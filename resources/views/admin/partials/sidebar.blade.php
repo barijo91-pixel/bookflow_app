@@ -1,0 +1,57 @@
+@php
+    $route = request()->route() ? request()->route()->getName() : '';
+    $is = fn($prefix) => str_starts_with($route, $prefix) ? 'active' : '';
+@endphp
+<aside class="admin-sidebar">
+    <div class="sidebar-brand">
+        <a href="{{ route('admin.dashboard') }}">
+            <i class="bi bi-book-half"></i>
+            <span>BookFlow <small>admin</small></span>
+        </a>
+    </div>
+    <nav class="admin-nav">
+        <a href="{{ route('admin.dashboard') }}" class="nav-item {{ $is('admin.dashboard') }}">
+            <i class="bi bi-speedometer2"></i> 대시보드
+        </a>
+        <div class="nav-section">회원</div>
+        <a href="{{ route('admin.users.pending') }}" class="nav-item {{ $is('admin.users.pending') }}">
+            <i class="bi bi-person-plus"></i> 승인 대기열
+        </a>
+        <a href="{{ route('admin.users.index') }}" class="nav-item {{ $is('admin.users.index') }}">
+            <i class="bi bi-people"></i> 사용자 목록
+        </a>
+        <div class="nav-section">거래·도서</div>
+        <a href="{{ route('admin.vendors.index') }}" class="nav-item {{ $is('admin.vendors') }}">
+            <i class="bi bi-building"></i> 거래처(학원)
+        </a>
+        <a href="{{ route('admin.books.index') }}" class="nav-item {{ $is('admin.books') }}">
+            <i class="bi bi-journals"></i> 도서
+        </a>
+        <a href="{{ route('admin.stocks.index') }}" class="nav-item {{ $is('admin.stocks') }}">
+            <i class="bi bi-box-seam"></i> 재고
+        </a>
+        <a href="{{ route('admin.orders.index') }}" class="nav-item {{ $is('admin.orders') }}">
+            <i class="bi bi-receipt"></i> 주문
+        </a>
+        <div class="nav-section">B2C</div>
+        <a href="{{ route('admin.classes.index') }}" class="nav-item {{ $is('admin.classes') }}">
+            <i class="bi bi-mortarboard"></i> 학급/학생/학부모
+        </a>
+        <div class="nav-section">운영</div>
+        <a href="{{ route('admin.code-groups.index') }}" class="nav-item {{ $is('admin.code-groups') . $is('admin.codes') }}">
+            <i class="bi bi-tags"></i> 코드 테이블
+        </a>
+        <a href="{{ route('admin.regions.index') }}" class="nav-item {{ $is('admin.regions') }}">
+            <i class="bi bi-geo-alt"></i> 지역
+        </a>
+        <a href="{{ route('admin.notifications.templates') }}" class="nav-item {{ $is('admin.notifications') }}">
+            <i class="bi bi-bell"></i> 알림 템플릿/이력
+        </a>
+        <a href="{{ route('admin.settings.edit') }}" class="nav-item {{ $is('admin.settings') }}">
+            <i class="bi bi-gear"></i> 사이트 설정
+        </a>
+        <a href="{{ route('admin.audit-logs.index') }}" class="nav-item {{ $is('admin.audit-logs') }}">
+            <i class="bi bi-shield-check"></i> 감사 로그
+        </a>
+    </nav>
+</aside>

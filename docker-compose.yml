@@ -1,0 +1,84 @@
+# BookFlow 로컬 개발 환경
+# 사용법:
+#   cp .env.example .env (또는 기존 .env 수정)
+#   docker compose up -d --build
+#   docker compose exec app php artisan migrate:fresh --seed
+#   open http://localhost:8778
+#
+# 참고: 같은 .env를 그대로 쓰되, DB_HOST=db 로 바꿔야 함
+
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    image: bookflow:dev
+    container_name: bookflow-app
+    restart: unless-stopped
+    ports:
+      - "8778:80"
+    environment:
+      # docker-compose 내부 DNS로 db 컨테이너 참조
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: bookflow
+      DB_USERNAME: bookflow
+      DB_PASSWORD: bookflow_pw
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+    volumes:
+      - .:/var/www/html
+      - vendor:/var/www/html/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - bookflow
+
+  db:
+    image: mariadb:11.4
+    container_name: bookflow-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root_pw
+      MARIADB_DATABASE: bookflow
+      MARIADB_USER: bookflow
+      MARIADB_PASSWORD: bookflow_pw
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"   # 호스트 충돌 방지
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - bookflow
+
+  redis:
+    image: redis:7-alpine
+    container_name: bookflow-redis
+    restart: unless-stopped
+    networks:
+      - bookflow
+
+  # (선택) 큐 worker — alimtalk/email 등 비동기 발송 시
+  # worker:
+  #   image: bookflow:dev
+  #   command: php artisan queue:work --tries=3 --timeout=60
+  #   depends_on: [db, redis]
+  #   networks: [bookflow]
+
+volumes:
+  db_data:
+  vendor:
+
+networks:
+  bookflow:
+    driver: bridge

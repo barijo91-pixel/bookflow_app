@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookflow-app
+  namespace: bookflow
+  labels:
+    app: bookflow
+    tier: web
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: bookflow
+      tier: web
+  template:
+    metadata:
+      labels:
+        app: bookflow
+        tier: web
+    spec:
+      containers:
+        - name: app
+          image: REGISTRY/bookflow:latest        # CI에서 push한 이미지 태그로 교체
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          envFrom:
+            - configMapRef:
+                name: bookflow-config
+            - secretRef:
+                name: bookflow-secret
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "768Mi"
+          livenessProbe:
+            httpGet:
+              path: /up
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /up
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # 업로드 파일 등을 PVC 또는 S3-compatible로 마운트하려면 아래 활성화
+          # volumeMounts:
+          #   - name: storage
+          #     mountPath: /var/www/html/storage/app/public
+      # volumes:
+      #   - name: storage
+      #     persistentVolumeClaim:
+      #       claimName: bookflow-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookflow-app
+  namespace: bookflow
+spec:
+  type: ClusterIP
+  selector:
+    app: bookflow
+    tier: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

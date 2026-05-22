@@ -1,0 +1,296 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
+use App\Models\User;
+use App\Services\NotificationService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+
+class UserController extends Controller
+{
+    // -------------------- LIST --------------------
+    public function index(Request $request)
+    {
+        $role = $request->query('role');
+        $status = $request->query('status');
+        $q = trim((string) $request->query('q'));
+
+        $query = User::query()->orderByDesc('id');
+
+        if ($role)   { $query->where('role_code', $role); }
+        if ($status) { $query->where('status_code', $status); }
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('name', 'like', "%{$q}%")
+                  ->orWhere('email', 'like', "%{$q}%")
+                  ->orWhere('phone', 'like', "%{$q}%");
+            });
+        }
+
+        $users = $query->paginate(20)->withQueryString();
+        $roleOptions   = DB::table('codes')->where('group_code', 'user_role')->orderBy('sort_order')->get();
+        $statusOptions = DB::table('codes')->where('group_code', 'user_status')->orderBy('sort_order')->get();
+
+        return view('admin.users.index', compact('users', 'roleOptions', 'statusOptions', 'role', 'status', 'q'));
+    }
+
+    public function pending()
+    {
+        $users = User::where('status_code', 'pending')->orderBy('id')->paginate(20);
+        return view('admin.users.pending', compact('users'));
+    }
+
+    // -------------------- CREATE --------------------
+    public function create()
+    {
+        $roleOptions = DB::table('codes')->where('group_code', 'user_role')->orderBy('sort_order')->get();
+        $sidos       = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get();
+        return view('admin.users.create', compact('roleOptions', 'sidos'));
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'email'         => ['required', 'email', 'max:150', 'unique:users,email'],
+            'name'          => ['required', 'string', 'max:100'],
+            'phone'         => ['required', 'string', 'max:20'],
+            'password'      => ['required', 'string', 'min:4', 'max:50'],
+            'role_code'     => ['required', Rule::in(['admin','distributor','agent','academy'])],
+            'admin_level'   => ['nullable', Rule::in(['super','staff'])],
+            'region_id'     => ['nullable', 'integer', 'exists:regions,id'],
+            'address'       => ['nullable', 'string', 'max:255'],
+            'address_detail'=> ['nullable', 'string', 'max:255'],
+        ]);
+
+        $user = new User();
+        $user->email = $data['email'];
+        $user->password = $data['password']; // model casts to hashed
+        $user->name = $data['name'];
+        $user->phone = $data['phone'];
+        $user->role_code = $data['role_code'];
+        $user->admin_level = $data['role_code'] === 'admin' ? ($data['admin_level'] ?? 'staff') : null;
+        $user->region_id = $data['region_id'] ?? null;
+        $user->address = $data['address'] ?? null;
+        $user->address_detail = $data['address_detail'] ?? null;
+        $user->status_code = 'active';
+        $user->approved_by = auth()->id();
+        $user->approved_at = now();
+        $user->save();
+
+        AuditLog::log('users', $user->id, 'create', null, $user->only(['email','name','phone','role_code','admin_level','status_code']));
+
+        return redirect()->route('admin.users.show', $user)->with('success', '사용자가 등록되었습니다.');
+    }
+
+    // -------------------- SHOW (상세 + 편집 통합) --------------------
+    public function show(User $user)
+    {
+        $roleOptions   = DB::table('codes')->where('group_code', 'user_role')->orderBy('sort_order')->get();
+        $statusOptions = DB::table('codes')->where('group_code', 'user_status')->orderBy('sort_order')->get();
+        $sidos         = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get();
+
+        // 현재 region의 부모(sido) 찾기
+        $currentSidoId = null;
+        $sigungus = collect();
+        if ($user->region_id) {
+            $reg = DB::table('regions')->find($user->region_id);
+            if ($reg) {
+                $currentSidoId = $reg->parent_id ?? $reg->id;
+                $sigungus = DB::table('regions')->where('parent_id', $currentSidoId)->orderBy('sort_order')->get();
+            }
+        }
+
+        // 관계 정보
+        $relationsAsParent = DB::table('user_relations as r')
+            ->join('users as u', 'u.id', '=', 'r.child_user_id')
+            ->where('r.parent_user_id', $user->id)
+            ->select('r.id','r.relation_type','r.status','r.started_at','r.terminated_at',
+                'u.id as user_id','u.name as user_name','u.email as user_email','u.role_code')
+            ->orderByDesc('r.id')->get();
+        $relationsAsChild = DB::table('user_relations as r')
+            ->join('users as u', 'u.id', '=', 'r.parent_user_id')
+            ->where('r.child_user_id', $user->id)
+            ->select('r.id','r.relation_type','r.status','r.started_at','r.terminated_at',
+                'u.id as user_id','u.name as user_name','u.email as user_email','u.role_code')
+            ->orderByDesc('r.id')->get();
+
+        // 최근 주문 (역할별)
+        $recentOrders = collect();
+        if ($user->isAgent()) {
+            $recentOrders = DB::table('orders')
+                ->where('agent_user_id', $user->id)
+                ->orderByDesc('id')->limit(10)->get();
+        } elseif ($user->isDistributor()) {
+            $recentOrders = DB::table('orders')
+                ->where('distributor_user_id', $user->id)
+                ->orderByDesc('id')->limit(10)->get();
+        } elseif ($user->isAcademy()) {
+            // vendor_users 통해 vendor 찾고 그 vendor의 주문
+            $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
+            if ($vendorIds->isNotEmpty()) {
+                $recentOrders = DB::table('orders')
+                    ->whereIn('vendor_id', $vendorIds)
+                    ->orderByDesc('id')->limit(10)->get();
+            }
+        }
+
+        return view('admin.users.show', compact(
+            'user', 'roleOptions', 'statusOptions', 'sidos', 'currentSidoId', 'sigungus',
+            'relationsAsParent', 'relationsAsChild', 'recentOrders'
+        ));
+    }
+
+    // -------------------- UPDATE --------------------
+    public function update(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'name'          => ['required', 'string', 'max:100'],
+            'phone'         => ['required', 'string', 'max:20'],
+            'role_code'     => ['required', Rule::in(['admin','distributor','agent','academy'])],
+            'admin_level'   => ['nullable', Rule::in(['super','staff'])],
+            'status_code'   => ['required', Rule::in(['pending','active','suspended','terminated'])],
+            'region_id'     => ['nullable', 'integer', 'exists:regions,id'],
+            'address'       => ['nullable', 'string', 'max:255'],
+            'address_detail'=> ['nullable', 'string', 'max:255'],
+        ]);
+
+        $me = auth()->user();
+
+        // GUARD: 본인 status 변경 차단 (자기 차단 방지)
+        if ($user->id === $me->id && $data['status_code'] !== 'active') {
+            return back()->withErrors(['status_code' => '본인 계정의 상태는 active 외로 변경할 수 없습니다.']);
+        }
+
+        // GUARD: 슈퍼관리자가 아닌 사람이 admin 권한 부여/박탈 차단
+        if (! $me->isSuperAdmin()) {
+            if ($data['role_code'] === 'admin' && $user->role_code !== 'admin') {
+                return back()->withErrors(['role_code' => '슈퍼관리자만 admin 권한을 부여할 수 있습니다.']);
+            }
+            if ($user->role_code === 'admin' && $data['role_code'] !== 'admin') {
+                return back()->withErrors(['role_code' => '슈퍼관리자만 관리자 권한을 박탈할 수 있습니다.']);
+            }
+            if ($user->role_code === 'admin' && $user->admin_level === 'super') {
+                return back()->withErrors(['role_code' => '슈퍼관리자 계정은 슈퍼관리자만 수정할 수 있습니다.']);
+            }
+        }
+
+        $user->name = $data['name'];
+        $user->phone = $data['phone'];
+        $user->role_code = $data['role_code'];
+        $user->admin_level = $data['role_code'] === 'admin' ? ($data['admin_level'] ?? 'staff') : null;
+        $user->status_code = $data['status_code'];
+        $user->region_id = $data['region_id'] ?? null;
+        $user->address = $data['address'] ?? null;
+        $user->address_detail = $data['address_detail'] ?? null;
+
+        // active로 바뀐 경우 approved_at 기록
+        if ($data['status_code'] === 'active' && ! $user->approved_at) {
+            $user->approved_by = $me->id;
+            $user->approved_at = now();
+        }
+
+        $user->save();
+        AuditLog::log('users', $user->id, 'update', $user->getOriginal(), $user->only(['name','phone','role_code','admin_level','status_code','region_id']));
+        return redirect()->route('admin.users.show', $user)->with('success', '저장되었습니다.');
+    }
+
+    // -------------------- 상태 변경 액션 (안전장치 포함) --------------------
+    public function approve(User $user, NotificationService $notify)
+    {
+        $before = ['status_code' => $user->status_code];
+        $user->status_code = 'active';
+        $user->approved_by = auth()->id();
+        $user->approved_at = now();
+        $user->save();
+
+        AuditLog::log('users', $user->id, 'approve', $before, ['status_code' => 'active']);
+
+        $notify->send('user.approval_result', [
+            'name'   => $user->name,
+            'result' => '승인',
+        ], [
+            ['type' => 'user', 'id' => $user->id, 'phone' => $user->phone, 'email' => $user->email],
+        ]);
+
+        return back()->with('success', "{$user->name}({$user->email}) 승인 완료");
+    }
+
+    public function reject(User $user, NotificationService $notify)
+    {
+        if (! $this->canModify($user, 'reject')) {
+            return back()->with('error', '본인 또는 슈퍼관리자 계정은 거절할 수 없습니다.');
+        }
+        $before = ['status_code' => $user->status_code];
+        $user->status_code = 'terminated';
+        $user->save();
+
+        AuditLog::log('users', $user->id, 'reject', $before, ['status_code' => 'terminated']);
+
+        $notify->send('user.approval_result', [
+            'name'   => $user->name,
+            'result' => '거절',
+        ], [
+            ['type' => 'user', 'id' => $user->id, 'phone' => $user->phone, 'email' => $user->email],
+        ]);
+
+        return back()->with('success', "{$user->name}({$user->email}) 거절 처리됨");
+    }
+
+    public function suspend(User $user)
+    {
+        if (! $this->canModify($user, 'suspend')) {
+            return back()->with('error', '본인 또는 슈퍼관리자 계정은 일시정지할 수 없습니다.');
+        }
+        $before = ['status_code' => $user->status_code];
+        $user->status_code = 'suspended';
+        $user->save();
+        AuditLog::log('users', $user->id, 'suspend', $before, ['status_code' => 'suspended']);
+        return back()->with('success', "{$user->name}({$user->email}) 일시정지");
+    }
+
+    public function activate(User $user)
+    {
+        $before = ['status_code' => $user->status_code];
+        $user->status_code = 'active';
+        $user->save();
+        AuditLog::log('users', $user->id, 'activate', $before, ['status_code' => 'active']);
+        return back()->with('success', "{$user->name}({$user->email}) 정상화");
+    }
+
+    public function resetPassword(User $user)
+    {
+        if (! $this->canModify($user, 'reset')) {
+            return back()->with('error', '본인 또는 슈퍼관리자 계정의 비번은 여기서 초기화할 수 없습니다.');
+        }
+        $new = Str::random(8);
+        $user->password = $new; // hashed cast
+        $user->save();
+
+        AuditLog::log('users', $user->id, 'reset_password', null, null);
+
+        return back()
+            ->with('success', "비밀번호가 초기화되었습니다. 새 비밀번호: {$new} (1회만 표시됨)")
+            ->with('new_password', $new);
+    }
+
+    // -------------------- GUARDS --------------------
+    private function canModify(User $target, string $action): bool
+    {
+        $me = auth()->user();
+        // 본인 차단
+        if ($target->id === $me->id) {
+            return false;
+        }
+        // 슈퍼관리자 보호: 슈퍼관리자가 아닌 사람이 슈퍼관리자에게 영향 금지
+        if ($target->isSuperAdmin() && ! $me->isSuperAdmin()) {
+            return false;
+        }
+        return true;
+    }
+}

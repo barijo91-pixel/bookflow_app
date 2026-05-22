@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /mypage
+Disallow: /p/
+
+Sitemap: https://booksys.co.kr/sitemap.xml

@@ -1,0 +1,56 @@
+# Redis (session + cache + queue) — 내부용 단일 인스턴스
+# 운영에서는 관리형 Redis (ElastiCache 등) 사용 권장
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookflow-redis
+  namespace: bookflow
+  labels:
+    app: bookflow
+    tier: cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookflow
+      tier: cache
+  template:
+    metadata:
+      labels:
+        app: bookflow
+        tier: cache
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: ["--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+          ports:
+            - containerPort: 6379
+              name: redis
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "320Mi"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}    # 운영에서는 PVC로 교체
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookflow-redis
+  namespace: bookflow
+spec:
+  type: ClusterIP
+  selector:
+    app: bookflow
+    tier: cache
+  ports:
+    - port: 6379
+      targetPort: 6379

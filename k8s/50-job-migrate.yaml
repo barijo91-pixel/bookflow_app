@@ -1,0 +1,38 @@
+# 마이그레이션 Job — 새 배포 시 Helm hook 또는 수동 적용
+# 사용법:
+#   kubectl apply -f k8s/50-job-migrate.yaml
+#   (한 번 끝나고 Pod는 자동 종료. 같은 이름이면 미리 delete)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bookflow-migrate
+  namespace: bookflow
+  labels:
+    app: bookflow
+    role: migrate
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: REGISTRY/bookflow:latest
+          command: ["sh", "-c"]
+          args:
+            - |
+              php artisan migrate --force --no-interaction && \
+              php artisan db:seed --class=ProductionSeeder --force --no-interaction || true
+          envFrom:
+            - configMapRef:
+                name: bookflow-config
+            - secretRef:
+                name: bookflow-secret
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
