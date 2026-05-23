@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $vendor->name ?? 'BookFlow' }} 교재 안내</title>
+    <title>{{ $vendor->name ?? 'BookSys' }} 교재 안내</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -55,7 +55,7 @@
 
     <div class="text-center text-muted small mt-4 mb-5">
         문의: {{ $vendor->mobile ?? $vendor->tel ?? '' }}<br>
-        <span style="opacity:.6">Powered by BookFlow</span>
+        <span style="opacity:.6">Powered by BookSys</span>
     </div>
 </div>
 </body>

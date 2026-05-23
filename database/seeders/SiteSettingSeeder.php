@@ -12,7 +12,7 @@ class SiteSettingSeeder extends Seeder
         $settings = [
             // group, key, value, type, label, description, sort
             ['company', 'company_name', 'e-Learn', 'text', '회사명', null, 10],
-            ['company', 'service_name', 'BookFlow', 'text', '서비스명', null, 20],
+            ['company', 'service_name', 'BookSys', 'text', '서비스명', null, 20],
             ['company', 'business_no', '', 'text', '사업자등록번호', null, 30],
             ['company', 'representative', '', 'text', '대표자', null, 40],
             ['company', 'company_address', '', 'text', '주소', null, 50],
@@ -32,7 +32,7 @@ class SiteSettingSeeder extends Seeder
             ['integration', 'fcm_project_id', '', 'text', 'FCM Project ID', null, 100],
 
             // SEO
-            ['seo', 'meta_title', 'BookFlow - 교재 도매 유통 플랫폼', 'text', 'SEO 제목', null, 10],
+            ['seo', 'meta_title', 'BookSys - 교재 도매 유통 플랫폼', 'text', 'SEO 제목', null, 10],
             ['seo', 'meta_description', '총판·영업자·학원·학부모를 연결하는 교재 유통 올인원 솔루션', 'textarea', 'SEO 설명', null, 20],
             ['seo', 'meta_keywords', '교재,도매,유통,학원,영어교재,총판,영업자', 'text', '키워드', null, 30],
 
@@ -43,7 +43,7 @@ class SiteSettingSeeder extends Seeder
 
             // 앱 다운로드
             ['app', 'app_download_active', '0', 'boolean', '앱 다운로드 노출', '메인 페이지에 다운로드 섹션 표시 여부', 10],
-            ['app', 'app_download_label', 'BookFlow 모바일 앱', 'text', '다운로드 섹션 제목', null, 20],
+            ['app', 'app_download_label', 'BookSys 모바일 앱', 'text', '다운로드 섹션 제목', null, 20],
             ['app', 'app_download_description', '바코드 스캔 주문, 푸시 알림 등 모바일 앱에서만 가능한 기능을 사용하세요.', 'textarea', '다운로드 섹션 설명', null, 30],
             ['app', 'app_download_android_url', '', 'text', 'Android 다운로드 URL', '.apk 파일 URL 또는 Play Store 링크', 40],
             ['app', 'app_download_android_version', '', 'text', 'Android 버전', '예: 1.0.0', 50],

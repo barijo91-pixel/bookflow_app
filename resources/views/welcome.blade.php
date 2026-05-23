@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ setting('meta_title', 'BookFlow — 교재 도매 유통 전문 플랫폼') }}</title>
+    <title>{{ setting('meta_title', 'BookSys — 교재 도매 유통 전문 플랫폼') }}</title>
     <meta name="description" content="{{ setting('meta_description', '총판·영업자·학원·학부모를 연결하는 교재 도매 유통 올인원 솔루션. 전화·카카오톡으로 비효율적이던 영어 교재 유통을 디지털화합니다.') }}">
     <meta name="keywords" content="{{ setting('meta_keywords', '교재,도매,유통,학원,영어교재,총판,영업자') }}">
 
     {{-- Open Graph (카카오톡/페이스북) --}}
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="BookFlow">
-    <meta property="og:title" content="{{ setting('meta_title', 'BookFlow — 교재 도매 유통 전문 플랫폼') }}">
+    <meta property="og:site_name" content="BookSys">
+    <meta property="og:title" content="{{ setting('meta_title', 'BookSys — 교재 도매 유통 전문 플랫폼') }}">
     <meta property="og:description" content="{{ setting('meta_description', '총판·영업자·학원·학부모를 연결하는 교재 도매 유통 올인원 솔루션') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:locale" content="ko_KR">
 
     {{-- Twitter Card --}}
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="{{ setting('meta_title', 'BookFlow') }}">
+    <meta name="twitter:title" content="{{ setting('meta_title', 'BookSys') }}">
     <meta name="twitter:description" content="{{ setting('meta_description', '교재 도매 유통 전문 플랫폼') }}">
 
     {{-- JSON-LD Organization (@context, @type은 Blade와 충돌 → @@로 escape) --}}
@@ -27,7 +27,7 @@
         "@@type": "Organization",
         "name": "{{ setting('company_name', 'e-Learn') }}",
         "url": "{{ url('/') }}",
-        "description": "BookFlow — 교재 도매 유통 전문 플랫폼"
+        "description": "BookSys — 교재 도매 유통 전문 플랫폼"
     }
     </script>
 
@@ -137,7 +137,7 @@
 <header class="topbar">
     <div class="container d-flex align-items-center justify-content-between py-3">
         <a href="/" class="brand">
-            <i class="bi bi-book-half"></i>BookFlow
+            <i class="bi bi-book-half"></i>BookSys
         </a>
         <nav class="d-flex align-items-center gap-2">
             @auth
@@ -171,7 +171,7 @@
     <div class="container text-center">
         <span class="badge-tag mb-3 d-inline-block">교재 도매 유통 전문 플랫폼</span>
         <h1 class="mb-3">총판·영업자·학원·학부모<br>모두를 연결하는 올인원 솔루션</h1>
-        <p class="lead mb-4">전화와 카카오톡으로 비효율적이던 영어 교재 유통.<br>이제 BookFlow에서 디지털로 간편하게.</p>
+        <p class="lead mb-4">전화와 카카오톡으로 비효율적이던 영어 교재 유통.<br>이제 BookSys에서 디지털로 간편하게.</p>
         <div class="d-flex gap-2 justify-content-center flex-wrap">
             @auth
                 @if(auth()->user()->role_code === 'admin')
@@ -185,7 +185,7 @@
                 @endif
             @else
                 <a href="{{ route('public.register') }}" class="btn btn-light btn-lg px-4">
-                    <i class="bi bi-person-plus"></i> 무료로 시작하기
+                    <i class="bi bi-person-plus"></i> 이용하기
                 </a>
                 <a href="{{ route('public.login') }}" class="btn btn-outline-light btn-lg px-4">
                     <i class="bi bi-box-arrow-in-right"></i> 로그인
@@ -350,7 +350,7 @@
     @endphp
     <section id="download" style="background: #fff; padding: 4rem 1rem;">
         <div class="container" style="max-width: 720px;">
-            <h2 class="section-title">{{ setting('app_download_label', 'BookFlow 모바일 앱') }}</h2>
+            <h2 class="section-title">{{ setting('app_download_label', 'BookSys 모바일 앱') }}</h2>
             <p class="section-sub">{{ setting('app_download_description', '바코드 스캔 주문, 푸시 알림 등 모바일에서만 가능한 기능을 사용하세요.') }}</p>
 
             <div class="row g-3 justify-content-center mt-4">
@@ -435,7 +435,7 @@
     <div class="container">
         <div class="row g-3">
             <div class="col-md-4">
-                <h6><i class="bi bi-book-half"></i> BookFlow</h6>
+                <h6><i class="bi bi-book-half"></i> BookSys</h6>
                 <p class="mb-0">교재 도매 유통 전문 플랫폼<br>
                     <small>Powered by e-Learn</small>
                 </p>
@@ -460,7 +460,7 @@
             </div>
         </div>
         <div class="copyright">
-            &copy; {{ date('Y') }} BookFlow · All rights reserved.
+            &copy; {{ date('Y') }} BookSys · All rights reserved.
         </div>
     </div>
 </footer>

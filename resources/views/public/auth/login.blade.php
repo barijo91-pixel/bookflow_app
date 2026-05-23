@@ -7,7 +7,7 @@
     <div class="card-body p-4">
         <div class="text-center mb-4">
             <i class="bi bi-box-arrow-in-right navy" style="font-size:2.5rem"></i>
-            <h1 class="h4 navy mt-2 mb-1">BookFlow 로그인</h1>
+            <h1 class="h4 navy mt-2 mb-1">BookSys 로그인</h1>
             <p class="text-muted small mb-0">총판 · 영업자 · 학원 통합 로그인</p>
         </div>
 

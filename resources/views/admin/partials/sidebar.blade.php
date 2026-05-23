@@ -6,7 +6,7 @@
     <div class="sidebar-brand">
         <a href="{{ route('admin.dashboard') }}">
             <i class="bi bi-book-half"></i>
-            <span>BookFlow <small>admin</small></span>
+            <span>BookSys <small>admin</small></span>
         </a>
     </div>
     <nav class="admin-nav">

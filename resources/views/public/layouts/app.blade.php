@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'BookFlow') · BookFlow</title>
+    <title>@yield('title', 'BookSys') · BookSys</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -35,7 +35,7 @@
 <header class="topbar">
     <div class="container d-flex align-items-center justify-content-between py-3">
         <a href="/" class="brand">
-            <i class="bi bi-book-half"></i> BookFlow
+            <i class="bi bi-book-half"></i> BookSys
         </a>
         <nav class="d-flex align-items-center gap-2">
             @auth
@@ -82,7 +82,7 @@
 </main>
 
 <footer class="public-footer">
-    &copy; {{ date('Y') }} BookFlow · {{ setting('company_name', 'e-Learn') }}
+    &copy; {{ date('Y') }} BookSys · {{ setting('company_name', 'e-Learn') }}
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
