@@ -19,6 +19,7 @@ class DemoAccountSeeder extends Seeder
 
         // 관리자
         $adminId = DB::table('users')->insertGetId([
+            'login_id' => 'admin01',
             'email' => 'admin@bookflow.local',
             'password' => $pw,
             'name' => '시스템관리자',
@@ -36,6 +37,7 @@ class DemoAccountSeeder extends Seeder
 
         // 총판 2개
         $distA = DB::table('users')->insertGetId([
+            'login_id' => 'distA01',
             'email' => 'distA@bookflow.local',
             'password' => $pw,
             'name' => '한국교재총판',
@@ -50,6 +52,7 @@ class DemoAccountSeeder extends Seeder
             'updated_at' => $now,
         ]);
         $distB = DB::table('users')->insertGetId([
+            'login_id' => 'distB01',
             'email' => 'distB@bookflow.local',
             'password' => $pw,
             'name' => '잉글리시북스',
@@ -66,6 +69,7 @@ class DemoAccountSeeder extends Seeder
 
         // 영업자 2명
         $ag1 = DB::table('users')->insertGetId([
+            'login_id' => 'agent01',
             'email' => 'agent1@bookflow.local',
             'password' => $pw,
             'name' => '김영업',
@@ -80,6 +84,7 @@ class DemoAccountSeeder extends Seeder
             'updated_at' => $now,
         ]);
         $ag2 = DB::table('users')->insertGetId([
+            'login_id' => 'agent02',
             'email' => 'agent2@bookflow.local',
             'password' => $pw,
             'name' => '이영업',
@@ -96,6 +101,7 @@ class DemoAccountSeeder extends Seeder
 
         // 학원 담당 3명
         $ac1 = DB::table('users')->insertGetId([
+            'login_id' => 'academy01',
             'email' => 'academy1@bookflow.local',
             'password' => $pw,
             'name' => '박원장',
@@ -110,6 +116,7 @@ class DemoAccountSeeder extends Seeder
             'updated_at' => $now,
         ]);
         $ac2 = DB::table('users')->insertGetId([
+            'login_id' => 'academy02',
             'email' => 'academy2@bookflow.local',
             'password' => $pw,
             'name' => '최원장',
@@ -124,6 +131,7 @@ class DemoAccountSeeder extends Seeder
             'updated_at' => $now,
         ]);
         $ac3 = DB::table('users')->insertGetId([
+            'login_id' => 'academy03',
             'email' => 'academy3@bookflow.local',
             'password' => $pw,
             'name' => '정원장',

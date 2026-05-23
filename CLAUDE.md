@@ -51,11 +51,23 @@ C:/laragon/bin/php/php-8.3.30-Win32-vs16-x64/php.exe artisan serve --host=127.0.
 ## 관리자 계정 (시드)
 
 - URL: `/admin/login`
-- 데모 계정 8개 (전부 비밀번호 `1234`)
-  - `admin@bookflow.local` (시스템관리자, super)
-  - `distA@bookflow.local`, `distB@bookflow.local` (총판 ×2)
-  - `agent1@bookflow.local`, `agent2@bookflow.local` (영업자 ×2)
-  - `academy1~3@bookflow.local` (학원 ×3)
+- **로그인 ID 시스템**: 이메일 형식이 아닌 일반 아이디 (영문+숫자 6~50자)
+- 운영 admin (ProductionSeeder): `admin01` / `admin1234` (첫 로그인 시 비번 변경 강제)
+- 데모 계정 8개 (DemoAccountSeeder, 전부 비번 `1234` — 약한 비번 검사 명령 대상)
+  - `admin01` (시스템관리자, super) — 옛 `admin@bookflow.local`
+  - `distA01`, `distB01` (총판 ×2)
+  - `agent01`, `agent02` (영업자 ×2)
+  - `academy01`, `academy02`, `academy03` (학원 ×3)
+- 기존 이메일은 옵션 컬럼(`users.email`, nullable)으로 유지 — 알림/연락처용
+
+## 보안 정책
+
+- **비밀번호**: 최소 8자 + 영문 + 숫자 필수 (관리자 비번 변경 시에도 동일 적용)
+- **로그인 시도 제한**: 5회 실패 → 60초 잠금 (IP + 아이디 기준)
+- **첫 로그인 시 비번 변경 강제**: `users.password_change_required = true` 인 사용자는 `/mypage/force-password-change` 로 자동 이동
+- **관리자 세션 타임아웃**: 60분 비활성 시 자동 로그아웃
+- **약한 비번 일괄 검사**: `php artisan security:flag-weak-passwords` (1234 등 알려진 약한 비번 사용자에게 변경 강제 플래그 설정)
+- **이전 로그인 시각/IP**: 대시보드 + 마이페이지에 표시 (이상 로그인 감지용)
 
 ## DB 구조 (마이그레이션: database/migrations/2026_05_21_*)
 
@@ -85,7 +97,7 @@ php artisan migrate:fresh --seed   # 전체 재생성 + 시드
 3. PublisherSeeder — 출판사 18개
 4. NotificationTemplateSeeder — 알림 템플릿 11개
 5. SiteSettingSeeder — 사이트 설정 30개 (app 그룹 7개 포함, **idempotent — value 보존**)
-6. AdminAccountSeeder — admin 계정 1개 (`admin@bookflow.local` / `1234` — 운영 후 즉시 변경 필수)
+6. AdminAccountSeeder — admin 계정 1개 (아이디 `admin01` / 임시 비번 `admin1234` — 첫 로그인 시 변경 강제)
 
 **로컬/데모용** — `php artisan db:seed` (DatabaseSeeder)
 - 위 운영 시더 5개 + 다음:

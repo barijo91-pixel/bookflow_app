@@ -25,10 +25,10 @@ class ProductionSeeder extends Seeder
             NotificationTemplateSeeder::class,
             // 5. 사이트 설정 (회사/연동/SEO/정책/앱)
             SiteSettingSeeder::class,
-            // 6. 관리자 계정 1개 (admin@bookflow.local / 1234 — 운영 후 즉시 비밀번호 변경 필수)
+            // 6. 관리자 계정 1개 (admin01 / admin1234 — 첫 로그인 시 비번 변경 강제)
             AdminAccountSeeder::class,
         ]);
 
-        $this->command->warn('[운영 시드 완료] 관리자 계정: admin@bookflow.local / 1234 → 즉시 변경하세요.');
+        $this->command->warn('[운영 시드 완료] 관리자 아이디: admin01 / 임시 비번: admin1234 → 첫 로그인 시 비번 변경 강제됨.');
     }
 }
