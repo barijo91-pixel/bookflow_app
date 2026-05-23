@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -60,17 +61,22 @@ class UserController extends Controller
             'email'         => ['required', 'email', 'max:150', 'unique:users,email'],
             'name'          => ['required', 'string', 'max:100'],
             'phone'         => ['required', 'string', 'max:20'],
-            'password'      => ['required', 'string', 'min:4', 'max:50'],
+            'password'      => ['required', Password::min(8)->letters()->numbers(), 'max:50'],
             'role_code'     => ['required', Rule::in(['admin','distributor','agent','academy'])],
             'admin_level'   => ['nullable', Rule::in(['super','staff'])],
             'region_id'     => ['nullable', 'integer', 'exists:regions,id'],
             'address'       => ['nullable', 'string', 'max:255'],
             'address_detail'=> ['nullable', 'string', 'max:255'],
+        ], [
+            'password.min'     => '비밀번호는 최소 8자 이상이어야 합니다.',
+            'password.letters' => '비밀번호에 영문자가 1자 이상 포함되어야 합니다.',
+            'password.numbers' => '비밀번호에 숫자가 1자 이상 포함되어야 합니다.',
         ]);
 
         $user = new User();
         $user->email = $data['email'];
         $user->password = $data['password']; // model casts to hashed
+        $user->password_change_required = true; // 관리자 생성 계정은 첫 로그인 시 비번 변경 강제
         $user->name = $data['name'];
         $user->phone = $data['phone'];
         $user->role_code = $data['role_code'];
@@ -268,8 +274,10 @@ class UserController extends Controller
         if (! $this->canModify($user, 'reset')) {
             return back()->with('error', '본인 또는 슈퍼관리자 계정의 비번은 여기서 초기화할 수 없습니다.');
         }
-        $new = Str::random(8);
+        // 영문+숫자 혼합 8자 임시 비번 생성
+        $new = $this->generateTempPassword(8);
         $user->password = $new; // hashed cast
+        $user->password_change_required = true; // 다음 로그인 시 변경 강제
         $user->save();
 
         AuditLog::log('users', $user->id, 'reset_password', null, null);
@@ -277,6 +285,17 @@ class UserController extends Controller
         return back()
             ->with('success', "비밀번호가 초기화되었습니다. 새 비밀번호: {$new} (1회만 표시됨)")
             ->with('new_password', $new);
+    }
+
+    /** 영문 4 + 숫자 4 자리 혼합 임시 비밀번호 (정책 준수) */
+    private function generateTempPassword(int $length = 8): string
+    {
+        $letters = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
+        $digits  = '23456789';
+        $half    = (int) floor($length / 2);
+        $pw  = substr(str_shuffle(str_repeat($letters, 4)), 0, $half);
+        $pw .= substr(str_shuffle(str_repeat($digits,  4)), 0, $length - $half);
+        return str_shuffle($pw);
     }
 
     // -------------------- GUARDS --------------------

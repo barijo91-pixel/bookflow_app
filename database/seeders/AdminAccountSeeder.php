@@ -18,6 +18,7 @@ class AdminAccountSeeder extends Seeder
         DB::table('users')->insert([
             'email'        => 'admin@bookflow.local',
             'password'     => Hash::make('1234'),
+            'password_change_required' => true,
             'name'         => '시스템관리자',
             'phone'        => '01000000000',
             'phone_verified_at' => now(),
@@ -30,6 +31,6 @@ class AdminAccountSeeder extends Seeder
             'updated_at'   => now(),
         ]);
 
-        $this->command->warn('[보안] admin@bookflow.local / 1234 — 운영 시 즉시 비밀번호 변경 필수');
+        $this->command->warn('[보안] admin@bookflow.local / 1234 — 첫 로그인 시 비밀번호 변경 강제됨');
     }
 }

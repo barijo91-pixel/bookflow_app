@@ -28,8 +28,8 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small text-muted">초기 비밀번호</label>
-                    <input type="text" name="password" class="form-control" value="{{ old('password') }}" required minlength="4" maxlength="50">
-                    <small class="text-muted">최소 4자. 등록 후 사용자에게 별도 전달.</small>
+                    <input type="text" name="password" class="form-control" value="{{ old('password') }}" required minlength="8" maxlength="50">
+                    <small class="text-muted">8자 이상, 영문+숫자. 등록 후 사용자에게 별도 전달 (첫 로그인 시 변경 강제됨).</small>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small text-muted">이름</label>

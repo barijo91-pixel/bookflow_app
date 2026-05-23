@@ -45,6 +45,10 @@ Route::middleware('auth')->group(function () {
     Route::get('mypage/profile',  [\App\Http\Controllers\MyPageController::class, 'showProfile'])->name('mypage.profile');
     Route::put('mypage/profile',  [\App\Http\Controllers\MyPageController::class, 'updateProfile'])->name('mypage.profile.update');
     Route::put('mypage/password', [\App\Http\Controllers\MyPageController::class, 'updatePassword'])->name('mypage.password.update');
+
+    // 비밀번호 강제 변경 (첫 로그인/관리자 초기화 후)
+    Route::get('mypage/force-password-change',  [\App\Http\Controllers\MyPageController::class, 'showForcePasswordChange'])->name('mypage.force_password_change');
+    Route::put('mypage/force-password-change',  [\App\Http\Controllers\MyPageController::class, 'submitForcePasswordChange'])->name('mypage.force_password_change.submit');
 });
 
 // 관리자
@@ -57,7 +61,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     // 관리자 전용
-    Route::middleware(['auth', 'admin'])->group(function () {
+    Route::middleware(['auth', 'admin', 'admin.session.timeout'])->group(function () {
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

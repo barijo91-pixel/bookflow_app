@@ -2,9 +2,27 @@
 @section('title', '대시보드')
 
 @section('content')
+@php
+    $prevLogin = session('previous_login_at');
+    $prevLoginText = $prevLogin ? \Carbon\Carbon::parse($prevLogin)->format('Y-m-d H:i') : null;
+    $currentIp = session('current_login_ip');
+@endphp
 <div class="page-header">
     <h1 class="h4 mb-0">대시보드</h1>
-    <span class="text-muted small">{{ now()->format('Y-m-d (D) H:i') }}</span>
+    <div class="text-muted small text-end">
+        <div>{{ now()->format('Y-m-d (D) H:i') }}</div>
+        @if($prevLoginText)
+            <div class="mt-1">
+                <i class="bi bi-shield-check"></i>
+                이전 로그인: {{ $prevLoginText }}
+                @if($currentIp) <span class="text-muted">· IP {{ $currentIp }}</span> @endif
+            </div>
+        @else
+            <div class="mt-1 text-success">
+                <i class="bi bi-shield-check"></i> 첫 로그인입니다
+            </div>
+        @endif
+    </div>
 </div>
 
 {{-- 상단 통계 카드 4개 --}}

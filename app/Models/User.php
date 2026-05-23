@@ -16,6 +16,7 @@ use Laravel\Sanctum\HasApiTokens;
     'region_id', 'address', 'address_detail',
     'phone_verified_at', 'email_verified_at',
     'approved_by', 'approved_at', 'last_login_at',
+    'password_change_required',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -30,6 +31,7 @@ class User extends Authenticatable
             'approved_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'password_change_required' => 'boolean',
         ];
     }
 

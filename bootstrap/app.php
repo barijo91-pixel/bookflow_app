@@ -14,7 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'admin'                => \App\Http\Middleware\EnsureAdmin::class,
+            'require.pw.change'    => \App\Http\Middleware\RequirePasswordChange::class,
+            'admin.session.timeout'=> \App\Http\Middleware\AdminSessionTimeout::class,
+        ]);
+
+        // 인증된 모든 웹 요청에 대해 비밀번호 강제 변경 체크
+        $middleware->web(append: [
+            \App\Http\Middleware\RequirePasswordChange::class,
         ]);
         $middleware->redirectGuestsTo(function ($request) {
             // API 또는 JSON 요청은 리다이렉트 대신 401 JSON 응답 트리거 (null 반환)

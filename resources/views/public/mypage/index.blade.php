@@ -46,8 +46,15 @@
                         <dd class="col-8">{{ $region_name }}</dd>
                     @endif
 
-                    @if($user->last_login_at)
-                        <dt class="col-4 text-muted">최근 로그인</dt>
+                    @php
+                        $prevLogin = session('previous_login_at');
+                        $prevLoginText = $prevLogin ? \Carbon\Carbon::parse($prevLogin)->format('Y-m-d H:i') : null;
+                    @endphp
+                    @if($prevLoginText)
+                        <dt class="col-4 text-muted">이전 로그인</dt>
+                        <dd class="col-8">{{ $prevLoginText }}</dd>
+                    @elseif($user->last_login_at)
+                        <dt class="col-4 text-muted">로그인 시각</dt>
                         <dd class="col-8">{{ $user->last_login_at->format('Y-m-d H:i') }}</dd>
                     @endif
                 </dl>

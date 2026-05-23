@@ -7,7 +7,10 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 /**
  * 공개 회원가입/로그인 컨트롤러
@@ -35,7 +38,17 @@ class PublicAuthController extends Controller
         ]);
         $remember = (bool) $request->boolean('remember', true);
 
+        // === Rate Limit: 5회 실패 → 60초 잠금 (IP + 이메일 기준) ===
+        $rlKey = 'login:'.Str::lower($data['email']).'|'.$request->ip();
+        if (RateLimiter::tooManyAttempts($rlKey, 5)) {
+            $seconds = RateLimiter::availableIn($rlKey);
+            return back()->withInput($request->only('email'))->withErrors([
+                'email' => "로그인 시도가 너무 많습니다. {$seconds}초 후 다시 시도해주세요.",
+            ]);
+        }
+
         if (! Auth::attempt($data, $remember)) {
+            RateLimiter::hit($rlKey, 60);
             return back()->withInput($request->only('email'))->withErrors([
                 'email' => '이메일 또는 비밀번호가 올바르지 않습니다.',
             ]);
@@ -53,8 +66,15 @@ class PublicAuthController extends Controller
             return back()->withInput($request->only('email'))->withErrors(['email' => $msg]);
         }
 
+        RateLimiter::clear($rlKey);
+
+        // 이전 로그인 시각 세션에 저장 (마이페이지/대시보드에 표시)
+        $previousLoginAt = $user->last_login_at;
         $user->forceFill(['last_login_at' => now()])->save();
+
         $request->session()->regenerate();
+        $request->session()->put('previous_login_at', $previousLoginAt?->toIso8601String());
+        $request->session()->put('current_login_ip', $request->ip());
         return $this->redirectAfterLogin($user);
     }
 
@@ -74,12 +94,16 @@ class PublicAuthController extends Controller
     {
         $data = $request->validate([
             'email'    => ['required', 'email', 'max:150', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:4', 'max:50', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers(), 'max:50'],
             'name'     => ['required', 'string', 'max:100'],
             'phone'    => ['required', 'string', 'max:20'],
             'role_code'=> ['required', Rule::in(['distributor', 'agent', 'academy'])],
             'parent_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'agree_terms'    => ['accepted'],
+        ], [
+            'password.min'     => '비밀번호는 최소 8자 이상이어야 합니다.',
+            'password.letters' => '비밀번호에 영문자가 1자 이상 포함되어야 합니다.',
+            'password.numbers' => '비밀번호에 숫자가 1자 이상 포함되어야 합니다.',
         ]);
         $phone = preg_replace('/[^0-9]/', '', $data['phone']);
 

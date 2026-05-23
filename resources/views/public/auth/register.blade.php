@@ -65,11 +65,17 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small text-muted">비밀번호 *</label>
-                    <input type="password" name="password" class="form-control" minlength="4" required>
+                    <input type="password" name="password" class="form-control" minlength="8" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small text-muted">비밀번호 확인 *</label>
-                    <input type="password" name="password_confirmation" class="form-control" minlength="4" required>
+                    <input type="password" name="password_confirmation" class="form-control" minlength="8" required>
+                </div>
+                <div class="col-12">
+                    <div class="form-text small">
+                        <i class="bi bi-info-circle"></i>
+                        비밀번호는 <strong>8자 이상, 영문 + 숫자 조합</strong>이어야 합니다. (특수문자 권장)
+                    </div>
                 </div>
             </div>
 

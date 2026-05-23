@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class MyPageController extends Controller
 {
@@ -128,13 +130,63 @@ class MyPageController extends Controller
         $user = Auth::user();
         $data = $request->validate([
             'current_password' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:4', 'max:50', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers(), 'max:50'],
+        ], [
+            'password.min'     => '비밀번호는 최소 8자 이상이어야 합니다.',
+            'password.letters' => '비밀번호에 영문자가 1자 이상 포함되어야 합니다.',
+            'password.numbers' => '비밀번호에 숫자가 1자 이상 포함되어야 합니다.',
         ]);
         if (! Hash::check($data['current_password'], $user->password)) {
             return back()->withErrors(['current_password' => '현재 비밀번호가 일치하지 않습니다.']);
         }
+        if (Hash::check($data['password'], $user->password)) {
+            return back()->withErrors(['password' => '새 비밀번호는 기존 비밀번호와 달라야 합니다.']);
+        }
         $user->password = $data['password'];
+        $user->password_change_required = false; // 변경 완료 → 강제 플래그 해제
         $user->save();
+        AuditLog::log('users', $user->id, 'change_password', null, null);
         return back()->with('success', '비밀번호가 변경되었습니다.');
+    }
+
+    // -------------------- 비밀번호 강제 변경 (첫 로그인 / 관리자 초기화 후) --------------------
+    public function showForcePasswordChange()
+    {
+        $user = Auth::user();
+        if (! (bool) $user->password_change_required) {
+            // 변경 불필요 → 원래 페이지로
+            return $user->role_code === 'admin'
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('mypage');
+        }
+        return view('public.mypage.force_password_change', ['user' => $user]);
+    }
+
+    public function submitForcePasswordChange(Request $request)
+    {
+        $user = Auth::user();
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers(), 'max:50'],
+        ], [
+            'password.min'     => '비밀번호는 최소 8자 이상이어야 합니다.',
+            'password.letters' => '비밀번호에 영문자가 1자 이상 포함되어야 합니다.',
+            'password.numbers' => '비밀번호에 숫자가 1자 이상 포함되어야 합니다.',
+        ]);
+        if (! Hash::check($data['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => '현재 비밀번호가 일치하지 않습니다.']);
+        }
+        if (Hash::check($data['password'], $user->password)) {
+            return back()->withErrors(['password' => '새 비밀번호는 기존 비밀번호와 달라야 합니다.']);
+        }
+        $user->password = $data['password'];
+        $user->password_change_required = false;
+        $user->save();
+        AuditLog::log('users', $user->id, 'force_change_password', null, null);
+
+        return ($user->role_code === 'admin'
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('mypage'))
+            ->with('success', '비밀번호가 변경되었습니다.');
     }
 }
