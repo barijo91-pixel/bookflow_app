@@ -53,8 +53,12 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small text-muted">이메일 (ID, 변경 불가)</label>
-                            <input type="text" class="form-control" value="{{ $user->email }}" readonly disabled>
+                            <label class="form-label small text-muted">아이디 (변경 불가)</label>
+                            <input type="text" class="form-control" value="{{ $user->login_id }}" readonly disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">이메일 (선택)</label>
+                            <input type="email" class="form-control" value="{{ $user->email }}" readonly disabled>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small text-muted">이름</label>

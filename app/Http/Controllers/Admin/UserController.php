@@ -29,6 +29,7 @@ class UserController extends Controller
         if ($q !== '') {
             $query->where(function ($w) use ($q) {
                 $w->where('name', 'like', "%{$q}%")
+                  ->orWhere('login_id', 'like', "%{$q}%")
                   ->orWhere('email', 'like', "%{$q}%")
                   ->orWhere('phone', 'like', "%{$q}%");
             });
@@ -58,7 +59,8 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'email'         => ['required', 'email', 'max:150', 'unique:users,email'],
+            'login_id'      => ['required', 'string', 'min:6', 'max:50', 'regex:/^[a-zA-Z0-9]+$/', 'unique:users,login_id'],
+            'email'         => ['nullable', 'email', 'max:150'],
             'name'          => ['required', 'string', 'max:100'],
             'phone'         => ['required', 'string', 'max:20'],
             'password'      => ['required', Password::min(8)->letters()->numbers(), 'max:50'],
@@ -68,13 +70,17 @@ class UserController extends Controller
             'address'       => ['nullable', 'string', 'max:255'],
             'address_detail'=> ['nullable', 'string', 'max:255'],
         ], [
+            'login_id.min'     => '아이디는 6자 이상이어야 합니다.',
+            'login_id.regex'   => '아이디는 영문과 숫자만 사용 가능합니다.',
+            'login_id.unique'  => '이미 사용중인 아이디입니다.',
             'password.min'     => '비밀번호는 최소 8자 이상이어야 합니다.',
             'password.letters' => '비밀번호에 영문자가 1자 이상 포함되어야 합니다.',
             'password.numbers' => '비밀번호에 숫자가 1자 이상 포함되어야 합니다.',
         ]);
 
         $user = new User();
-        $user->email = $data['email'];
+        $user->login_id = $data['login_id'];
+        $user->email = $data['email'] ?? null;
         $user->password = $data['password']; // model casts to hashed
         $user->password_change_required = true; // 관리자 생성 계정은 첫 로그인 시 비번 변경 강제
         $user->name = $data['name'];
@@ -89,7 +95,7 @@ class UserController extends Controller
         $user->approved_at = now();
         $user->save();
 
-        AuditLog::log('users', $user->id, 'create', null, $user->only(['email','name','phone','role_code','admin_level','status_code']));
+        AuditLog::log('users', $user->id, 'create', null, $user->only(['login_id','email','name','phone','role_code','admin_level','status_code']));
 
         return redirect()->route('admin.users.show', $user)->with('success', '사용자가 등록되었습니다.');
     }
@@ -224,7 +230,7 @@ class UserController extends Controller
             ['type' => 'user', 'id' => $user->id, 'phone' => $user->phone, 'email' => $user->email],
         ]);
 
-        return back()->with('success', "{$user->name}({$user->email}) 승인 완료");
+        return back()->with('success', "{$user->name}({$user->login_id}) 승인 완료");
     }
 
     public function reject(User $user, NotificationService $notify)
@@ -245,7 +251,7 @@ class UserController extends Controller
             ['type' => 'user', 'id' => $user->id, 'phone' => $user->phone, 'email' => $user->email],
         ]);
 
-        return back()->with('success', "{$user->name}({$user->email}) 거절 처리됨");
+        return back()->with('success', "{$user->name}({$user->login_id}) 거절 처리됨");
     }
 
     public function suspend(User $user)
@@ -257,7 +263,7 @@ class UserController extends Controller
         $user->status_code = 'suspended';
         $user->save();
         AuditLog::log('users', $user->id, 'suspend', $before, ['status_code' => 'suspended']);
-        return back()->with('success', "{$user->name}({$user->email}) 일시정지");
+        return back()->with('success', "{$user->name}({$user->login_id}) 일시정지");
     }
 
     public function activate(User $user)
@@ -266,7 +272,7 @@ class UserController extends Controller
         $user->status_code = 'active';
         $user->save();
         AuditLog::log('users', $user->id, 'activate', $before, ['status_code' => 'active']);
-        return back()->with('success', "{$user->name}({$user->email}) 정상화");
+        return back()->with('success', "{$user->name}({$user->login_id}) 정상화");
     }
 
     public function resetPassword(User $user)

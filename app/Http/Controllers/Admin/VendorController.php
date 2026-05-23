@@ -86,7 +86,7 @@ class VendorController extends Controller
         $linkedUserIds = $staffs->pluck('user_id');
         $candidateStaffs = User::where('role_code', 'academy')
             ->whereNotIn('id', $linkedUserIds)
-            ->orderBy('name')->get(['id','name','email','phone']);
+            ->orderBy('name')->get(['id','name','login_id','email','phone']);
 
         // 영업자 매핑 + 할인율
         $agentLinks = DB::table('agent_vendor_discounts as avd')
@@ -100,7 +100,7 @@ class VendorController extends Controller
         $candidateAgents = User::where('role_code', 'agent')
             ->where('status_code', 'active')
             ->whereNotIn('id', $linkedAgentIds)
-            ->orderBy('name')->get(['id','name','email']);
+            ->orderBy('name')->get(['id','name','login_id','email']);
 
         // 최근 주문 10건
         $recentOrders = DB::table('orders')

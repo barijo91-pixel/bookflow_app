@@ -32,7 +32,7 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label class="form-label small text-muted mb-1">검색 (이름/이메일/연락처)</label>
+                <label class="form-label small text-muted mb-1">검색 (이름/아이디/이메일/연락처)</label>
                 <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm">
             </div>
             <div class="col-md-2 d-grid">
@@ -51,7 +51,7 @@
                 <tr>
                     <th style="width:60px;">#</th>
                     <th>이름</th>
-                    <th>이메일</th>
+                    <th>아이디</th>
                     <th>연락처</th>
                     <th>역할</th>
                     <th>상태</th>
@@ -75,7 +75,7 @@
                             @if($u->isSuperAdmin())<span class="badge bg-danger ms-1">SUPER</span>@endif
                             @if($isSelf)<span class="badge bg-primary ms-1">나</span>@endif
                         </td>
-                        <td class="text-muted">{{ $u->email }}</td>
+                        <td class="text-muted small"><code>{{ $u->login_id }}</code></td>
                         <td class="text-muted small">{{ $u->phone }}</td>
                         <td><span class="badge bg-light text-dark">{{ $u->role_code }}</span></td>
                         <td>

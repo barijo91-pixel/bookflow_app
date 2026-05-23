@@ -21,33 +21,33 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
+            'login_id' => ['required', 'string', 'max:50'],
             'password' => ['required', 'string'],
         ]);
 
         $remember = (bool) $request->boolean('remember');
 
         // === Rate Limit: 5회 실패 → 60초 잠금 ===
-        $rlKey = 'admin-login:'.Str::lower($data['email']).'|'.$request->ip();
+        $rlKey = 'admin-login:'.Str::lower($data['login_id']).'|'.$request->ip();
         if (RateLimiter::tooManyAttempts($rlKey, 5)) {
             $seconds = RateLimiter::availableIn($rlKey);
-            return back()->withInput($request->only('email'))->withErrors([
-                'email' => "로그인 시도가 너무 많습니다. {$seconds}초 후 다시 시도해주세요.",
+            return back()->withInput($request->only('login_id'))->withErrors([
+                'login_id' => "로그인 시도가 너무 많습니다. {$seconds}초 후 다시 시도해주세요.",
             ]);
         }
 
         if (! Auth::attempt($data, $remember)) {
             RateLimiter::hit($rlKey, 60);
-            return back()->withInput($request->only('email'))->withErrors([
-                'email' => '이메일 또는 비밀번호가 올바르지 않습니다.',
+            return back()->withInput($request->only('login_id'))->withErrors([
+                'login_id' => '아이디 또는 비밀번호가 올바르지 않습니다.',
             ]);
         }
 
         $user = Auth::user();
         if ($user->role_code !== 'admin' || $user->status_code !== 'active') {
             Auth::logout();
-            return back()->withInput($request->only('email'))->withErrors([
-                'email' => '관리자 권한이 없거나 비활성 계정입니다.',
+            return back()->withInput($request->only('login_id'))->withErrors([
+                'login_id' => '관리자 권한이 없거나 비활성 계정입니다.',
             ]);
         }
 

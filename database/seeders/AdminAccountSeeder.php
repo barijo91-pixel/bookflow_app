@@ -10,14 +10,15 @@ class AdminAccountSeeder extends Seeder
 {
     public function run(): void
     {
-        if (DB::table('users')->where('email', 'admin@bookflow.local')->exists()) {
-            $this->command->info('admin@bookflow.local 이미 존재 — 건너뜀.');
+        if (DB::table('users')->where('login_id', 'admin01')->exists()) {
+            $this->command->info('admin01 이미 존재 — 건너뜀.');
             return;
         }
 
         DB::table('users')->insert([
+            'login_id'     => 'admin01',
             'email'        => 'admin@bookflow.local',
-            'password'     => Hash::make('1234'),
+            'password'     => Hash::make('admin1234'),
             'password_change_required' => true,
             'name'         => '시스템관리자',
             'phone'        => '01000000000',
@@ -31,6 +32,6 @@ class AdminAccountSeeder extends Seeder
             'updated_at'   => now(),
         ]);
 
-        $this->command->warn('[보안] admin@bookflow.local / 1234 — 첫 로그인 시 비밀번호 변경 강제됨');
+        $this->command->warn('[보안] 관리자 아이디: admin01 / 임시 비번: admin1234 — 첫 로그인 시 비번 변경 강제됨');
     }
 }

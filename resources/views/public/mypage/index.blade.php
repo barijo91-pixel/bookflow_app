@@ -13,7 +13,7 @@
             'admin'       => '관리자',
             default       => $user->role_code,
         } }}</span>
-        {{ $user->email }} ·
+        {{ $user->login_id }} ·
         @switch($user->status_code)
             @case('active')    <span class="text-success">정상</span> @break
             @case('pending')   <span class="text-warning">승인 대기</span> @break
@@ -32,14 +32,19 @@
             </div>
             <div class="card-body">
                 <dl class="row mb-0 small">
+                    <dt class="col-4 text-muted">아이디</dt>
+                    <dd class="col-8">{{ $user->login_id }}</dd>
+
                     <dt class="col-4 text-muted">이름</dt>
                     <dd class="col-8">{{ $user->name }}</dd>
 
-                    <dt class="col-4 text-muted">이메일</dt>
-                    <dd class="col-8">{{ $user->email }}</dd>
-
                     <dt class="col-4 text-muted">휴대폰</dt>
                     <dd class="col-8">{{ $user->phone }}</dd>
+
+                    @if($user->email)
+                        <dt class="col-4 text-muted">이메일</dt>
+                        <dd class="col-8">{{ $user->email }}</dd>
+                    @endif
 
                     @if($region_name ?? false)
                         <dt class="col-4 text-muted">지역</dt>

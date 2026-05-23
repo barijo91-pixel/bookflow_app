@@ -120,6 +120,7 @@ class MyPageController extends Controller
         $data = $request->validate([
             'name'  => ['required', 'string', 'max:100'],
             'phone' => ['required', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:150'],
         ]);
         $user->update($data);
         return back()->with('success', '정보가 저장되었습니다.');

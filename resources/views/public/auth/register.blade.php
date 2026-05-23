@@ -60,8 +60,16 @@
                     <input type="tel" name="phone" value="{{ old('phone') }}" class="form-control" placeholder="01012345678" required>
                 </div>
                 <div class="col-12">
-                    <label class="form-label small text-muted">이메일 (로그인 ID) *</label>
-                    <input type="email" name="email" value="{{ old('email') }}" class="form-control" required>
+                    <label class="form-label small text-muted">아이디 *</label>
+                    <input type="text" name="login_id" value="{{ old('login_id') }}"
+                           class="form-control" required minlength="6" maxlength="50"
+                           pattern="[a-zA-Z0-9]+"
+                           autocomplete="username">
+                    <div class="form-text small">6자 이상 50자 이하, 영문 + 숫자만 가능</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small text-muted">이메일 (선택, 알림 수신용)</label>
+                    <input type="email" name="email" value="{{ old('email') }}" class="form-control" maxlength="150">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small text-muted">비밀번호 *</label>

@@ -105,8 +105,9 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'email'    => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:4', 'max:50'],
+            'login_id' => ['required', 'string', 'min:6', 'max:50', 'regex:/^[a-zA-Z0-9]+$/', 'unique:users,login_id'],
+            'email'    => ['nullable', 'email', 'max:150'],
+            'password' => ['required', 'string', 'min:8', 'max:50', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
             'name'     => ['required', 'string', 'max:100'],
             'phone'    => ['required', 'string'],
             'role_code'=> ['required', Rule::in(['distributor','agent','academy'])],
@@ -129,7 +130,8 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'email'    => $data['email'],
+            'login_id' => $data['login_id'],
+            'email'    => $data['email'] ?? null,
             'password' => $data['password'],
             'name'     => $data['name'],
             'phone'    => $phone,
@@ -165,14 +167,14 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $data = $request->validate([
-            'email'    => ['required', 'email'],
+            'login_id' => ['required', 'string', 'max:50'],
             'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $user = User::where('email', $data['email'])->first();
+        $user = User::where('login_id', $data['login_id'])->first();
         if (! $user || ! Hash::check($data['password'], $user->password)) {
-            return response()->json(['ok' => false, 'error' => '이메일 또는 비밀번호가 올바르지 않습니다.'], 401);
+            return response()->json(['ok' => false, 'error' => '아이디 또는 비밀번호가 올바르지 않습니다.'], 401);
         }
         if ($user->status_code !== 'active') {
             $statusMsg = match($user->status_code) {
@@ -192,6 +194,7 @@ class AuthController extends Controller
             'token' => $token,
             'user' => [
                 'id'        => $user->id,
+                'login_id'  => $user->login_id,
                 'email'     => $user->email,
                 'name'      => $user->name,
                 'phone'     => $user->phone,
@@ -211,7 +214,7 @@ class AuthController extends Controller
         $user = $request->user();
         return response()->json([
             'ok' => true,
-            'user' => $user->only(['id','email','name','phone','role_code','status_code']),
+            'user' => $user->only(['id','login_id','email','name','phone','role_code','status_code']),
         ]);
     }
 }

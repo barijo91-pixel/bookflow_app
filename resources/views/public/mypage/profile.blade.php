@@ -20,8 +20,8 @@
         @csrf @method('PUT')
         <div class="card-body">
             <div class="mb-3">
-                <label class="form-label small text-muted">이메일 (변경 불가)</label>
-                <input type="text" class="form-control" value="{{ $user->email }}" disabled>
+                <label class="form-label small text-muted">아이디 (변경 불가)</label>
+                <input type="text" class="form-control" value="{{ $user->login_id }}" disabled>
             </div>
             <div class="mb-3">
                 <label class="form-label small text-muted">이름</label>
@@ -30,6 +30,10 @@
             <div class="mb-3">
                 <label class="form-label small text-muted">휴대폰</label>
                 <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small text-muted">이메일 (선택, 알림 수신용)</label>
+                <input type="email" name="email" value="{{ old('email', $user->email) }}" class="form-control" maxlength="150">
             </div>
         </div>
         <div class="card-footer bg-white text-end">

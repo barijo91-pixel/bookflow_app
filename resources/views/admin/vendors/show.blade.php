@@ -182,7 +182,7 @@
                             <select name="user_id" class="form-select form-select-sm" required>
                                 <option value="">선택</option>
                                 @foreach($candidateStaffs as $u)
-                                    <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
+                                    <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->login_id }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -267,7 +267,7 @@
                             <select name="agent_user_id" class="form-select form-select-sm" required>
                                 <option value="">선택</option>
                                 @foreach($candidateAgents as $u)
-                                    <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
+                                    <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->login_id }})</option>
                                 @endforeach
                             </select>
                         </div>

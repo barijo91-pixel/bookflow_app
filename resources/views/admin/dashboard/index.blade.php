@@ -157,7 +157,7 @@
                             <tr>
                                 <td class="small">
                                     <a href="{{ route('admin.users.show', $u->id) }}" class="text-decoration-none">{{ $u->name }}</a>
-                                    <div class="text-muted">{{ $u->email }}</div>
+                                    <div class="text-muted"><code>{{ $u->login_id }}</code></div>
                                 </td>
                                 <td><span class="badge bg-light text-dark">{{ $u->role_code }}</span></td>
                                 <td>

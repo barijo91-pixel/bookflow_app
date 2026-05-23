@@ -24,9 +24,10 @@
         <form method="POST" action="{{ route('admin.login.attempt') }}" autocomplete="on">
             @csrf
             <div class="mb-3">
-                <label class="form-label small text-muted">이메일</label>
-                <input type="email" name="email" value="{{ old('email') }}"
-                       class="form-control form-control-lg" required autofocus>
+                <label class="form-label small text-muted">아이디</label>
+                <input type="text" name="login_id" value="{{ old('login_id') }}"
+                       class="form-control form-control-lg" required autofocus
+                       autocomplete="username">
             </div>
             <div class="mb-3">
                 <label class="form-label small text-muted">비밀번호</label>
