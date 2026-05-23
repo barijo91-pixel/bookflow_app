@@ -26,7 +26,7 @@ class DashboardController extends Controller
         ];
 
         $recentUsers = DB::table('users')
-            ->select('id', 'name', 'email', 'role_code', 'status_code', 'created_at')
+            ->select('id', 'name', 'login_id', 'email', 'role_code', 'status_code', 'created_at')
             ->whereNull('deleted_at')
             ->orderByDesc('id')
             ->limit(5)
