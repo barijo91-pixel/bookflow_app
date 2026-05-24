@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
     <title>{{ setting('meta_title', 'BookSys — 교재 도매 유통 전문 플랫폼') }}</title>
     <meta name="description" content="{{ setting('meta_description', '총판·영업자·학원·학부모를 연결하는 교재 도매 유통 올인원 솔루션. 전화·카카오톡으로 비효율적이던 영어 교재 유통을 디지털화합니다.') }}">
     <meta name="keywords" content="{{ setting('meta_keywords', '교재,도매,유통,학원,영어교재,총판,영업자') }}">
