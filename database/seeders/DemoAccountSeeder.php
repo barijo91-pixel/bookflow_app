@@ -19,7 +19,7 @@ class DemoAccountSeeder extends Seeder
 
         // 관리자
         $adminId = DB::table('users')->insertGetId([
-            'login_id' => 'admin01',
+            'login_id' => 'sysadmin00',
             'email' => 'admin@bookflow.local',
             'password' => $pw,
             'name' => '시스템관리자',

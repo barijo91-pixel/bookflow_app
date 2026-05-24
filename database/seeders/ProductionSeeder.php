@@ -25,10 +25,10 @@ class ProductionSeeder extends Seeder
             NotificationTemplateSeeder::class,
             // 5. 사이트 설정 (회사/연동/SEO/정책/앱)
             SiteSettingSeeder::class,
-            // 6. 관리자 계정 1개 (admin01 / admin1234 — 첫 로그인 시 비번 변경 강제)
+            // 6. 관리자 계정 1개 (sysadmin00 / admin1234 — 첫 로그인 시 비번 변경 강제)
             AdminAccountSeeder::class,
         ]);
 
-        $this->command->warn('[운영 시드 완료] 관리자 아이디: admin01 / 임시 비번: admin1234 → 첫 로그인 시 비번 변경 강제됨.');
+        $this->command->warn('[운영 시드 완료] 관리자 아이디: sysadmin00 / 임시 비번: admin1234 → 첫 로그인 시 비번 변경 강제됨.');
     }
 }
