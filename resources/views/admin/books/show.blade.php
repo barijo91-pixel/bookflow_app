@@ -132,6 +132,18 @@
                             </div>
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label small text-muted">학기 (복수)</label>
+                            <div>
+                                @foreach($semesterOptions as $sem)
+                                    <label class="me-2 small">
+                                        <input type="checkbox" name="semester_codes[]" value="{{ $sem->code }}"
+                                               @checked(in_array($sem->code, $semesterCodes ?? [], true))>
+                                        {{ $sem->name }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label small text-muted">난이도 (복수)</label>
                             <div>
                                 @foreach($levelOptions as $l)

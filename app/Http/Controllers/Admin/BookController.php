@@ -69,9 +69,10 @@ class BookController extends Controller
 
         // 학년 등 N:N
         $targets = DB::table('book_targets')->where('book_id', $book->id)->get();
-        $extra['gradeCodes']  = $targets->where('target_type', 'grade')->pluck('code')->toArray();
-        $extra['levelCodes']  = $targets->where('target_type', 'level')->pluck('code')->toArray();
-        $extra['schoolTargets'] = $targets->where('target_type', 'school')->pluck('code')->toArray();
+        $extra['gradeCodes']     = $targets->where('target_type', 'grade')->pluck('code')->toArray();
+        $extra['levelCodes']     = $targets->where('target_type', 'level')->pluck('code')->toArray();
+        $extra['schoolTargets']  = $targets->where('target_type', 'school')->pluck('code')->toArray();
+        $extra['semesterCodes']  = $targets->where('target_type', 'semester')->pluck('code')->toArray();
 
         $extra['stocks'] = DB::table('book_stocks as s')
             ->join('users as u', 'u.id', '=', 's.distributor_user_id')
@@ -160,6 +161,7 @@ class BookController extends Controller
             'schoolOptions'    => DB::table('codes')->where('group_code', 'school')->orderBy('sort_order')->get(),
             'gradeOptions'     => DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get(),
             'levelOptions'     => DB::table('codes')->where('group_code', 'level')->orderBy('sort_order')->get(),
+            'semesterOptions'  => DB::table('codes')->where('group_code', 'semester')->orderBy('sort_order')->get(),
             'publisherOptions' => Publisher::orderBy('sort_order')->get(['id','name']),
         ];
     }
@@ -189,9 +191,10 @@ class BookController extends Controller
 
     private function syncTargets(Book $book, Request $request): void
     {
-        $grades = (array) $request->input('grade_codes', []);
-        $levels = (array) $request->input('level_codes', []);
-        $schools = (array) $request->input('school_targets', []);
+        $grades    = (array) $request->input('grade_codes', []);
+        $levels    = (array) $request->input('level_codes', []);
+        $schools   = (array) $request->input('school_targets', []);
+        $semesters = (array) $request->input('semester_codes', []);
 
         DB::table('book_targets')->where('book_id', $book->id)->delete();
         $now = now();
@@ -204,6 +207,9 @@ class BookController extends Controller
         }
         foreach ($schools as $s) {
             $rows[] = ['book_id' => $book->id, 'target_type' => 'school', 'code' => $s, 'created_at' => $now, 'updated_at' => $now];
+        }
+        foreach ($semesters as $sem) {
+            $rows[] = ['book_id' => $book->id, 'target_type' => 'semester', 'code' => $sem, 'created_at' => $now, 'updated_at' => $now];
         }
         if ($rows) DB::table('book_targets')->insert($rows);
     }

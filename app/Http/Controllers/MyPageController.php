@@ -545,8 +545,23 @@ class MyPageController extends Controller
         }
         if ($school)   $booksQuery->where('books.school_code', $school);
         if ($subject)  $booksQuery->where('books.subject_code', $subject);
-        if ($grade)    $booksQuery->where('books.grade_code', $grade);
-        if ($semester) $booksQuery->where('books.semester_code', $semester);
+        // 학년/학기는 book_targets (M:N) 조회
+        if ($grade) {
+            $booksQuery->whereExists(function ($q) use ($grade) {
+                $q->select(DB::raw(1))->from('book_targets')
+                  ->whereColumn('book_targets.book_id', 'books.id')
+                  ->where('target_type', 'grade')
+                  ->where('code', $grade);
+            });
+        }
+        if ($semester) {
+            $booksQuery->whereExists(function ($q) use ($semester) {
+                $q->select(DB::raw(1))->from('book_targets')
+                  ->whereColumn('book_targets.book_id', 'books.id')
+                  ->where('target_type', 'semester')
+                  ->where('code', $semester);
+            });
+        }
 
         $books = $booksQuery->orderBy('books.title')->limit(60)->get();
 
