@@ -5,9 +5,14 @@
 @php $me = auth()->user(); @endphp
 <div class="page-header">
     <h1 class="h4 mb-0">사용자 목록 <small class="text-muted fs-6">전체 {{ number_format($users->total()) }}명</small></h1>
-    <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-primary">
-        <i class="bi bi-person-plus"></i> 사용자 추가
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-person-plus"></i> 사용자 추가
+        </a>
+        <a href="{{ route('admin.users.import.show') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-file-earmark-spreadsheet"></i> 엑셀 대량 등록
+        </a>
+    </div>
 </div>
 
 <form method="GET" class="card border-0 shadow-sm mb-3">
@@ -76,7 +81,7 @@
                             @if($isSelf)<span class="badge bg-primary ms-1">나</span>@endif
                         </td>
                         <td class="text-muted small"><code>{{ $u->login_id }}</code></td>
-                        <td class="text-muted small">{{ $u->phone }}</td>
+                        <td class="text-muted small">{{ format_phone($u->phone) }}</td>
                         <td><span class="badge bg-light text-dark">{{ $u->role_code }}</span></td>
                         <td>
                             @switch($u->status_code)

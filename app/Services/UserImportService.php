@@ -231,8 +231,8 @@ class UserImportService
         return ['success' => $success, 'failed' => $failed, 'errors' => $errors, 'created_users' => $createdUsers];
     }
 
-    /** 빈 템플릿 엑셀 생성 */
-    public function generateTemplate(): string
+    /** 빈 템플릿 엑셀 생성 (Spreadsheet 객체 반환 → 컨트롤러에서 stream) */
+    public function buildTemplate(): \PhpOffice\PhpSpreadsheet\Spreadsheet
     {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -286,9 +286,14 @@ class UserImportService
 
         $spreadsheet->setActiveSheetIndex(0);
 
-        $tmp = storage_path('app/private/user_template_'.time().'.xlsx');
-        if (! is_dir(dirname($tmp))) mkdir(dirname($tmp), 0755, true);
-        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        return $spreadsheet;
+    }
+
+    /** 후방 호환: 기존 호출 시 임시 파일 경로 반환 */
+    public function generateTemplate(): string
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'user_tpl_').'.xlsx';
+        $writer = IOFactory::createWriter($this->buildTemplate(), 'Xlsx');
         $writer->save($tmp);
         return $tmp;
     }

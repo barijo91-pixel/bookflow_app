@@ -24,11 +24,19 @@ class UserImportController extends Controller
         return view('admin.users.import', compact('recentJobs'));
     }
 
-    /** 템플릿 다운로드 */
+    /** 템플릿 다운로드 — 파일 시스템 안 거치고 바로 stream (운영 권한 무관) */
     public function template()
     {
-        $path = $this->importer->generateTemplate();
-        return response()->download($path, 'user_import_template.xlsx')->deleteFileAfterSend();
+        $spreadsheet = $this->importer->buildTemplate();
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, '사용자_등록_템플릿.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     /** 파일 업로드 → 미리보기 */

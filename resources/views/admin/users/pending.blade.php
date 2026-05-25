@@ -27,7 +27,7 @@
                         <td>{{ $u->id }}</td>
                         <td>{{ $u->name }}</td>
                         <td class="text-muted small"><code>{{ $u->login_id }}</code></td>
-                        <td class="text-muted small">{{ $u->phone }}</td>
+                        <td class="text-muted small">{{ format_phone($u->phone) }}</td>
                         <td><span class="badge bg-light text-dark">{{ $u->role_code }}</span></td>
                         <td class="text-muted small">{{ optional($u->created_at)->format('Y-m-d H:i') }}</td>
                         <td class="text-end">
