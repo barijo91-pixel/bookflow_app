@@ -194,11 +194,30 @@ class MyPageController extends Controller
     /** 담당 학원 (영업자) */
     public function vendorsIndex()
     {
-        return view('public.mypage.placeholder', [
-            'user'  => Auth::user(),
-            'title' => '담당 학원',
-            'icon'  => 'bi-building',
-            'description' => '본인이 담당하는 학원 목록. 곧 제공됩니다.',
+        $user = Auth::user();
+        if ($user->role_code !== 'agent') {
+            abort(403, '영업자만 접근 가능합니다.');
+        }
+
+        $vendors = DB::table('agent_vendor_discounts as avd')
+            ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
+            ->leftJoin('regions as r', 'r.id', '=', 'v.region_id')
+            ->leftJoin('regions as p', 'p.id', '=', 'r.parent_id')
+            ->where('avd.agent_user_id', $user->id)
+            ->select(
+                'v.id', 'v.name', 'v.owner_name', 'v.business_no',
+                'v.mobile', 'v.tel', 'v.status_code',
+                'avd.discount_rate', 'avd.is_active as discount_active',
+                'avd.started_at', 'avd.ended_at',
+                'r.name as sigungu_name', 'p.name as sido_name'
+            )
+            ->orderByDesc('avd.is_active')
+            ->orderBy('v.name')
+            ->get();
+
+        return view('public.mypage.vendors', [
+            'user' => $user,
+            'vendors' => $vendors,
         ]);
     }
 
