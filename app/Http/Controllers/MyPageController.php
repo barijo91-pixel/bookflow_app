@@ -523,21 +523,41 @@ class MyPageController extends Controller
                 ->pluck('discount_rate', 'book_id');
         }
 
-        // 4. 도서 검색 + 목록
-        $q = trim((string) $request->query('q'));
+        // 4. 도서 검색 + 필터 + 목록
+        $q        = trim((string) $request->query('q'));
+        $school   = $request->query('school');     // 분류 (elementary/middle/high/general)
+        $subject  = $request->query('subject');    // 과목 (korean/english/math/science/social)
+        $grade    = $request->query('grade');      // 학년 (pre_elem/elem_1~6/mid_1~3/high_1~3)
+        $semester = $request->query('semester');   // 학기 (sem_1/sem_2)
+
         $booksQuery = DB::table('books')
-            ->whereNull('deleted_at')
-            ->where('status_code', 'selling')
+            ->whereNull('books.deleted_at')
+            ->where('books.status_code', 'selling')
             ->leftJoin('publishers as p', 'p.id', '=', 'books.publisher_id')
             ->select('books.*', 'p.name as publisher_name');
         if ($q !== '') {
             $booksQuery->where(function ($w) use ($q) {
                 $w->where('books.title', 'like', "%{$q}%")
                   ->orWhere('books.isbn', 'like', "%{$q}%")
-                  ->orWhere('books.series_name', 'like', "%{$q}%");
+                  ->orWhere('books.series_name', 'like', "%{$q}%")
+                  ->orWhere('books.author', 'like', "%{$q}%");
             });
         }
-        $books = $booksQuery->orderBy('books.title')->limit(30)->get();
+        if ($school)   $booksQuery->where('books.school_code', $school);
+        if ($subject)  $booksQuery->where('books.subject_code', $subject);
+        if ($grade)    $booksQuery->where('books.grade_code', $grade);
+        if ($semester) $booksQuery->where('books.semester_code', $semester);
+
+        $books = $booksQuery->orderBy('books.title')->limit(60)->get();
+
+        // 필터 옵션 (codes 테이블에서)
+        $filterOptions = [
+            'school'   => DB::table('codes')->where('group_code', 'school')->orderBy('sort_order')->get(['code','name']),
+            'subject'  => DB::table('codes')->where('group_code', 'subject')->orderBy('sort_order')->get(['code','name']),
+            'grade'    => DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get(['code','name']),
+            'semester' => DB::table('codes')->where('group_code', 'semester')->orderBy('sort_order')->get(['code','name']),
+        ];
+        $activeFilters = compact('school','subject','grade','semester','q');
 
         // 5. 장바구니 (세션, vendor별 분리)
         $cartKey = 'cart.'.($vendorId ?? '0').'.'.($selectedAgent->id ?? '0');
@@ -576,6 +596,8 @@ class MyPageController extends Controller
             'cartKey'        => $cartKey,
             'cartLines'      => $cartLines,
             'subtotal'       => $subtotal,
+            'filterOptions'  => $filterOptions,
+            'activeFilters'  => $activeFilters,
         ]);
     }
 

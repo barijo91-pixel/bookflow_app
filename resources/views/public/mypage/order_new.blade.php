@@ -28,11 +28,33 @@
     @php return; @endphp
 @endif
 
-{{-- 영업자 선택 --}}
+@php
+    // 현재 쿼리에서 특정 필터만 바꿔 URL 생성 (다른 필터는 유지)
+    $buildUrl = function (array $override) use ($activeFilters, $selectedAgent) {
+        $base = array_filter([
+            'q'        => $activeFilters['q'] ?: null,
+            'school'   => $activeFilters['school'] ?: null,
+            'subject'  => $activeFilters['subject'] ?: null,
+            'grade'    => $activeFilters['grade'] ?: null,
+            'semester' => $activeFilters['semester'] ?: null,
+            'agent_id' => $selectedAgent->id ?? null,
+        ], fn ($v) => $v !== null && $v !== '');
+        foreach ($override as $k => $v) {
+            if ($v === null || $v === '') unset($base[$k]);
+            else $base[$k] = $v;
+        }
+        return route('my.order_new', $base);
+    };
+    // 필터 활성 체크
+    $isActive = fn ($key, $value) => ($activeFilters[$key] ?? null) === $value;
+@endphp
+
+{{-- 영업자 선택 + 검색 --}}
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('my.order_new') }}" class="row g-2 align-items-end">
-            <div class="col-md-5">
+            {{-- 영업자 --}}
+            <div class="col-md-4">
                 <label class="form-label small text-muted mb-1">영업자 (담당)</label>
                 <select name="agent_id" class="form-select form-select-sm" onchange="this.form.submit()">
                     @foreach($agents as $a)
@@ -42,14 +64,65 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-5">
-                <label class="form-label small text-muted mb-1">도서 검색 (제목 / ISBN / 시리즈)</label>
-                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="예: Bricks Phonics, 9788...">
+            {{-- 검색 --}}
+            <div class="col-md-6">
+                <label class="form-label small text-muted mb-1">도서 검색</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ $q }}" class="form-control"
+                           placeholder="제목 · ISBN · 시리즈 · 저자로 검색">
+                </div>
             </div>
             <div class="col-md-2 d-grid">
                 <button class="btn btn-sm btn-navy"><i class="bi bi-search"></i> 검색</button>
             </div>
+            {{-- 현재 필터 hidden (필터 유지) --}}
+            @if($activeFilters['school'])   <input type="hidden" name="school"   value="{{ $activeFilters['school'] }}"> @endif
+            @if($activeFilters['subject'])  <input type="hidden" name="subject"  value="{{ $activeFilters['subject'] }}"> @endif
+            @if($activeFilters['grade'])    <input type="hidden" name="grade"    value="{{ $activeFilters['grade'] }}"> @endif
+            @if($activeFilters['semester']) <input type="hidden" name="semester" value="{{ $activeFilters['semester'] }}"> @endif
         </form>
+    </div>
+</div>
+
+{{-- 필터 카드 --}}
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-3">
+        @php
+            $rows = [
+                'school'   => ['분류', $filterOptions['school']],
+                'subject'  => ['과목', $filterOptions['subject']],
+                'grade'    => ['학년', $filterOptions['grade']],
+                'semester' => ['학기', $filterOptions['semester']],
+            ];
+        @endphp
+        @foreach($rows as $key => [$label, $options])
+            <div class="d-flex flex-wrap align-items-start mb-2 gap-2">
+                <div class="text-muted small fw-bold" style="width:50px;padding-top:.35rem">{{ $label }}</div>
+                <div class="d-flex flex-wrap gap-2 flex-grow-1">
+                    <a href="{{ $buildUrl([$key => null]) }}"
+                       class="btn btn-sm rounded-pill {{ ! ($activeFilters[$key] ?? null) ? 'btn-navy' : 'btn-outline-secondary' }}">
+                        전체
+                    </a>
+                    @foreach($options as $o)
+                        <a href="{{ $buildUrl([$key => $o->code]) }}"
+                           class="btn btn-sm rounded-pill {{ $isActive($key, $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">
+                            {{ $o->name }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+
+        {{-- 초기화 / 적용 --}}
+        @if(array_filter($activeFilters))
+            <div class="text-end mt-2">
+                <a href="{{ route('my.order_new', $selectedAgent ? ['agent_id' => $selectedAgent->id] : []) }}"
+                   class="btn btn-sm btn-outline-secondary rounded-pill">
+                    <i class="bi bi-arrow-counterclockwise"></i> 초기화
+                </a>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -59,7 +132,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-journals"></i> 도서 목록</strong>
-                <span class="small text-muted">{{ $books->count() }}건 표시 (최대 30건)</span>
+                <span class="small text-muted">{{ $books->count() }}건 표시 (최대 60건)</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-sm table-hover align-middle mb-0">
