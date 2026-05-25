@@ -85,37 +85,86 @@
     </div>
 </div>
 
-{{-- 필터 카드 --}}
+{{-- 필터 카드 - Progressive Disclosure --}}
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body py-3">
-        @php
-            $rows = [
-                'school'   => ['분류', $filterOptions['school']],
-                'subject'  => ['과목', $filterOptions['subject']],
-                'grade'    => ['학년', $filterOptions['grade']],
-                'semester' => ['학기', $filterOptions['semester']],
-            ];
-        @endphp
-        @foreach($rows as $key => [$label, $options])
+        {{-- 1단계: 분류 (항상 표시) --}}
+        <div class="d-flex flex-wrap align-items-start mb-2 gap-2">
+            <div class="text-muted small fw-bold" style="width:50px;padding-top:.35rem">분류</div>
+            <div class="d-flex flex-wrap gap-2 flex-grow-1">
+                {{-- 분류 변경 시 학년/학기 초기화 --}}
+                <a href="{{ $buildUrl(['school' => null, 'grade' => null, 'semester' => null]) }}"
+                   class="btn btn-sm rounded-pill {{ ! $activeFilters['school'] ? 'btn-navy' : 'btn-outline-secondary' }}">
+                    전체
+                </a>
+                @foreach($filterOptions['school'] as $o)
+                    <a href="{{ $buildUrl(['school' => $o->code, 'grade' => null, 'semester' => null]) }}"
+                       class="btn btn-sm rounded-pill {{ $isActive('school', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">
+                        {{ $o->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
+        @if($showSubFilters)
+            {{-- 2단계: 과목 --}}
             <div class="d-flex flex-wrap align-items-start mb-2 gap-2">
-                <div class="text-muted small fw-bold" style="width:50px;padding-top:.35rem">{{ $label }}</div>
+                <div class="text-muted small fw-bold" style="width:50px;padding-top:.35rem">과목</div>
                 <div class="d-flex flex-wrap gap-2 flex-grow-1">
-                    <a href="{{ $buildUrl([$key => null]) }}"
-                       class="btn btn-sm rounded-pill {{ ! ($activeFilters[$key] ?? null) ? 'btn-navy' : 'btn-outline-secondary' }}">
+                    <a href="{{ $buildUrl(['subject' => null]) }}"
+                       class="btn btn-sm rounded-pill {{ ! $activeFilters['subject'] ? 'btn-navy' : 'btn-outline-secondary' }}">
                         전체
                     </a>
-                    @foreach($options as $o)
-                        <a href="{{ $buildUrl([$key => $o->code]) }}"
-                           class="btn btn-sm rounded-pill {{ $isActive($key, $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">
+                    @foreach($filterOptions['subject'] as $o)
+                        <a href="{{ $buildUrl(['subject' => $o->code]) }}"
+                           class="btn btn-sm rounded-pill {{ $isActive('subject', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">
                             {{ $o->name }}
                         </a>
                     @endforeach
                 </div>
             </div>
-        @endforeach
 
-        {{-- 초기화 / 적용 --}}
-        @if(array_filter($activeFilters))
+            @if($showGradeRow)
+                {{-- 3단계: 학년 (분류에 종속) --}}
+                <div class="d-flex flex-wrap align-items-start mb-2 gap-2">
+                    <div class="text-muted small fw-bold" style="width:50px;padding-top:.35rem">학년</div>
+                    <div class="d-flex flex-wrap gap-2 flex-grow-1">
+                        <a href="{{ $buildUrl(['grade' => null]) }}"
+                           class="btn btn-sm rounded-pill {{ ! $activeFilters['grade'] ? 'btn-navy' : 'btn-outline-secondary' }}">
+                            전체
+                        </a>
+                        @foreach($filterOptions['grade'] as $o)
+                            <a href="{{ $buildUrl(['grade' => $o->code]) }}"
+                               class="btn btn-sm rounded-pill {{ $isActive('grade', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">
+                                {{ $o->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if($showSemesterRow)
+                {{-- 4단계: 학기 --}}
+                <div class="d-flex flex-wrap align-items-start mb-2 gap-2">
+                    <div class="text-muted small fw-bold" style="width:50px;padding-top:.35rem">학기</div>
+                    <div class="d-flex flex-wrap gap-2 flex-grow-1">
+                        <a href="{{ $buildUrl(['semester' => null]) }}"
+                           class="btn btn-sm rounded-pill {{ ! $activeFilters['semester'] ? 'btn-navy' : 'btn-outline-secondary' }}">
+                            전체
+                        </a>
+                        @foreach($filterOptions['semester'] as $o)
+                            <a href="{{ $buildUrl(['semester' => $o->code]) }}"
+                               class="btn btn-sm rounded-pill {{ $isActive('semester', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">
+                                {{ $o->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        @endif
+
+        {{-- 초기화 (필터 적용된 경우만) --}}
+        @if($activeFilters['school'] || $activeFilters['subject'] || $activeFilters['grade'] || $activeFilters['semester'])
             <div class="text-end mt-2">
                 <a href="{{ route('my.order_new', $selectedAgent ? ['agent_id' => $selectedAgent->id] : []) }}"
                    class="btn btn-sm btn-outline-secondary rounded-pill">

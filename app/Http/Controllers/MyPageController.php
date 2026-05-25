@@ -550,14 +550,34 @@ class MyPageController extends Controller
 
         $books = $booksQuery->orderBy('books.title')->limit(60)->get();
 
-        // 필터 옵션 (codes 테이블에서)
+        // 필터 옵션 (codes 테이블에서, 분류에 따라 학년 동적 필터)
+        $allGrades = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get(['code','name']);
+        $gradePrefix = match($school) {
+            'elementary' => ['pre_elem', 'elem_'],
+            'middle'     => ['mid_'],
+            'high'       => ['high_'],
+            default      => null, // 분류 미선택 or 단행본 → 학년 표시 안 함
+        };
+        $filteredGrades = collect();
+        if ($gradePrefix !== null) {
+            $filteredGrades = $allGrades->filter(function ($g) use ($gradePrefix) {
+                foreach ($gradePrefix as $prefix) {
+                    if (str_starts_with($g->code, $prefix)) return true;
+                }
+                return false;
+            })->values();
+        }
+
         $filterOptions = [
             'school'   => DB::table('codes')->where('group_code', 'school')->orderBy('sort_order')->get(['code','name']),
             'subject'  => DB::table('codes')->where('group_code', 'subject')->orderBy('sort_order')->get(['code','name']),
-            'grade'    => DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get(['code','name']),
+            'grade'    => $filteredGrades,
             'semester' => DB::table('codes')->where('group_code', 'semester')->orderBy('sort_order')->get(['code','name']),
         ];
         $activeFilters = compact('school','subject','grade','semester','q');
+        $showSubFilters = (bool) $school; // 분류 선택 시에만 하위 필터 표시
+        $showGradeRow   = $school && $school !== 'general'; // 단행본은 학년 의미 없음
+        $showSemesterRow= $school && $school !== 'general'; // 단행본은 학기 의미 없음
 
         // 5. 장바구니 (세션, vendor별 분리)
         $cartKey = 'cart.'.($vendorId ?? '0').'.'.($selectedAgent->id ?? '0');
@@ -598,6 +618,9 @@ class MyPageController extends Controller
             'subtotal'       => $subtotal,
             'filterOptions'  => $filterOptions,
             'activeFilters'  => $activeFilters,
+            'showSubFilters' => $showSubFilters,
+            'showGradeRow'   => $showGradeRow,
+            'showSemesterRow'=> $showSemesterRow,
         ]);
     }
 
