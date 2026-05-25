@@ -153,9 +153,14 @@
 </div>
 @push('scripts')
 @if($selectedVendor && $availableBooks->isNotEmpty())
+@php
+    $booksJsArray = $availableBooks->map(function ($b) {
+        return ['id' => $b->id, 'title' => $b->title, 'isbn' => $b->isbn, 'price' => $b->price];
+    })->values()->all();
+@endphp
 <script>
 (function () {
-    const books = @json($availableBooks->map(fn($b) => ['id'=>$b->id,'title'=>$b->title,'isbn'=>$b->isbn,'price'=>$b->price]));
+    const books = {!! json_encode($booksJsArray, JSON_UNESCAPED_UNICODE) !!};
     const input    = document.getElementById('bookSearchInput');
     const hidden   = document.getElementById('bookIdInput');
     const results  = document.getElementById('bookSearchResults');
