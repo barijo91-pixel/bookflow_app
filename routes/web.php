@@ -50,10 +50,13 @@ Route::middleware('auth')->group(function () {
     Route::get('mypage/force-password-change',  [\App\Http\Controllers\MyPageController::class, 'showForcePasswordChange'])->name('mypage.force_password_change');
     Route::put('mypage/force-password-change',  [\App\Http\Controllers\MyPageController::class, 'submitForcePasswordChange'])->name('mypage.force_password_change.submit');
 
-    // 역할별 메뉴 (Phase A: placeholder - 곧 실제 기능 구현 예정)
+    // 역할별 메뉴
     Route::prefix('mypage')->name('my.')->group(function () {
-        // 공통(역할별 분기) - 주문
-        Route::get('orders',     [\App\Http\Controllers\MyPageController::class, 'ordersIndex'])->name('orders.index');
+        // 공통 - 주문 목록/상세/액션
+        Route::get('orders',                       [\App\Http\Controllers\MyPageController::class, 'ordersIndex'])->name('orders.index');
+        Route::get('orders/{id}',                  [\App\Http\Controllers\MyPageController::class, 'showOrder'])->name('orders.show');
+        Route::post('orders/{id}/transition',      [\App\Http\Controllers\MyPageController::class, 'transitionOrder'])->name('orders.transition');
+        Route::post('orders/{id}/ship',            [\App\Http\Controllers\MyPageController::class, 'shipOrder'])->name('orders.ship');
 
         // 총판 전용
         Route::get('stocks',     [\App\Http\Controllers\MyPageController::class, 'stocksIndex'])->name('stocks.index');

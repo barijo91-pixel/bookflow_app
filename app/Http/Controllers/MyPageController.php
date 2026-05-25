@@ -150,6 +150,215 @@ class MyPageController extends Controller
         return back()->with('success', '비밀번호가 변경되었습니다.');
     }
 
+    // -------------------- 주문 상세 + 상태 전환 (Phase B-3) --------------------
+    /** 권한: 본인이 관련된 주문인지 검증 */
+    private function authorizeOrder($order): \App\Models\User
+    {
+        $user = Auth::user();
+        $isAgent      = $user->role_code === 'agent' && $order->agent_user_id == $user->id;
+        $isDist       = $user->role_code === 'distributor' && $order->distributor_user_id == $user->id;
+        $isAcademy    = false;
+        if ($user->role_code === 'academy') {
+            $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
+            $isAcademy = $vendorIds->contains($order->vendor_id);
+        }
+        if (! ($isAgent || $isDist || $isAcademy)) {
+            abort(403, '본인 주문이 아닙니다.');
+        }
+        return $user;
+    }
+
+    /** 주문 상세 페이지 (역할별 가능한 액션 표시) */
+    public function showOrder($id)
+    {
+        $order = \App\Models\Order::findOrFail($id);
+        $user = $this->authorizeOrder($order);
+
+        $vendor = DB::table('vendors')->find($order->vendor_id);
+        $agent  = $order->agent_user_id ? DB::table('users')->find($order->agent_user_id) : null;
+        $dist   = $order->distributor_user_id ? DB::table('users')->find($order->distributor_user_id) : null;
+
+        $items = DB::table('order_items as oi')
+            ->leftJoin('books as b', 'b.id', '=', 'oi.book_id')
+            ->where('oi.order_id', $order->id)
+            ->select('oi.*', 'b.cover_path', 'b.isbn as book_isbn', 'b.title as book_title')
+            ->get();
+
+        $statusLogs = DB::table('order_status_logs as l')
+            ->leftJoin('users as u', 'u.id', '=', 'l.changed_by')
+            ->where('l.order_id', $order->id)
+            ->orderBy('l.created_at')
+            ->select('l.*', 'u.name as changed_by_name')
+            ->get();
+
+        $shipment = DB::table('order_shipments')->where('order_id', $order->id)->first();
+        $courierOptions = DB::table('codes')->where('group_code', 'courier')->orderBy('sort_order')->get();
+
+        // 역할별 가능한 액션
+        $canConfirm = ($user->role_code === 'agent' && $order->agent_user_id == $user->id && $order->status_code === 'requested');
+        $canAccept  = ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id && $order->status_code === 'confirmed');
+        $canShip    = ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id && $order->status_code === 'accepted');
+        $canCancel  = in_array($order->status_code, ['requested','confirmed','accepted'])
+                      && ($user->role_code === 'agent' && $order->agent_user_id == $user->id
+                       || $user->role_code === 'distributor' && $order->distributor_user_id == $user->id);
+
+        return view('public.mypage.order_show', compact(
+            'user', 'order', 'vendor', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
+            'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel'
+        ));
+    }
+
+    /** 상태 전이 (영업자 confirm, 총판 accept, 취소 등) */
+    public function transitionOrder(Request $request, $id, \App\Services\NotificationService $notify)
+    {
+        $order = \App\Models\Order::findOrFail($id);
+        $user  = $this->authorizeOrder($order);
+
+        $data = $request->validate([
+            'to_status' => ['required', 'in:confirmed,accepted,canceled'],
+            'reason'    => ['nullable', 'string', 'max:500'],
+        ]);
+        $to = $data['to_status'];
+        $from = $order->status_code;
+
+        // 역할별 허용 전이 확인
+        $allowed = false;
+        if ($to === 'confirmed' && $user->role_code === 'agent' && $from === 'requested' && $order->agent_user_id == $user->id) $allowed = true;
+        if ($to === 'accepted'  && $user->role_code === 'distributor' && $from === 'confirmed' && $order->distributor_user_id == $user->id) $allowed = true;
+        if ($to === 'canceled'  && in_array($from, ['requested','confirmed','accepted'])) {
+            if ($user->role_code === 'agent' && $order->agent_user_id == $user->id) $allowed = true;
+            if ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id) $allowed = true;
+        }
+        if (! $allowed) {
+            return back()->with('error', "상태 전이 불가 ({$from} → {$to})");
+        }
+
+        DB::transaction(function () use ($order, $to, $from, $data) {
+            $update = ['status_code' => $to, 'updated_at' => now()];
+            switch ($to) {
+                case 'confirmed': $update['confirmed_at'] = now(); break;
+                case 'accepted':  $update['accepted_at']  = now(); break;
+                case 'canceled':  $update['canceled_at']  = now(); break;
+            }
+            DB::table('orders')->where('id', $order->id)->update($update);
+            DB::table('order_status_logs')->insert([
+                'order_id'   => $order->id,
+                'from_status'=> $from,
+                'to_status'  => $to,
+                'changed_by' => auth()->id(),
+                'reason'     => $data['reason'] ?? null,
+                'created_at' => now(),
+            ]);
+        });
+
+        AuditLog::log('orders', $order->id, $to,
+            ['status_code' => $from],
+            ['status_code' => $to, 'reason' => $data['reason'] ?? null]);
+
+        $this->dispatchOrderNotification($order->fresh(), $to, $notify, $data['reason'] ?? null);
+
+        $msg = match($to) {
+            'confirmed' => '주문을 확정했습니다.',
+            'accepted'  => '주문을 접수했습니다.',
+            'canceled'  => '주문을 취소했습니다.',
+            default     => '상태가 변경되었습니다.',
+        };
+        return back()->with('success', $msg);
+    }
+
+    /** 출고 처리 (총판 전용, 송장 입력) */
+    public function shipOrder(Request $request, $id, \App\Services\NotificationService $notify)
+    {
+        $order = \App\Models\Order::findOrFail($id);
+        $user  = $this->authorizeOrder($order);
+
+        if ($user->role_code !== 'distributor' || $order->distributor_user_id != $user->id) {
+            abort(403, '총판만 출고 처리할 수 있습니다.');
+        }
+        if ($order->status_code !== 'accepted') {
+            return back()->with('error', "출고는 '총판접수' 상태에서만 가능합니다. 현재: {$order->status_code}");
+        }
+
+        $data = $request->validate([
+            'courier_code' => ['required', 'string', 'max:30'],
+            'tracking_no'  => ['required', 'string', 'max:50'],
+        ]);
+
+        DB::transaction(function () use ($order, $data) {
+            DB::table('order_shipments')->updateOrInsert(
+                ['order_id' => $order->id],
+                [
+                    'courier_code'     => $data['courier_code'],
+                    'tracking_no'      => $data['tracking_no'],
+                    'ship_status_code' => 'shipped',
+                    'shipped_at'       => now(),
+                    'updated_at'       => now(),
+                    'created_at'       => now(),
+                ]
+            );
+            DB::table('orders')->where('id', $order->id)->update([
+                'status_code' => 'shipped',
+                'shipped_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+            DB::table('order_status_logs')->insert([
+                'order_id'   => $order->id,
+                'from_status'=> 'accepted',
+                'to_status'  => 'shipped',
+                'changed_by' => auth()->id(),
+                'reason'     => '송장입력: '.$data['courier_code'].' '.$data['tracking_no'],
+                'created_at' => now(),
+            ]);
+        });
+
+        AuditLog::log('orders', $order->id, 'ship',
+            ['status_code' => 'accepted'],
+            ['status_code' => 'shipped', 'courier_code' => $data['courier_code'], 'tracking_no' => $data['tracking_no']]);
+
+        $courierName = DB::table('codes')->where('group_code', 'courier')->where('code', $data['courier_code'])->value('name') ?? $data['courier_code'];
+        $this->dispatchOrderNotification($order->fresh(), 'shipped', $notify, null, [
+            'courier_name' => $courierName,
+            'tracking_no'  => $data['tracking_no'],
+        ]);
+
+        return back()->with('success', '출고 처리 완료');
+    }
+
+    /** 주문 상태 변경 알림 발송 (Admin\OrderController와 동일 로직) */
+    private function dispatchOrderNotification(\App\Models\Order $order, string $newStatus, \App\Services\NotificationService $notify, ?string $reason = null, array $extraContext = []): void
+    {
+        $vendor = DB::table('vendors')->find($order->vendor_id);
+        $agent  = $order->agent_user_id ? DB::table('users')->find($order->agent_user_id) : null;
+        $dist   = $order->distributor_user_id ? DB::table('users')->find($order->distributor_user_id) : null;
+
+        $context = array_merge([
+            'order_no'         => $order->order_no,
+            'vendor_name'      => $vendor->name ?? '',
+            'agent_name'       => $agent->name ?? '',
+            'distributor_name' => $dist->name ?? '',
+            'total_amount'     => $order->total_amount,
+            'reason'           => $reason ?? '',
+        ], $extraContext);
+
+        $eventMap = [
+            'confirmed' => 'order.confirmed',
+            'accepted'  => 'order.accepted',
+            'shipped'   => 'order.shipped',
+            'canceled'  => 'order.canceled',
+        ];
+        $event = $eventMap[$newStatus] ?? null;
+        if (! $event) return;
+
+        $recipients = [];
+        if ($agent && $newStatus !== 'confirmed')   $recipients[] = ['type' => 'user', 'id' => $agent->id, 'phone' => $agent->phone, 'email' => $agent->email];
+        if ($dist && in_array($newStatus, ['accepted', 'shipped'])) $recipients[] = ['type' => 'user', 'id' => $dist->id, 'phone' => $dist->phone, 'email' => $dist->email];
+        if ($vendor && in_array($newStatus, ['confirmed', 'accepted', 'shipped', 'canceled'])) {
+            $recipients[] = ['type' => 'vendor', 'id' => $vendor->id, 'phone' => $vendor->mobile ?? null, 'email' => null];
+        }
+
+        $notify->send($event, $context, $recipients);
+    }
+
     // -------------------- 역할별 메뉴 (Phase A: placeholder) --------------------
     /** 받은 주문 (총판) / 주문 확인 (영업자) / 주문 내역 (학원) - 통합 라우트 */
     public function ordersIndex(Request $request)
