@@ -58,8 +58,11 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/transition',      [\App\Http\Controllers\MyPageController::class, 'transitionOrder'])->name('orders.transition');
         Route::post('orders/{id}/ship',            [\App\Http\Controllers\MyPageController::class, 'shipOrder'])->name('orders.ship');
 
-        // 총판 전용
-        Route::get('stocks',     [\App\Http\Controllers\MyPageController::class, 'stocksIndex'])->name('stocks.index');
+        // 총판 전용 - 재고 관리 (Phase B-6)
+        Route::get('stocks',                [\App\Http\Controllers\MyPageController::class, 'stocksIndex'])->name('stocks.index');
+        Route::post('stocks',               [\App\Http\Controllers\MyPageController::class, 'stockStore'])->name('stocks.store');
+        Route::put('stocks/{stockId}',      [\App\Http\Controllers\MyPageController::class, 'stockUpdate'])->name('stocks.update');
+        Route::delete('stocks/{stockId}',   [\App\Http\Controllers\MyPageController::class, 'stockDestroy'])->name('stocks.destroy');
         Route::get('agents',     [\App\Http\Controllers\MyPageController::class, 'agentsIndex'])->name('agents.index');
 
         // 영업자 전용

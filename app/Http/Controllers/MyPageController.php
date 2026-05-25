@@ -439,15 +439,124 @@ class MyPageController extends Controller
         ]);
     }
 
-    /** 재고 관리 (총판) */
-    public function stocksIndex()
+    /** 재고 관리 (총판) - Phase B-6 */
+    public function stocksIndex(Request $request)
     {
-        return view('public.mypage.placeholder', [
-            'user'  => Auth::user(),
-            'title' => '재고 관리',
-            'icon'  => 'bi-box-seam',
-            'description' => '보유 도서별 재고를 조정하는 페이지입니다. 곧 제공됩니다.',
+        $user = Auth::user();
+        if ($user->role_code !== 'distributor') {
+            abort(403, '총판만 접근 가능합니다.');
+        }
+
+        $q   = trim((string) $request->query('q'));
+        $low = $request->boolean('low');  // 안전재고 이하만 보기
+
+        $query = DB::table('book_stocks as s')
+            ->join('books as b', 'b.id', '=', 's.book_id')
+            ->leftJoin('publishers as p', 'p.id', '=', 'b.publisher_id')
+            ->where('s.distributor_user_id', $user->id)
+            ->whereNull('b.deleted_at')
+            ->select(
+                's.id as stock_id', 's.qty', 's.low_stock_threshold', 's.reserved_qty',
+                'b.id as book_id', 'b.isbn', 'b.title', 'b.subtitle', 'b.school_code', 'b.subject_code',
+                'b.price', 'p.name as publisher_name'
+            );
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('b.title', 'like', "%{$q}%")
+                  ->orWhere('b.isbn', 'like', "%{$q}%");
+            });
+        }
+        if ($low) {
+            $query->whereColumn('s.qty', '<=', 's.low_stock_threshold');
+        }
+        $stocks = $query->orderBy('b.title')->paginate(30)->withQueryString();
+
+        // 요약
+        $baseStocks = DB::table('book_stocks')->where('distributor_user_id', $user->id);
+        $summary = [
+            'total_books' => (clone $baseStocks)->count(),
+            'total_qty'   => (int) (clone $baseStocks)->sum('qty'),
+            'low_stock'   => (clone $baseStocks)->whereColumn('qty', '<=', 'low_stock_threshold')->count(),
+            'zero_stock'  => (clone $baseStocks)->where('qty', 0)->count(),
+        ];
+
+        // 등록 가능한 책 목록 (아직 재고 안 잡힌 책)
+        $myBookIds = DB::table('book_stocks')->where('distributor_user_id', $user->id)->pluck('book_id');
+        $availableBooks = DB::table('books')
+            ->whereNull('deleted_at')->where('status_code', 'selling')
+            ->whereNotIn('id', $myBookIds)
+            ->orderBy('title')->get(['id', 'title', 'isbn', 'price']);
+
+        return view('public.mypage.stocks', compact('user', 'stocks', 'summary', 'availableBooks', 'q', 'low'));
+    }
+
+    /** 재고 수정 (qty / low_stock_threshold) */
+    public function stockUpdate(Request $request, $stockId)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'distributor') abort(403);
+
+        $data = $request->validate([
+            'qty' => ['required', 'integer', 'min:0'],
+            'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
         ]);
+
+        $row = DB::table('book_stocks')->where('id', $stockId)->where('distributor_user_id', $user->id)->first();
+        if (! $row) abort(404);
+
+        DB::table('book_stocks')->where('id', $stockId)->update([
+            'qty' => $data['qty'],
+            'low_stock_threshold' => $data['low_stock_threshold'] ?? $row->low_stock_threshold,
+            'updated_at' => now(),
+        ]);
+
+        AuditLog::log('book_stocks', $stockId, 'update', ['qty' => $row->qty], ['qty' => $data['qty']]);
+        return back()->with('success', '재고가 업데이트되었습니다.');
+    }
+
+    /** 신규 도서 재고 등록 */
+    public function stockStore(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'distributor') abort(403);
+
+        $data = $request->validate([
+            'book_id' => ['required', 'integer', 'exists:books,id'],
+            'qty' => ['required', 'integer', 'min:0'],
+            'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        // 중복 방지
+        $exists = DB::table('book_stocks')->where('book_id', $data['book_id'])
+            ->where('distributor_user_id', $user->id)->exists();
+        if ($exists) {
+            return back()->with('error', '이미 등록된 도서입니다.');
+        }
+
+        DB::table('book_stocks')->insert([
+            'book_id' => $data['book_id'],
+            'distributor_user_id' => $user->id,
+            'qty' => $data['qty'],
+            'low_stock_threshold' => $data['low_stock_threshold'] ?? 5,
+            'reserved_qty' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('success', '도서 재고가 등록되었습니다.');
+    }
+
+    /** 재고 항목 제거 */
+    public function stockDestroy($stockId)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'distributor') abort(403);
+
+        $row = DB::table('book_stocks')->where('id', $stockId)->where('distributor_user_id', $user->id)->first();
+        if (! $row) abort(404);
+
+        DB::table('book_stocks')->where('id', $stockId)->delete();
+        return back()->with('success', '재고 항목이 제거되었습니다.');
     }
 
     /** 소속 영업자 (총판) */
