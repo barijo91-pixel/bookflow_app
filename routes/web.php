@@ -49,6 +49,24 @@ Route::middleware('auth')->group(function () {
     // 비밀번호 강제 변경 (첫 로그인/관리자 초기화 후)
     Route::get('mypage/force-password-change',  [\App\Http\Controllers\MyPageController::class, 'showForcePasswordChange'])->name('mypage.force_password_change');
     Route::put('mypage/force-password-change',  [\App\Http\Controllers\MyPageController::class, 'submitForcePasswordChange'])->name('mypage.force_password_change.submit');
+
+    // 역할별 메뉴 (Phase A: placeholder - 곧 실제 기능 구현 예정)
+    Route::prefix('mypage')->name('my.')->group(function () {
+        // 공통(역할별 분기) - 주문
+        Route::get('orders',     [\App\Http\Controllers\MyPageController::class, 'ordersIndex'])->name('orders.index');
+
+        // 총판 전용
+        Route::get('stocks',     [\App\Http\Controllers\MyPageController::class, 'stocksIndex'])->name('stocks.index');
+        Route::get('agents',     [\App\Http\Controllers\MyPageController::class, 'agentsIndex'])->name('agents.index');
+
+        // 영업자 전용
+        Route::get('vendors',    [\App\Http\Controllers\MyPageController::class, 'vendorsIndex'])->name('vendors.index');
+        Route::get('discounts',  [\App\Http\Controllers\MyPageController::class, 'discountsIndex'])->name('discounts.index');
+
+        // 학원 전용
+        Route::get('order/new',  [\App\Http\Controllers\MyPageController::class, 'orderNew'])->name('order_new');
+        Route::get('classes',    [\App\Http\Controllers\MyPageController::class, 'classesIndex'])->name('classes.index');
+    });
 });
 
 // 관리자

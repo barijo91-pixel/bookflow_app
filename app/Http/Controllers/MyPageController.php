@@ -150,6 +150,91 @@ class MyPageController extends Controller
         return back()->with('success', '비밀번호가 변경되었습니다.');
     }
 
+    // -------------------- 역할별 메뉴 (Phase A: placeholder) --------------------
+    /** 받은 주문 (총판) / 주문 확인 (영업자) / 주문 내역 (학원) - 통합 라우트 */
+    public function ordersIndex()
+    {
+        $user = Auth::user();
+        $title = match($user->role_code) {
+            'distributor' => '받은 주문',
+            'agent'       => '주문 확인',
+            'academy'     => '주문 내역',
+            default       => '주문',
+        };
+        return view('public.mypage.placeholder', [
+            'user'  => $user,
+            'title' => $title,
+            'icon'  => 'bi-receipt',
+            'description' => '주문 목록을 보고 처리할 수 있는 페이지입니다. 곧 제공됩니다.',
+        ]);
+    }
+
+    /** 재고 관리 (총판) */
+    public function stocksIndex()
+    {
+        return view('public.mypage.placeholder', [
+            'user'  => Auth::user(),
+            'title' => '재고 관리',
+            'icon'  => 'bi-box-seam',
+            'description' => '보유 도서별 재고를 조정하는 페이지입니다. 곧 제공됩니다.',
+        ]);
+    }
+
+    /** 소속 영업자 (총판) */
+    public function agentsIndex()
+    {
+        return view('public.mypage.placeholder', [
+            'user'  => Auth::user(),
+            'title' => '소속 영업자',
+            'icon'  => 'bi-person-badge',
+            'description' => '총판 산하 영업자 목록 및 매핑 관리. 곧 제공됩니다.',
+        ]);
+    }
+
+    /** 담당 학원 (영업자) */
+    public function vendorsIndex()
+    {
+        return view('public.mypage.placeholder', [
+            'user'  => Auth::user(),
+            'title' => '담당 학원',
+            'icon'  => 'bi-building',
+            'description' => '본인이 담당하는 학원 목록. 곧 제공됩니다.',
+        ]);
+    }
+
+    /** 할인율 관리 (영업자) */
+    public function discountsIndex()
+    {
+        return view('public.mypage.placeholder', [
+            'user'  => Auth::user(),
+            'title' => '할인율 관리',
+            'icon'  => 'bi-percent',
+            'description' => '학원별·도서별 할인율 조정. 곧 제공됩니다.',
+        ]);
+    }
+
+    /** 도서 주문하기 (학원) */
+    public function orderNew()
+    {
+        return view('public.mypage.placeholder', [
+            'user'  => Auth::user(),
+            'title' => '도서 주문하기',
+            'icon'  => 'bi-bag-plus',
+            'description' => '도서를 검색해 장바구니에 담고 주문하는 페이지. 곧 제공됩니다.',
+        ]);
+    }
+
+    /** 학급/학생 (학원) */
+    public function classesIndex()
+    {
+        return view('public.mypage.placeholder', [
+            'user'  => Auth::user(),
+            'title' => '학급/학생',
+            'icon'  => 'bi-mortarboard',
+            'description' => '학급 편성과 학생/학부모 관리, 학부모 공유링크 발송. 곧 제공됩니다.',
+        ]);
+    }
+
     // -------------------- 비밀번호 강제 변경 (첫 로그인 / 관리자 초기화 후) --------------------
     public function showForcePasswordChange()
     {
