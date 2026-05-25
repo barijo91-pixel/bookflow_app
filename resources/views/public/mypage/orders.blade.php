@@ -69,8 +69,12 @@
             </thead>
             <tbody>
                 @forelse($orders as $o)
-                    <tr>
-                        <td><code>{{ $o->order_no }}</code></td>
+                    <tr class="order-row" style="cursor:pointer" onclick="location.href='{{ route('my.orders.show', $o->id) }}'">
+                        <td>
+                            <a href="{{ route('my.orders.show', $o->id) }}" class="text-decoration-none" onclick="event.stopPropagation()">
+                                <code>{{ $o->order_no }}</code>
+                            </a>
+                        </td>
                         <td class="small">{{ $o->vendor_name ?? '-' }}</td>
                         @if($user->role_code !== 'agent')
                             <td class="small text-muted">{{ $o->agent_name ?? '-' }}</td>

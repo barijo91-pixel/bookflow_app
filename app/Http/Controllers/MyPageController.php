@@ -487,15 +487,295 @@ class MyPageController extends Controller
         ]);
     }
 
-    /** 도서 주문하기 (학원) */
-    public function orderNew()
+    /** 도서 주문하기 (학원) - 검색 + 장바구니 + 주문 생성 */
+    public function orderNew(Request $request)
     {
-        return view('public.mypage.placeholder', [
-            'user'  => Auth::user(),
-            'title' => '도서 주문하기',
-            'icon'  => 'bi-bag-plus',
-            'description' => '도서를 검색해 장바구니에 담고 주문하는 페이지. 곧 제공됩니다.',
+        $user = Auth::user();
+        if ($user->role_code !== 'academy') {
+            abort(403, '학원만 주문할 수 있습니다.');
+        }
+
+        // 1. 학원의 vendor 찾기 (첫 번째 매핑)
+        $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
+        $vendor = $vendorId ? DB::table('vendors')->find($vendorId) : null;
+
+        // 2. 영업자 매핑 (이 vendor에 매핑된 active agent들, 첫 번째 자동 선택)
+        $agents = collect();
+        $selectedAgent = null;
+        if ($vendor) {
+            $agents = DB::table('agent_vendor_discounts as avd')
+                ->join('users as u', 'u.id', '=', 'avd.agent_user_id')
+                ->where('avd.vendor_id', $vendorId)
+                ->where('avd.is_active', true)
+                ->select('u.id', 'u.name', 'u.login_id', 'avd.discount_rate as general_rate')
+                ->get();
+            $selectedAgentId = $request->query('agent_id', $agents->first()->id ?? null);
+            $selectedAgent = $agents->firstWhere('id', $selectedAgentId);
+        }
+
+        // 3. 도서별 할인율 매핑 (선택된 영업자 기준)
+        $bookDiscounts = collect();
+        if ($selectedAgent) {
+            $bookDiscounts = DB::table('agent_vendor_book_discounts')
+                ->where('agent_user_id', $selectedAgent->id)
+                ->where('vendor_id', $vendorId)
+                ->where('is_active', true)
+                ->pluck('discount_rate', 'book_id');
+        }
+
+        // 4. 도서 검색 + 목록
+        $q = trim((string) $request->query('q'));
+        $booksQuery = DB::table('books')
+            ->whereNull('deleted_at')
+            ->where('status_code', 'selling')
+            ->leftJoin('publishers as p', 'p.id', '=', 'books.publisher_id')
+            ->select('books.*', 'p.name as publisher_name');
+        if ($q !== '') {
+            $booksQuery->where(function ($w) use ($q) {
+                $w->where('books.title', 'like', "%{$q}%")
+                  ->orWhere('books.isbn', 'like', "%{$q}%")
+                  ->orWhere('books.series_name', 'like', "%{$q}%");
+            });
+        }
+        $books = $booksQuery->orderBy('books.title')->limit(30)->get();
+
+        // 5. 장바구니 (세션, vendor별 분리)
+        $cartKey = 'cart.'.($vendorId ?? '0').'.'.($selectedAgent->id ?? '0');
+        $cart = $request->session()->get($cartKey, []);
+        $cartBooks = empty($cart) ? collect() : DB::table('books')->whereIn('id', array_keys($cart))->get()->keyBy('id');
+
+        // 6. 카트 합계 계산
+        $cartLines = collect();
+        $subtotal = 0;
+        foreach ($cart as $bookId => $qty) {
+            $book = $cartBooks->get($bookId);
+            if (! $book) continue;
+            $rate = $bookDiscounts->get($bookId, $selectedAgent->general_rate ?? 0);
+            $unitPrice = (int) round($book->price * (100 - $rate) / 100);
+            $lineTotal = $unitPrice * $qty;
+            $subtotal += $lineTotal;
+            $cartLines->push([
+                'book'        => $book,
+                'qty'         => $qty,
+                'list_price'  => $book->price,
+                'rate'        => $rate,
+                'unit_price'  => $unitPrice,
+                'line_total'  => $lineTotal,
+                'has_book_discount' => $bookDiscounts->has($bookId),
+            ]);
+        }
+
+        return view('public.mypage.order_new', [
+            'user'           => $user,
+            'vendor'         => $vendor,
+            'agents'         => $agents,
+            'selectedAgent'  => $selectedAgent,
+            'bookDiscounts'  => $bookDiscounts,
+            'books'          => $books,
+            'q'              => $q,
+            'cartKey'        => $cartKey,
+            'cartLines'      => $cartLines,
+            'subtotal'       => $subtotal,
         ]);
+    }
+
+    /** 장바구니 - 추가 */
+    public function cartAdd(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'academy') abort(403);
+
+        $data = $request->validate([
+            'book_id'  => ['required', 'integer', 'exists:books,id'],
+            'qty'      => ['required', 'integer', 'min:1', 'max:9999'],
+            'cart_key' => ['required', 'string'],
+        ]);
+
+        $cart = $request->session()->get($data['cart_key'], []);
+        $cart[$data['book_id']] = ($cart[$data['book_id']] ?? 0) + $data['qty'];
+        $request->session()->put($data['cart_key'], $cart);
+
+        return back()->with('success', '장바구니에 담았습니다.');
+    }
+
+    /** 장바구니 - 수량 변경 (일괄) */
+    public function cartUpdate(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'academy') abort(403);
+
+        $cartKey = $request->input('cart_key');
+        if (! $cartKey) abort(400);
+
+        $qtys = $request->input('qty', []);
+        $cart = $request->session()->get($cartKey, []);
+        foreach ($qtys as $bookId => $qty) {
+            $qty = (int) $qty;
+            if ($qty <= 0) {
+                unset($cart[$bookId]);
+            } else {
+                $cart[$bookId] = min($qty, 9999);
+            }
+        }
+        $request->session()->put($cartKey, $cart);
+
+        return back()->with('success', '장바구니가 업데이트되었습니다.');
+    }
+
+    /** 장바구니 - 항목 제거 */
+    public function cartRemove(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'academy') abort(403);
+
+        $data = $request->validate([
+            'book_id'  => ['required', 'integer'],
+            'cart_key' => ['required', 'string'],
+        ]);
+
+        $cart = $request->session()->get($data['cart_key'], []);
+        unset($cart[$data['book_id']]);
+        $request->session()->put($data['cart_key'], $cart);
+
+        return back()->with('success', '제거되었습니다.');
+    }
+
+    /** 주문 생성 (장바구니 → 주문) */
+    public function storeOrder(Request $request, \App\Services\NotificationService $notify)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'academy') abort(403);
+
+        $data = $request->validate([
+            'cart_key' => ['required', 'string'],
+            'agent_id' => ['required', 'integer'],
+        ]);
+
+        $cart = $request->session()->get($data['cart_key'], []);
+        if (empty($cart)) {
+            return back()->with('error', '장바구니가 비어있습니다.');
+        }
+
+        $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
+        if (! $vendorId) {
+            return back()->with('error', '학원 매핑이 없습니다.');
+        }
+
+        // 영업자 검증 (이 vendor에 매핑된 active agent인지)
+        $agentRow = DB::table('agent_vendor_discounts')
+            ->where('vendor_id', $vendorId)
+            ->where('agent_user_id', $data['agent_id'])
+            ->where('is_active', true)
+            ->first();
+        if (! $agentRow) {
+            return back()->with('error', '유효하지 않은 영업자입니다.');
+        }
+
+        // 총판 결정 (agent의 첫 distributor)
+        $distId = DB::table('user_relations')
+            ->where('child_user_id', $agentRow->agent_user_id)
+            ->where('relation_type', 'distributor_agent')
+            ->where('status', 'active')
+            ->orderBy('id')
+            ->value('parent_user_id');
+
+        // 책별 할인율
+        $bookDiscounts = DB::table('agent_vendor_book_discounts')
+            ->where('agent_user_id', $agentRow->agent_user_id)
+            ->where('vendor_id', $vendorId)
+            ->where('is_active', true)
+            ->pluck('discount_rate', 'book_id');
+
+        // 도서 정보 일괄 조회
+        $books = DB::table('books')->whereIn('id', array_keys($cart))->whereNull('deleted_at')->get()->keyBy('id');
+
+        // 주문번호 생성 (BS + YYYYMMDD + 4자리 시퀀스)
+        $today = date('Ymd');
+        $count = DB::table('orders')->whereDate('created_at', today())->count() + 1;
+        $orderNo = setting('order_no_prefix', 'BF').$today.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
+
+        $subtotal = 0;
+        $itemRows = [];
+        foreach ($cart as $bookId => $qty) {
+            $book = $books->get($bookId);
+            if (! $book) continue;
+            $rate = (float) $bookDiscounts->get($bookId, $agentRow->discount_rate);
+            $unitPrice = (int) round($book->price * (100 - $rate) / 100);
+            $lineTotal = $unitPrice * (int) $qty;
+            $subtotal += $lineTotal;
+            $itemRows[] = [
+                'book_id'         => $bookId,
+                'isbn_snapshot'   => $book->isbn,
+                'title_snapshot'  => $book->title,
+                'qty'             => (int) $qty,
+                'list_price'      => $book->price,
+                'discount_rate'   => $rate,
+                'discount_source' => $bookDiscounts->has($bookId) ? 'book' : 'general',
+                'unit_price'      => $unitPrice,
+                'line_total'      => $lineTotal,
+            ];
+        }
+        if (empty($itemRows)) {
+            return back()->with('error', '주문 가능한 도서가 없습니다.');
+        }
+
+        $orderId = null;
+        DB::transaction(function () use ($orderNo, $vendorId, $agentRow, $distId, $subtotal, $itemRows, $user, &$orderId) {
+            $orderId = DB::table('orders')->insertGetId([
+                'order_no'            => $orderNo,
+                'vendor_id'           => $vendorId,
+                'agent_user_id'       => $agentRow->agent_user_id,
+                'distributor_user_id' => $distId,
+                'subtotal_amount'     => $subtotal,
+                'shipping_fee'        => 0,
+                'total_amount'        => $subtotal,
+                'status_code'         => 'requested',
+                'requested_at'        => now(),
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ]);
+            foreach ($itemRows as $row) {
+                $row['order_id']   = $orderId;
+                $row['created_at'] = now();
+                $row['updated_at'] = now();
+                DB::table('order_items')->insert($row);
+            }
+            DB::table('order_status_logs')->insert([
+                'order_id'    => $orderId,
+                'from_status' => null,
+                'to_status'   => 'requested',
+                'changed_by'  => $user->id,
+                'reason'      => '학원 주문 접수',
+                'created_at'  => now(),
+            ]);
+        });
+
+        AuditLog::log('orders', $orderId, 'create', null, [
+            'order_no' => $orderNo, 'vendor_id' => $vendorId, 'agent_user_id' => $agentRow->agent_user_id,
+            'total_amount' => $subtotal, 'item_count' => count($itemRows),
+        ]);
+
+        // 장바구니 비우기
+        $request->session()->forget($data['cart_key']);
+
+        // 알림 발송 (영업자 + 학원)
+        try {
+            $vendor = DB::table('vendors')->find($vendorId);
+            $agent  = DB::table('users')->find($agentRow->agent_user_id);
+            $notify->send('order.requested', [
+                'order_no'     => $orderNo,
+                'vendor_name'  => $vendor->name ?? '',
+                'agent_name'   => $agent->name ?? '',
+                'total_amount' => $subtotal,
+            ], [
+                ['type' => 'user', 'id' => $agent->id, 'phone' => $agent->phone, 'email' => $agent->email],
+                ['type' => 'vendor', 'id' => $vendor->id, 'phone' => $vendor->mobile ?? null, 'email' => null],
+            ]);
+        } catch (\Throwable $e) {
+            // 알림 실패는 주문 자체에 영향 X
+        }
+
+        return redirect()->route('my.orders.show', $orderId)->with('success', "주문 {$orderNo} 가 접수되었습니다.");
     }
 
     /** 학급/학생 (학원) */
