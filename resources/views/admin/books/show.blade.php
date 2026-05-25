@@ -109,7 +109,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small text-muted">기본 할인율(%)</label>
-                            <input type="number" step="0.01" min="0" max="100" name="default_discount_rate" class="form-control text-end" value="{{ old('default_discount_rate', $book->default_discount_rate) }}">
+                            <input type="number" step="0.5" min="0" max="100" name="default_discount_rate" class="form-control text-end" value="{{ old('default_discount_rate', $book->default_discount_rate) }}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small text-muted">상태 *</label>

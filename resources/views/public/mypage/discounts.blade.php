@@ -33,7 +33,7 @@
                                 </div>
                                 <div class="col-3">
                                     <div class="input-group input-group-sm">
-                                        <input type="number" step="0.01" min="0" max="100" name="discount_rate"
+                                        <input type="number" step="0.5" min="0" max="100" name="discount_rate"
                                                value="{{ rtrim(rtrim($v->general_rate, '0'), '.') }}"
                                                class="form-control text-end">
                                         <span class="input-group-text">%</span>
@@ -91,7 +91,7 @@
                                             <input type="hidden" name="vendor_id" value="{{ $selectedVendorId }}">
                                             <input type="hidden" name="book_id" value="{{ $bd->book_id }}">
                                             <div class="input-group input-group-sm" style="max-width:100px">
-                                                <input type="number" step="0.01" min="0" max="100" name="discount_rate"
+                                                <input type="number" step="0.5" min="0" max="100" name="discount_rate"
                                                        value="{{ rtrim(rtrim($bd->discount_rate, '0'), '.') }}"
                                                        class="form-control text-end">
                                                 <button class="btn btn-outline-navy btn-sm"><i class="bi bi-save"></i></button>
@@ -133,7 +133,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small text-muted mb-1">할인율 %</label>
-                                <input type="number" step="0.01" min="0" max="100" name="discount_rate"
+                                <input type="number" step="0.5" min="0" max="100" name="discount_rate"
                                        value="{{ rtrim(rtrim($selectedVendor->general_rate, '0'), '.') }}"
                                        class="form-control form-control-sm text-end">
                             </div>

@@ -232,7 +232,7 @@
                                             <div class="text-muted small">{{ $a->email }}</div>
                                         </td>
                                         <td class="text-end">
-                                            <input type="number" step="0.01" min="0" max="100"
+                                            <input type="number" step="0.5" min="0" max="100"
                                                    name="discount_rate" value="{{ rtrim(rtrim($a->discount_rate, '0'), '.') }}"
                                                    class="form-control form-control-sm text-end">
                                         </td>
@@ -273,7 +273,7 @@
                         </div>
                         <div class="col-3">
                             <label class="form-label small text-muted mb-1">기본 할인율(%)</label>
-                            <input type="number" step="0.01" min="0" max="100" name="discount_rate" class="form-control form-control-sm text-end" value="30" required>
+                            <input type="number" step="0.5" min="0" max="100" name="discount_rate" class="form-control form-control-sm text-end" value="30" required>
                         </div>
                         <div class="col-2">
                             <button class="btn btn-sm btn-outline-primary w-100">매핑</button>
