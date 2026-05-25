@@ -1,0 +1,242 @@
+@extends('public.layouts.app')
+@section('title', '학급 · '.$class->name)
+@section('max_width', '1200px')
+
+@section('content')
+<div class="mb-3">
+    <a href="{{ route('my.classes.index') }}" class="text-muted small text-decoration-none">
+        <i class="bi bi-arrow-left"></i> 학급 목록으로
+    </a>
+    <div class="d-flex justify-content-between align-items-start mt-1">
+        <h1 class="h4 navy mb-0">
+            <i class="bi bi-mortarboard"></i> {{ $class->name }}
+            @if($class->status === 'closed')
+                <span class="badge bg-secondary fs-6 ms-1">종료</span>
+            @endif
+        </h1>
+        <form method="POST" action="{{ route('my.classes.destroy', $class->id) }}"
+              onsubmit="return confirm('학급을 삭제할까요? (학생이 있으면 차단됩니다)')">
+            @csrf @method('DELETE')
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> 학급 삭제</button>
+        </form>
+    </div>
+</div>
+
+@if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif
+@if(session('error'))<div class="alert alert-danger py-2 small">{{ session('error') }}</div>@endif
+@if(session('share_url'))
+    <div class="alert alert-info py-2 small">
+        <strong><i class="bi bi-link"></i> 발행된 공유링크:</strong>
+        <code class="ms-2">{{ session('share_url') }}</code>
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-2"
+                onclick="navigator.clipboard.writeText('{{ session('share_url') }}'); this.textContent='✓ 복사됨';">
+            <i class="bi bi-clipboard"></i> 복사
+        </button>
+    </div>
+@endif
+@if($errors->any())<div class="alert alert-danger py-2 small"><ul class="mb-0 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
+
+<div class="row g-3">
+    {{-- LEFT: 학급 정보 + 교재 --}}
+    <div class="col-lg-6">
+        {{-- 학급 정보 --}}
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white"><strong><i class="bi bi-info-circle"></i> 학급 정보</strong></div>
+            <form method="POST" action="{{ route('my.classes.update', $class->id) }}">
+                @csrf @method('PUT')
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-7">
+                            <label class="form-label small text-muted mb-1">학급명</label>
+                            <input type="text" name="name" class="form-control form-control-sm" value="{{ $class->name }}" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small text-muted mb-1">학년</label>
+                            <select name="grade_code" class="form-select form-select-sm">
+                                <option value="">선택 안 함</option>
+                                @foreach($grades as $g)
+                                    <option value="{{ $g->code }}" @selected($class->grade_code === $g->code)>{{ $g->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small text-muted mb-1">시작일</label>
+                            <input type="date" name="started_at" class="form-control form-control-sm" value="{{ $class->started_at }}">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small text-muted mb-1">종료일</label>
+                            <input type="date" name="ended_at" class="form-control form-control-sm" value="{{ $class->ended_at }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">상태</label>
+                            <select name="status" class="form-select form-select-sm">
+                                <option value="active" @selected($class->status === 'active')>진행중</option>
+                                <option value="closed" @selected($class->status === 'closed')>종료</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-muted mb-1">메모</label>
+                            <textarea name="memo" class="form-control form-control-sm" rows="2">{{ $class->memo }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-end">
+                    <button class="btn btn-sm btn-navy"><i class="bi bi-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+
+        {{-- 교재 --}}
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white"><strong><i class="bi bi-book"></i> 학급 교재 ({{ $books->count() }})</strong></div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light"><tr>
+                        <th>도서</th><th class="text-end">수량</th><th></th>
+                    </tr></thead>
+                    <tbody>
+                        @forelse($books as $b)
+                            <tr>
+                                <td class="small">
+                                    <div class="fw-bold">{{ $b->title }}</div>
+                                    <div class="text-muted small"><code>{{ $b->isbn }}</code></div>
+                                </td>
+                                <td class="text-end small">{{ $b->qty }}</td>
+                                <td class="text-end">
+                                    <form method="POST" action="{{ route('my.classes.books.detach', [$class->id, $b->cb_id]) }}"
+                                          onsubmit="return confirm('이 교재를 제거할까요?')" class="d-inline">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="3" class="text-center text-muted py-3 small">교재가 없습니다.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white">
+                <form method="POST" action="{{ route('my.classes.books.attach', $class->id) }}" class="row g-2">
+                    @csrf
+                    <div class="col-7">
+                        <select name="book_id" class="form-select form-select-sm" required>
+                            <option value="">교재 선택</option>
+                            @foreach($availableBooks as $ab)
+                                <option value="{{ $ab->id }}">{{ \Illuminate\Support\Str::limit($ab->title, 40) }} ({{ number_format($ab->price) }}원)</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-3">
+                        <input type="number" name="qty" value="1" min="1" max="99" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-2 d-grid">
+                        <button class="btn btn-sm btn-outline-navy"><i class="bi bi-plus"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- RIGHT: 학생 + 학부모 + 공유링크 --}}
+    <div class="col-lg-6">
+        {{-- 학생 목록 + 추가 --}}
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white"><strong><i class="bi bi-people"></i> 학생/학부모 ({{ $students->count() }})</strong></div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light"><tr>
+                        <th>학생</th><th>학부모</th><th>연락처</th><th></th>
+                    </tr></thead>
+                    <tbody>
+                        @forelse($students as $s)
+                            <tr>
+                                <td class="small">
+                                    <strong>{{ $s->name }}</strong>
+                                    @if($s->grade_code)
+                                        @php $g = $grades->firstWhere('code', $s->grade_code); @endphp
+                                        <span class="badge bg-light text-dark">{{ $g->name ?? $s->grade_code }}</span>
+                                    @endif
+                                </td>
+                                <td class="small">{{ $s->parent_name ?? '-' }}</td>
+                                <td class="small text-muted">{{ $s->parent_phone ?? '-' }}</td>
+                                <td class="text-end">
+                                    {{-- 공유링크 발송 --}}
+                                    <form method="POST" action="{{ route('my.classes.share', $class->id) }}"
+                                          onsubmit="return confirm('이 학부모에게 공유링크를 발송할까요?')" class="d-inline">
+                                        @csrf
+                                        <input type="hidden" name="student_id" value="{{ $s->id }}">
+                                        <button class="btn btn-sm btn-link p-0" title="공유링크 발송"><i class="bi bi-send"></i></button>
+                                    </form>
+                                    {{-- 삭제 --}}
+                                    <form method="POST" action="{{ route('my.classes.students.detach', [$class->id, $s->id]) }}"
+                                          onsubmit="return confirm('이 학생을 제거할까요?')" class="d-inline ms-2">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-link text-danger p-0" title="학생 제거"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="text-center text-muted py-3 small">아직 학생이 없습니다.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white">
+                <form method="POST" action="{{ route('my.classes.students.attach', $class->id) }}" class="row g-2">
+                    @csrf
+                    <div class="col-md-3">
+                        <input type="text" name="student_name" class="form-control form-control-sm" placeholder="학생 이름" required>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="grade_code" class="form-select form-select-sm">
+                            <option value="">학년</option>
+                            @foreach($grades as $g)
+                                <option value="{{ $g->code }}">{{ $g->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="parent_name" class="form-control form-control-sm" placeholder="학부모 이름" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="tel" name="parent_phone" class="form-control form-control-sm" placeholder="학부모 휴대폰" required>
+                    </div>
+                    <div class="col-md-1 d-grid">
+                        <button class="btn btn-sm btn-outline-navy"><i class="bi bi-plus"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- 공유링크 이력 --}}
+        @if($shareLinks->isNotEmpty())
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white"><strong><i class="bi bi-link"></i> 공유링크 발송 이력</strong></div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light"><tr>
+                            <th>학생/학부모</th><th>발송</th><th>만료</th><th>조회수</th>
+                        </tr></thead>
+                        <tbody>
+                            @foreach($shareLinks as $l)
+                                <tr>
+                                    <td class="small">{{ $l->student_name }} · {{ $l->parent_name }}</td>
+                                    <td class="small text-muted">{{ $l->sent_at ? \Carbon\Carbon::parse($l->sent_at)->format('m-d H:i') : '-' }}</td>
+                                    <td class="small text-muted">
+                                        @if($l->expires_at)
+                                            @php $exp = \Carbon\Carbon::parse($l->expires_at); @endphp
+                                            <span class="{{ $exp->isPast() ? 'text-danger' : '' }}">{{ $exp->format('Y-m-d') }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="small text-muted">{{ $l->access_count ?? 0 }}회</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+    </div>
+</div>
+@endsection

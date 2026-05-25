@@ -838,15 +838,289 @@ class MyPageController extends Controller
         return redirect()->route('my.orders.show', $orderId)->with('success', "주문 {$orderNo} 가 접수되었습니다.");
     }
 
-    /** 학급/학생 (학원) */
+    // ============== 학급/학생 (학원 전용) — Phase B-8 ==============
+
+    /** 학원 사용자의 vendor_id 가져오기 (없으면 abort) */
+    private function academyVendor(): array
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'academy') {
+            abort(403, '학원만 접근 가능합니다.');
+        }
+        $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
+        if (! $vendorId) {
+            abort(403, '학원이 연결되지 않은 계정입니다. 관리자에게 문의해주세요.');
+        }
+        $vendor = DB::table('vendors')->find($vendorId);
+        return [$user, $vendorId, $vendor];
+    }
+
+    /** 학급 목록 */
     public function classesIndex()
     {
-        return view('public.mypage.placeholder', [
-            'user'  => Auth::user(),
-            'title' => '학급/학생',
-            'icon'  => 'bi-mortarboard',
-            'description' => '학급 편성과 학생/학부모 관리, 학부모 공유링크 발송. 곧 제공됩니다.',
+        [$user, $vendorId, $vendor] = $this->academyVendor();
+
+        $classes = DB::table('academy_classes')
+            ->where('vendor_id', $vendorId)
+            ->orderByDesc('id')
+            ->get();
+
+        // 각 학급 학생 수
+        $classIds = $classes->pluck('id')->toArray();
+        $counts = DB::table('students')
+            ->whereIn('class_id', $classIds)
+            ->whereNull('deleted_at')
+            ->select('class_id', DB::raw('count(*) as cnt'))
+            ->groupBy('class_id')->pluck('cnt', 'class_id');
+        foreach ($classes as $c) {
+            $c->student_count = $counts[$c->id] ?? 0;
+        }
+
+        $grades = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get();
+
+        return view('public.mypage.classes', compact('user', 'vendor', 'classes', 'grades'));
+    }
+
+    /** 학급 생성 */
+    public function classesStore(Request $request)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+
+        $data = $request->validate([
+            'name'       => ['required', 'string', 'max:100'],
+            'grade_code' => ['nullable', 'string', 'max:30'],
+            'started_at' => ['nullable', 'date'],
+            'ended_at'   => ['nullable', 'date'],
+            'memo'       => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $id = DB::table('academy_classes')->insertGetId([
+            'vendor_id'  => $vendorId,
+            'name'       => $data['name'],
+            'grade_code' => $data['grade_code'] ?? null,
+            'started_at' => $data['started_at'] ?? null,
+            'ended_at'   => $data['ended_at'] ?? null,
+            'memo'       => $data['memo'] ?? null,
+            'status'     => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('my.classes.show', $id)->with('success', '학급이 등록되었습니다.');
+    }
+
+    /** 학급 상세 */
+    public function classesShow($id)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404, '학급을 찾을 수 없습니다.');
+
+        $students = DB::table('students as s')
+            ->leftJoin('parents as p', 'p.id', '=', 's.parent_id')
+            ->where('s.class_id', $id)
+            ->whereNull('s.deleted_at')
+            ->select('s.id', 's.name', 's.grade_code', 's.memo',
+                'p.id as parent_id', 'p.name as parent_name', 'p.phone as parent_phone')
+            ->orderBy('s.id')->get();
+
+        $books = DB::table('class_books as cb')
+            ->leftJoin('books as b', 'b.id', '=', 'cb.book_id')
+            ->where('cb.class_id', $id)
+            ->select('cb.id as cb_id', 'cb.qty', 'cb.sort_order',
+                'b.id as book_id', 'b.title', 'b.isbn', 'b.price')
+            ->orderBy('cb.sort_order')->orderBy('cb.id')->get();
+
+        $shareLinks = DB::table('parent_share_links as l')
+            ->leftJoin('students as s', 's.id', '=', 'l.student_id')
+            ->leftJoin('parents as p', 'p.id', '=', 'l.parent_id')
+            ->where('l.class_id', $id)
+            ->orderByDesc('l.id')->limit(20)
+            ->select('l.id', 'l.token', 'l.sent_at', 'l.expires_at', 'l.accessed_at', 'l.access_count',
+                's.name as student_name', 'p.name as parent_name', 'p.phone as parent_phone')
+            ->get();
+
+        $grades = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get();
+        $availableBooks = DB::table('books')
+            ->whereNull('deleted_at')->where('status_code', 'selling')
+            ->orderBy('title')->get(['id', 'title', 'isbn', 'price']);
+
+        return view('public.mypage.class_show', compact(
+            'user', 'class', 'students', 'books', 'shareLinks', 'grades', 'availableBooks'
+        ));
+    }
+
+    /** 학급 정보 수정 */
+    public function classesUpdate(Request $request, $id)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404);
+
+        $data = $request->validate([
+            'name'       => ['required', 'string', 'max:100'],
+            'grade_code' => ['nullable', 'string', 'max:30'],
+            'started_at' => ['nullable', 'date'],
+            'ended_at'   => ['nullable', 'date'],
+            'memo'       => ['nullable', 'string', 'max:1000'],
+            'status'     => ['nullable', \Illuminate\Validation\Rule::in(['active','closed'])],
+        ]);
+        $data['updated_at'] = now();
+        DB::table('academy_classes')->where('id', $id)->update($data);
+        return back()->with('success', '학급 정보가 저장되었습니다.');
+    }
+
+    /** 학급 삭제 */
+    public function classesDestroy($id)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404);
+
+        $hasStudents = DB::table('students')->where('class_id', $id)->whereNull('deleted_at')->exists();
+        if ($hasStudents) {
+            return back()->with('error', '소속 학생이 있어 삭제할 수 없습니다. 학생을 먼저 제거해주세요.');
+        }
+        DB::table('academy_classes')->where('id', $id)->delete();
+        return redirect()->route('my.classes.index')->with('success', '학급이 삭제되었습니다.');
+    }
+
+    /** 학생 + 학부모 한번에 추가 */
+    public function classAttachStudent(Request $request, $id)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404);
+
+        $data = $request->validate([
+            'student_name' => ['required', 'string', 'max:80'],
+            'grade_code'   => ['nullable', 'string', 'max:30'],
+            'parent_name'  => ['required', 'string', 'max:80'],
+            'parent_phone' => ['required', 'string', 'max:20'],
+            'memo'         => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $now = now();
+        $phone = preg_replace('/[^0-9]/', '', $data['parent_phone']);
+
+        DB::transaction(function () use ($id, $vendorId, $data, $phone, $now) {
+            // 학부모: 같은 전화면 재사용
+            $parentId = DB::table('parents')->where('phone', $phone)->whereNull('deleted_at')->value('id');
+            if (! $parentId) {
+                $parentId = DB::table('parents')->insertGetId([
+                    'name'       => $data['parent_name'],
+                    'phone'      => $phone,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
+            DB::table('students')->insert([
+                'vendor_id'  => $vendorId,
+                'class_id'   => $id,
+                'parent_id'  => $parentId,
+                'name'       => $data['student_name'],
+                'grade_code' => $data['grade_code'] ?? null,
+                'memo'       => $data['memo'] ?? null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        });
+
+        return back()->with('success', '학생이 추가되었습니다.');
+    }
+
+    /** 학생 제거 (soft delete) */
+    public function classDetachStudent($id, $sid)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404);
+
+        DB::table('students')->where('id', $sid)->where('class_id', $id)->update([
+            'deleted_at' => now(), 'updated_at' => now()
+        ]);
+        return back()->with('success', '학생이 제거되었습니다.');
+    }
+
+    /** 학급에 도서 추가 */
+    public function classAttachBook(Request $request, $id)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404);
+
+        $data = $request->validate([
+            'book_id' => ['required', 'integer', 'exists:books,id'],
+            'qty'     => ['required', 'integer', 'min:1', 'max:99'],
+        ]);
+
+        DB::table('class_books')->updateOrInsert(
+            ['class_id' => $id, 'book_id' => $data['book_id']],
+            ['qty' => $data['qty'], 'created_at' => now(), 'updated_at' => now()]
+        );
+        return back()->with('success', '교재가 추가되었습니다.');
+    }
+
+    /** 학급 도서 제거 */
+    public function classDetachBook($id, $cbid)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404);
+
+        DB::table('class_books')->where('id', $cbid)->where('class_id', $id)->delete();
+        return back()->with('success', '교재가 제거되었습니다.');
+    }
+
+    /** 학부모 공유링크 생성 + 알림톡 발송 */
+    public function classCreateShareLink(Request $request, $id, \App\Services\NotificationService $notify)
+    {
+        [$user, $vendorId, $vendor] = $this->academyVendor();
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404);
+
+        $data = $request->validate([
+            'student_id'  => ['required', 'integer'],
+            'ttl_days'    => ['nullable', 'integer', 'min:1', 'max:90'],
+        ]);
+
+        $student = DB::table('students')->where('id', $data['student_id'])->where('class_id', $id)->whereNull('deleted_at')->first();
+        if (! $student) abort(404, '학생을 찾을 수 없습니다.');
+        $parent = DB::table('parents')->find($student->parent_id);
+        if (! $parent) return back()->with('error', '학부모 정보가 없습니다.');
+
+        $token = \Illuminate\Support\Str::random(48);
+        $ttl = (int) ($data['ttl_days'] ?? 30);
+
+        DB::table('parent_share_links')->insert([
+            'class_id'   => $id,
+            'student_id' => $student->id,
+            'parent_id'  => $parent->id,
+            'token'      => $token,
+            'sent_at'    => now(),
+            'expires_at' => now()->addDays($ttl),
+            'access_count' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $url = url("/p/{$token}");
+
+        // 알림톡 발송 (실패해도 링크 생성은 유지)
+        try {
+            $notify->send('b2c.share_link', [
+                'academy_name' => $vendor->name ?? '',
+                'student_name' => $student->name,
+                'link_url'     => $url,
+            ], [
+                ['type' => 'parent', 'id' => $parent->id, 'phone' => $parent->phone, 'email' => $parent->email],
+            ]);
+        } catch (\Throwable $e) {
+            // skip
+        }
+
+        return back()->with('success', "공유링크 발행 완료")->with('share_url', $url);
     }
 
     // -------------------- 비밀번호 강제 변경 (첫 로그인 / 관리자 초기화 후) --------------------

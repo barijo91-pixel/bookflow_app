@@ -73,7 +73,17 @@ Route::middleware('auth')->group(function () {
         Route::post('cart/remove',  [\App\Http\Controllers\MyPageController::class, 'cartRemove'])->name('cart.remove');
         Route::post('order/store',  [\App\Http\Controllers\MyPageController::class, 'storeOrder'])->name('order.store');
 
-        Route::get('classes',    [\App\Http\Controllers\MyPageController::class, 'classesIndex'])->name('classes.index');
+        // 학급/학생 (학원) — Phase B-8
+        Route::get('classes',                 [\App\Http\Controllers\MyPageController::class, 'classesIndex'])->name('classes.index');
+        Route::post('classes',                [\App\Http\Controllers\MyPageController::class, 'classesStore'])->name('classes.store');
+        Route::get('classes/{id}',            [\App\Http\Controllers\MyPageController::class, 'classesShow'])->name('classes.show');
+        Route::put('classes/{id}',            [\App\Http\Controllers\MyPageController::class, 'classesUpdate'])->name('classes.update');
+        Route::delete('classes/{id}',         [\App\Http\Controllers\MyPageController::class, 'classesDestroy'])->name('classes.destroy');
+        Route::post('classes/{id}/students',          [\App\Http\Controllers\MyPageController::class, 'classAttachStudent'])->name('classes.students.attach');
+        Route::delete('classes/{id}/students/{sid}',  [\App\Http\Controllers\MyPageController::class, 'classDetachStudent'])->name('classes.students.detach');
+        Route::post('classes/{id}/books',             [\App\Http\Controllers\MyPageController::class, 'classAttachBook'])->name('classes.books.attach');
+        Route::delete('classes/{id}/books/{cbid}',    [\App\Http\Controllers\MyPageController::class, 'classDetachBook'])->name('classes.books.detach');
+        Route::post('classes/{id}/share',             [\App\Http\Controllers\MyPageController::class, 'classCreateShareLink'])->name('classes.share');
     });
 });
 
