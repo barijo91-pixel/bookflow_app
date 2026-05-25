@@ -152,20 +152,66 @@ class MyPageController extends Controller
 
     // -------------------- 역할별 메뉴 (Phase A: placeholder) --------------------
     /** 받은 주문 (총판) / 주문 확인 (영업자) / 주문 내역 (학원) - 통합 라우트 */
-    public function ordersIndex()
+    public function ordersIndex(Request $request)
     {
         $user = Auth::user();
-        $title = match($user->role_code) {
-            'distributor' => '받은 주문',
-            'agent'       => '주문 확인',
-            'academy'     => '주문 내역',
-            default       => '주문',
-        };
-        return view('public.mypage.placeholder', [
-            'user'  => $user,
-            'title' => $title,
-            'icon'  => 'bi-receipt',
-            'description' => '주문 목록을 보고 처리할 수 있는 페이지입니다. 곧 제공됩니다.',
+        $status = $request->query('status'); // 필터링용
+
+        $query = DB::table('orders as o')
+            ->leftJoin('vendors as v', 'v.id', '=', 'o.vendor_id')
+            ->leftJoin('users as ag', 'ag.id', '=', 'o.agent_user_id')
+            ->leftJoin('users as ds', 'ds.id', '=', 'o.distributor_user_id')
+            ->whereNull('o.deleted_at')
+            ->select(
+                'o.id', 'o.order_no', 'o.status_code', 'o.total_amount',
+                'o.requested_at', 'o.confirmed_at', 'o.accepted_at',
+                'o.shipped_at', 'o.completed_at', 'o.created_at',
+                'v.name as vendor_name',
+                'ag.name as agent_name', 'ag.login_id as agent_login_id',
+                'ds.name as distributor_name'
+            );
+
+        // 역할별 필터 (자기 데이터만)
+        switch ($user->role_code) {
+            case 'agent':
+                $query->where('o.agent_user_id', $user->id);
+                $title = '주문 확인';
+                break;
+            case 'distributor':
+                $query->where('o.distributor_user_id', $user->id);
+                $title = '받은 주문';
+                break;
+            case 'academy':
+                $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
+                $query->whereIn('o.vendor_id', $vendorIds);
+                $title = '주문 내역';
+                break;
+            default:
+                abort(403);
+        }
+
+        if ($status) {
+            $query->where('o.status_code', $status);
+        }
+
+        $orders = $query->orderByDesc('o.id')->paginate(20)->withQueryString();
+
+        // 상태별 카운트 (필터 UI용)
+        $statusBaseQuery = DB::table('orders')->whereNull('deleted_at');
+        switch ($user->role_code) {
+            case 'agent':       $statusBaseQuery->where('agent_user_id', $user->id); break;
+            case 'distributor': $statusBaseQuery->where('distributor_user_id', $user->id); break;
+            case 'academy':     $statusBaseQuery->whereIn('vendor_id', DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id')); break;
+        }
+        $statusCounts = $statusBaseQuery->select('status_code', DB::raw('count(*) as cnt'))
+            ->groupBy('status_code')->pluck('cnt', 'status_code');
+
+        return view('public.mypage.orders', [
+            'user'   => $user,
+            'orders' => $orders,
+            'title'  => $title,
+            'status' => $status,
+            'statusCounts' => $statusCounts,
         ]);
     }
 
