@@ -55,10 +55,15 @@
         </div>
 
         {{-- 액션 카드 --}}
-        @if($canConfirm || $canAccept || $canShip || $canCancel)
+        @if($canConfirm || $canAccept || $canShip || $canCancel || $canEdit)
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-header bg-white"><strong><i class="bi bi-lightning"></i> 처리</strong></div>
                 <div class="card-body">
+                    @if($canEdit)
+                        <a href="{{ route('my.orders.edit', $order->id) }}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="bi bi-pencil-square"></i> 주문 수정 (수량/도서 삭제)
+                        </a>
+                    @endif
                     @if($canConfirm)
                         <form method="POST" action="{{ route('my.orders.transition', $order->id) }}" class="mb-2"
                               onsubmit="return confirm('주문을 확정하시겠습니까? 확정 후 총판에게 전달됩니다.')">

@@ -209,10 +209,131 @@ class MyPageController extends Controller
             if ($vendorIds->contains($order->vendor_id)) $canCancel = true;
         }
 
+        $canEdit = $this->canEditOrder($order, $user);
+
         return view('public.mypage.order_show', compact(
             'user', 'order', 'vendor', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
-            'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel'
+            'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit'
         ));
+    }
+
+    /** 주문 수정 폼 (학원, requested 상태) */
+    public function editOrder($id)
+    {
+        $order = \App\Models\Order::findOrFail($id);
+        $user  = $this->authorizeOrder($order);
+
+        if (! $this->canEditOrder($order, $user)) {
+            return redirect()->route('my.orders.show', $order->id)
+                ->with('error', '수정 불가: 본인 학원의 접수 대기(requested) 상태 주문만 수정할 수 있습니다.');
+        }
+
+        $vendor = DB::table('vendors')->find($order->vendor_id);
+        $items  = DB::table('order_items as oi')
+            ->leftJoin('books as b', 'b.id', '=', 'oi.book_id')
+            ->where('oi.order_id', $order->id)
+            ->select('oi.*', 'b.cover_path', 'b.isbn as book_isbn', 'b.title as book_title')
+            ->orderBy('oi.id')->get();
+
+        return view('public.mypage.order_edit', compact('user', 'order', 'vendor', 'items'));
+    }
+
+    /** 주문 수정 적용 (수량 변경 + 행 삭제) */
+    public function updateOrder(Request $request, $id)
+    {
+        $order = \App\Models\Order::findOrFail($id);
+        $user  = $this->authorizeOrder($order);
+
+        if (! $this->canEditOrder($order, $user)) {
+            return redirect()->route('my.orders.show', $order->id)
+                ->with('error', '수정 불가: 본인 학원의 접수 대기(requested) 상태 주문만 수정할 수 있습니다.');
+        }
+
+        $data = $request->validate([
+            'items'           => ['required', 'array', 'min:1'],
+            'items.*.id'      => ['required', 'integer'],
+            'items.*.qty'     => ['required', 'integer', 'min:0', 'max:99999'],
+            'items.*.delete'  => ['nullable', 'in:0,1'],
+            'reason'          => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $existingItems = DB::table('order_items')->where('order_id', $order->id)->get()->keyBy('id');
+        $beforeSnapshot = [
+            'total_amount' => $order->total_amount,
+            'items' => $existingItems->map(fn ($r) => ['book_id' => $r->book_id, 'qty' => $r->qty, 'line_total' => $r->line_total])->values()->all(),
+        ];
+
+        $newSubtotal = 0;
+        $toUpdate = []; // [id => qty]
+        $toDelete = []; // [id, ...]
+        $keptCount = 0;
+
+        foreach ($data['items'] as $row) {
+            $itemId = (int) $row['id'];
+            $item   = $existingItems->get($itemId);
+            if (! $item) continue; // 본인 주문 아닌 행은 무시
+
+            $deleting = (! empty($row['delete']) && $row['delete'] == '1') || (int) $row['qty'] === 0;
+            if ($deleting) {
+                $toDelete[] = $itemId;
+                continue;
+            }
+
+            $qty = (int) $row['qty'];
+            $lineTotal = (int) $item->unit_price * $qty;
+            $toUpdate[$itemId] = ['qty' => $qty, 'line_total' => $lineTotal];
+            $newSubtotal += $lineTotal;
+            $keptCount++;
+        }
+
+        if ($keptCount === 0) {
+            return back()->withInput()->with('error', '최소 1개 도서는 남겨야 합니다. 전체 삭제는 "주문 취소"를 사용하세요.');
+        }
+
+        DB::transaction(function () use ($order, $toUpdate, $toDelete, $newSubtotal, $user, $data) {
+            foreach ($toUpdate as $itemId => $up) {
+                DB::table('order_items')->where('id', $itemId)->update([
+                    'qty'        => $up['qty'],
+                    'line_total' => $up['line_total'],
+                    'updated_at' => now(),
+                ]);
+            }
+            if (! empty($toDelete)) {
+                DB::table('order_items')->whereIn('id', $toDelete)->delete();
+            }
+            DB::table('orders')->where('id', $order->id)->update([
+                'subtotal_amount' => $newSubtotal,
+                'total_amount'    => $newSubtotal, // shipping_fee=0 가정 (기존과 동일)
+                'updated_at'      => now(),
+            ]);
+            DB::table('order_status_logs')->insert([
+                'order_id'    => $order->id,
+                'from_status' => 'requested',
+                'to_status'   => 'requested',
+                'changed_by'  => $user->id,
+                'reason'      => '주문 수정: '.($data['reason'] ?? '학원에서 수량 변경/도서 삭제'),
+                'created_at'  => now(),
+            ]);
+        });
+
+        $afterSnapshot = [
+            'total_amount' => $newSubtotal,
+            'deleted_item_ids' => $toDelete,
+            'updated_count' => count($toUpdate),
+        ];
+        AuditLog::log('orders', $order->id, 'update_items', $beforeSnapshot, $afterSnapshot);
+
+        return redirect()->route('my.orders.show', $order->id)
+            ->with('success', '주문이 수정되었습니다. (총액 '.number_format($newSubtotal).'원)');
+    }
+
+    /** 주문 수정 가능 여부: 학원 본인 vendor + requested 상태 */
+    private function canEditOrder($order, $user): bool
+    {
+        if ($order->status_code !== 'requested') return false;
+        if ($user->role_code !== 'academy') return false;
+        $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
+        return $vendorIds->contains($order->vendor_id);
     }
 
     /** 상태 전이 (영업자 confirm, 총판 accept, 취소 등) */
