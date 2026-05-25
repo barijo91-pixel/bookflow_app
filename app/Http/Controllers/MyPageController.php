@@ -198,9 +198,16 @@ class MyPageController extends Controller
         $canConfirm = ($user->role_code === 'agent' && $order->agent_user_id == $user->id && $order->status_code === 'requested');
         $canAccept  = ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id && $order->status_code === 'confirmed');
         $canShip    = ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id && $order->status_code === 'accepted');
-        $canCancel  = in_array($order->status_code, ['requested','confirmed','accepted'])
-                      && ($user->role_code === 'agent' && $order->agent_user_id == $user->id
-                       || $user->role_code === 'distributor' && $order->distributor_user_id == $user->id);
+        // 학원도 본인 주문이고 아직 'requested' 상태면 취소 가능 / 영업자·총판은 더 넓은 범위
+        $canCancel = false;
+        if (in_array($order->status_code, ['requested','confirmed','accepted'])) {
+            if ($user->role_code === 'agent' && $order->agent_user_id == $user->id) $canCancel = true;
+            if ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id) $canCancel = true;
+        }
+        if ($order->status_code === 'requested' && $user->role_code === 'academy') {
+            $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
+            if ($vendorIds->contains($order->vendor_id)) $canCancel = true;
+        }
 
         return view('public.mypage.order_show', compact(
             'user', 'order', 'vendor', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
@@ -225,9 +232,17 @@ class MyPageController extends Controller
         $allowed = false;
         if ($to === 'confirmed' && $user->role_code === 'agent' && $from === 'requested' && $order->agent_user_id == $user->id) $allowed = true;
         if ($to === 'accepted'  && $user->role_code === 'distributor' && $from === 'confirmed' && $order->distributor_user_id == $user->id) $allowed = true;
-        if ($to === 'canceled'  && in_array($from, ['requested','confirmed','accepted'])) {
-            if ($user->role_code === 'agent' && $order->agent_user_id == $user->id) $allowed = true;
-            if ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id) $allowed = true;
+        if ($to === 'canceled') {
+            // 영업자/총판: requested~accepted 까지
+            if (in_array($from, ['requested','confirmed','accepted'])) {
+                if ($user->role_code === 'agent' && $order->agent_user_id == $user->id) $allowed = true;
+                if ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id) $allowed = true;
+            }
+            // 학원: 본인 학원 주문이고 아직 'requested' 일 때만
+            if ($from === 'requested' && $user->role_code === 'academy') {
+                $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
+                if ($vendorIds->contains($order->vendor_id)) $allowed = true;
+            }
         }
         if (! $allowed) {
             return back()->with('error', "상태 전이 불가 ({$from} → {$to})");

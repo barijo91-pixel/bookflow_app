@@ -108,11 +108,11 @@
                     <div class="row g-2">
                         <div class="col-6">
                             <label class="form-label small text-muted">시작일</label>
-                            <input type="date" name="started_at" class="form-control">
+                            <input type="date" name="started_at" id="newClassStartedAt" class="form-control" value="{{ now()->toDateString() }}">
                         </div>
                         <div class="col-6">
-                            <label class="form-label small text-muted">종료일</label>
-                            <input type="date" name="ended_at" class="form-control">
+                            <label class="form-label small text-muted">종료일 <small class="text-muted">(기본 +6개월)</small></label>
+                            <input type="date" name="ended_at" id="newClassEndedAt" class="form-control" value="{{ now()->addMonths(6)->toDateString() }}">
                         </div>
                     </div>
                     <div class="mt-3">
@@ -128,4 +128,23 @@
         </div>
     </div>
 </div>
+@push('scripts')
+<script>
+// 학급 추가 모달: 시작일 변경 시 종료일 자동 +6개월
+(function () {
+    const startEl = document.getElementById('newClassStartedAt');
+    const endEl   = document.getElementById('newClassEndedAt');
+    if (! startEl || ! endEl) return;
+    startEl.addEventListener('change', function () {
+        if (! this.value) return;
+        const d = new Date(this.value);
+        d.setMonth(d.getMonth() + 6);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        endEl.value = `${y}-${m}-${day}`;
+    });
+})();
+</script>
+@endpush
 @endsection
