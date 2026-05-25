@@ -559,15 +559,56 @@ class MyPageController extends Controller
         return back()->with('success', '재고 항목이 제거되었습니다.');
     }
 
-    /** 소속 영업자 (총판) */
+    /** 소속 영업자 (총판) - Phase B-9 */
     public function agentsIndex()
     {
-        return view('public.mypage.placeholder', [
-            'user'  => Auth::user(),
-            'title' => '소속 영업자',
-            'icon'  => 'bi-person-badge',
-            'description' => '총판 산하 영업자 목록 및 매핑 관리. 곧 제공됩니다.',
-        ]);
+        $user = Auth::user();
+        if ($user->role_code !== 'distributor') {
+            abort(403, '총판만 접근 가능합니다.');
+        }
+
+        // user_relations 에서 본 총판의 영업자 (active)
+        $agents = DB::table('user_relations as r')
+            ->join('users as u', 'u.id', '=', 'r.child_user_id')
+            ->leftJoin('regions as rg', 'rg.id', '=', 'u.region_id')
+            ->leftJoin('regions as p', 'p.id', '=', 'rg.parent_id')
+            ->where('r.parent_user_id', $user->id)
+            ->where('r.relation_type', 'distributor_agent')
+            ->where('r.status', 'active')
+            ->select(
+                'u.id', 'u.login_id', 'u.name', 'u.phone', 'u.email', 'u.status_code',
+                'u.last_login_at', 'u.approved_at',
+                'rg.name as sigungu_name', 'p.name as sido_name',
+                'r.started_at'
+            )
+            ->orderBy('u.name')
+            ->get();
+
+        // 각 영업자가 담당하는 학원 수 + 처리 주문 수
+        $agentIds = $agents->pluck('id')->toArray();
+        if (! empty($agentIds)) {
+            // 담당 학원 수
+            $vendorCounts = DB::table('agent_vendor_discounts')
+                ->whereIn('agent_user_id', $agentIds)
+                ->where('is_active', true)
+                ->select('agent_user_id', DB::raw('count(*) as cnt'))
+                ->groupBy('agent_user_id')->pluck('cnt', 'agent_user_id');
+            // 주문 (이 총판으로 들어온 것 중 영업자가 처리한 것)
+            $orderCounts = DB::table('orders')
+                ->where('distributor_user_id', $user->id)
+                ->whereIn('agent_user_id', $agentIds)
+                ->whereNotIn('status_code', ['canceled', 'returned'])
+                ->whereNull('deleted_at')
+                ->select('agent_user_id', DB::raw('count(*) as cnt'), DB::raw('sum(total_amount) as amt'))
+                ->groupBy('agent_user_id')->get()->keyBy('agent_user_id');
+            foreach ($agents as $a) {
+                $a->vendor_count = $vendorCounts[$a->id] ?? 0;
+                $a->order_count  = isset($orderCounts[$a->id]) ? $orderCounts[$a->id]->cnt : 0;
+                $a->order_amount = isset($orderCounts[$a->id]) ? (int) $orderCounts[$a->id]->amt : 0;
+            }
+        }
+
+        return view('public.mypage.agents', compact('user', 'agents'));
     }
 
     /** 담당 학원 (영업자) */
@@ -600,15 +641,119 @@ class MyPageController extends Controller
         ]);
     }
 
-    /** 할인율 관리 (영업자) */
-    public function discountsIndex()
+    /** 할인율 관리 (영업자) - Phase B-7 */
+    public function discountsIndex(Request $request)
     {
-        return view('public.mypage.placeholder', [
-            'user'  => Auth::user(),
-            'title' => '할인율 관리',
-            'icon'  => 'bi-percent',
-            'description' => '학원별·도서별 할인율 조정. 곧 제공됩니다.',
+        $user = Auth::user();
+        if ($user->role_code !== 'agent') {
+            abort(403, '영업자만 접근 가능합니다.');
+        }
+
+        // 본인 담당 학원들 (할인율 포함)
+        $vendors = DB::table('agent_vendor_discounts as avd')
+            ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
+            ->where('avd.agent_user_id', $user->id)
+            ->select(
+                'avd.id as avd_id', 'avd.discount_rate as general_rate', 'avd.is_active',
+                'v.id as vendor_id', 'v.name as vendor_name'
+            )
+            ->orderByDesc('avd.is_active')->orderBy('v.name')->get();
+
+        // 선택된 학원
+        $selectedVendorId = (int) $request->query('vendor_id', $vendors->first()->vendor_id ?? 0);
+        $selectedVendor = $vendors->firstWhere('vendor_id', $selectedVendorId);
+
+        // 도서별 개별 할인율 (선택된 학원)
+        $bookDiscounts = collect();
+        $availableBooks = collect();
+        if ($selectedVendor) {
+            $bookDiscounts = DB::table('agent_vendor_book_discounts as avbd')
+                ->join('books as b', 'b.id', '=', 'avbd.book_id')
+                ->where('avbd.agent_user_id', $user->id)
+                ->where('avbd.vendor_id', $selectedVendorId)
+                ->select(
+                    'avbd.id as avbd_id', 'avbd.discount_rate', 'avbd.is_active',
+                    'b.id as book_id', 'b.isbn', 'b.title', 'b.price'
+                )
+                ->orderBy('b.title')->get();
+
+            $existingBookIds = $bookDiscounts->pluck('book_id')->toArray();
+            $availableBooks = DB::table('books')
+                ->whereNull('deleted_at')->where('status_code', 'selling')
+                ->whereNotIn('id', $existingBookIds)
+                ->orderBy('title')->get(['id', 'title', 'isbn', 'price']);
+        }
+
+        return view('public.mypage.discounts', compact(
+            'user', 'vendors', 'selectedVendor', 'selectedVendorId', 'bookDiscounts', 'availableBooks'
+        ));
+    }
+
+    /** 학원별 일반 할인율 수정 */
+    public function discountVendorUpdate(Request $request, $avdId)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'agent') abort(403);
+
+        $data = $request->validate([
+            'discount_rate' => ['required', 'numeric', 'min:0', 'max:100'],
+            'is_active'     => ['nullable', 'boolean'],
         ]);
+
+        $row = DB::table('agent_vendor_discounts')->where('id', $avdId)
+            ->where('agent_user_id', $user->id)->first();
+        if (! $row) abort(404);
+
+        DB::table('agent_vendor_discounts')->where('id', $avdId)->update([
+            'discount_rate' => $data['discount_rate'],
+            'is_active'     => $request->boolean('is_active'),
+            'updated_at'    => now(),
+        ]);
+
+        AuditLog::log('agent_vendor_discounts', $avdId, 'update',
+            ['discount_rate' => $row->discount_rate],
+            ['discount_rate' => $data['discount_rate']]);
+        return back()->with('success', '학원 할인율이 저장되었습니다.');
+    }
+
+    /** 도서별 개별 할인율 추가/수정 */
+    public function discountBookUpsert(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'agent') abort(403);
+
+        $data = $request->validate([
+            'vendor_id' => ['required', 'integer'],
+            'book_id'   => ['required', 'integer', 'exists:books,id'],
+            'discount_rate' => ['required', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        // 영업자가 이 학원에 매핑되어 있는지 검증
+        $hasVendor = DB::table('agent_vendor_discounts')
+            ->where('agent_user_id', $user->id)
+            ->where('vendor_id', $data['vendor_id'])->exists();
+        if (! $hasVendor) abort(403, '담당하지 않는 학원입니다.');
+
+        DB::table('agent_vendor_book_discounts')->updateOrInsert(
+            ['agent_user_id' => $user->id, 'vendor_id' => $data['vendor_id'], 'book_id' => $data['book_id']],
+            ['discount_rate' => $data['discount_rate'], 'is_active' => true,
+             'started_at' => now()->toDateString(), 'updated_at' => now(), 'created_at' => now()]
+        );
+        return back()->with('success', '도서 개별 할인율이 저장되었습니다.');
+    }
+
+    /** 도서별 개별 할인율 제거 */
+    public function discountBookDestroy($avbdId)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'agent') abort(403);
+
+        $row = DB::table('agent_vendor_book_discounts')->where('id', $avbdId)
+            ->where('agent_user_id', $user->id)->first();
+        if (! $row) abort(404);
+
+        DB::table('agent_vendor_book_discounts')->where('id', $avbdId)->delete();
+        return back()->with('success', '개별 할인율이 제거되었습니다.');
     }
 
     /** 도서 주문하기 (학원) - 검색 + 장바구니 + 주문 생성 */

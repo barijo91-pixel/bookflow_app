@@ -68,6 +68,9 @@ Route::middleware('auth')->group(function () {
         // 영업자 전용
         Route::get('vendors',    [\App\Http\Controllers\MyPageController::class, 'vendorsIndex'])->name('vendors.index');
         Route::get('discounts',  [\App\Http\Controllers\MyPageController::class, 'discountsIndex'])->name('discounts.index');
+        Route::put('discounts/vendor/{avdId}',     [\App\Http\Controllers\MyPageController::class, 'discountVendorUpdate'])->name('discounts.vendor.update');
+        Route::post('discounts/book',              [\App\Http\Controllers\MyPageController::class, 'discountBookUpsert'])->name('discounts.book.upsert');
+        Route::delete('discounts/book/{avbdId}',   [\App\Http\Controllers\MyPageController::class, 'discountBookDestroy'])->name('discounts.book.destroy');
 
         // 학원 전용 - 주문하기 + 장바구니
         Route::get('order/new',  [\App\Http\Controllers\MyPageController::class, 'orderNew'])->name('order_new');
