@@ -625,6 +625,7 @@ class MyPageController extends Controller
             ->leftJoin('regions as p', 'p.id', '=', 'r.parent_id')
             ->where('avd.agent_user_id', $user->id)
             ->select(
+                'avd.id as avd_id',
                 'v.id', 'v.name', 'v.owner_name', 'v.business_no',
                 'v.mobile', 'v.tel', 'v.status_code',
                 'avd.discount_rate', 'avd.is_active as discount_active',
@@ -740,6 +741,29 @@ class MyPageController extends Controller
              'started_at' => now()->toDateString(), 'updated_at' => now(), 'created_at' => now()]
         );
         return back()->with('success', '도서 개별 할인율이 저장되었습니다.');
+    }
+
+    /** 학원별 할인율 매핑 비활성화 (소프트 삭제) */
+    public function discountVendorDestroy($avdId)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'agent') abort(403);
+
+        $row = DB::table('agent_vendor_discounts')->where('id', $avdId)
+            ->where('agent_user_id', $user->id)->first();
+        if (! $row) abort(404);
+
+        DB::table('agent_vendor_discounts')->where('id', $avdId)->update([
+            'is_active'  => false,
+            'ended_at'   => now()->toDateString(),
+            'updated_at' => now(),
+        ]);
+
+        AuditLog::log('agent_vendor_discounts', $avdId, 'deactivate',
+            ['is_active' => (bool) $row->is_active],
+            ['is_active' => false]);
+
+        return back()->with('success', '학원 할인 매핑이 비활성화되었습니다. (재활성화는 관리자 문의)');
     }
 
     /** 도서별 개별 할인율 제거 */
