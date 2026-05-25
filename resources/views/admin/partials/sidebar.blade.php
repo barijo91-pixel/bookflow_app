@@ -20,6 +20,9 @@
         <a href="{{ route('admin.users.index') }}" class="nav-item {{ $is('admin.users.index') }}">
             <i class="bi bi-people"></i> 사용자 목록
         </a>
+        <a href="{{ route('admin.users.import.show') }}" class="nav-item {{ $is('admin.users.import') }}">
+            <i class="bi bi-file-earmark-spreadsheet"></i> 사용자 엑셀 등록
+        </a>
         <div class="nav-section">거래·도서</div>
         <a href="{{ route('admin.vendors.index') }}" class="nav-item {{ $is('admin.vendors') }}">
             <i class="bi bi-building"></i> 거래처(학원)

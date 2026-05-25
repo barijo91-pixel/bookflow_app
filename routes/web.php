@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\RegionController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserImportController;
 use App\Http\Controllers\Admin\VendorController;
 use Illuminate\Support\Facades\Route;
 
@@ -112,6 +113,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('users/create',           [UserController::class, 'create'])->name('users.create');
         Route::post('users',                 [UserController::class, 'store'])->name('users.store');
         Route::get('users/pending',          [UserController::class, 'pending'])->name('users.pending');
+        // 사용자 엑셀 일괄 등록
+        Route::get('users/import',           [UserImportController::class, 'show'])->name('users.import.show');
+        Route::get('users/import/template',  [UserImportController::class, 'template'])->name('users.import.template');
+        Route::post('users/import/preview',  [UserImportController::class, 'preview'])->name('users.import.preview');
+        Route::post('users/import/{jobId}/run', [UserImportController::class, 'run'])->name('users.import.run');
         Route::get('users/{user}',           [UserController::class, 'show'])->name('users.show');
         Route::put('users/{user}',           [UserController::class, 'update'])->name('users.update');
         Route::post('users/{user}/approve',  [UserController::class, 'approve'])->name('users.approve');
