@@ -114,22 +114,20 @@
                     </table>
                 </div>
 
-                {{-- 새 도서 개별 할인율 추가 --}}
+                {{-- 새 도서 개별 할인율 추가 (검색형 combobox) --}}
                 @if($availableBooks->isNotEmpty())
                     <div class="card-footer bg-white">
-                        <form method="POST" action="{{ route('my.discounts.book.upsert') }}" class="row g-2 align-items-end">
+                        <form method="POST" action="{{ route('my.discounts.book.upsert') }}" class="row g-2 align-items-end" id="addBookDiscountForm">
                             @csrf
                             <input type="hidden" name="vendor_id" value="{{ $selectedVendorId }}">
-                            <div class="col-md-7">
+                            <div class="col-md-7 position-relative">
                                 <label class="form-label small text-muted mb-1">개별 할인율 추가할 도서</label>
-                                <select name="book_id" class="form-select form-select-sm" required>
-                                    <option value="">선택</option>
-                                    @foreach($availableBooks as $ab)
-                                        <option value="{{ $ab->id }}">
-                                            {{ \Illuminate\Support\Str::limit($ab->title, 40) }} ({{ number_format($ab->price) }}원)
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <input type="text" id="bookSearchInput" class="form-control form-control-sm"
+                                       placeholder="도서명 또는 ISBN 입력..." autocomplete="off">
+                                <input type="hidden" name="book_id" id="bookIdInput" required>
+                                <div id="bookSearchResults" class="position-absolute bg-white border rounded shadow-sm w-100 d-none"
+                                     style="max-height:300px; overflow-y:auto; z-index:1000; top:100%; left:0;">
+                                </div>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small text-muted mb-1">할인율 %</label>
@@ -138,7 +136,7 @@
                                        class="form-control form-control-sm text-end">
                             </div>
                             <div class="col-md-2 d-grid">
-                                <button class="btn btn-sm btn-outline-navy"><i class="bi bi-plus"></i> 추가</button>
+                                <button class="btn btn-sm btn-outline-navy" type="submit"><i class="bi bi-plus"></i> 추가</button>
                             </div>
                         </form>
                     </div>
@@ -153,4 +151,74 @@
         @endif
     </div>
 </div>
+@push('scripts')
+@if($selectedVendor && $availableBooks->isNotEmpty())
+<script>
+(function () {
+    const books = @json($availableBooks->map(fn($b) => ['id'=>$b->id,'title'=>$b->title,'isbn'=>$b->isbn,'price'=>$b->price]));
+    const input    = document.getElementById('bookSearchInput');
+    const hidden   = document.getElementById('bookIdInput');
+    const results  = document.getElementById('bookSearchResults');
+    if (!input || !results) return;
+
+    function render(filtered) {
+        if (filtered.length === 0) {
+            results.innerHTML = '<div class="px-3 py-2 small text-muted">검색 결과 없음</div>';
+        } else {
+            results.innerHTML = filtered.slice(0, 50).map(b =>
+                `<a href="#" class="d-block px-3 py-2 small text-decoration-none text-dark border-bottom book-pick" data-id="${b.id}" data-label="${b.title}">
+                    <strong>${escapeHtml(b.title)}</strong>
+                    <div class="text-muted small">
+                        <code>${b.isbn}</code> · ${Number(b.price).toLocaleString()}원
+                    </div>
+                </a>`
+            ).join('');
+        }
+        results.classList.remove('d-none');
+    }
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function filter(query) {
+        const q = query.trim().toLowerCase();
+        if (q === '') return books;
+        return books.filter(b =>
+            b.title.toLowerCase().includes(q) ||
+            String(b.isbn).toLowerCase().includes(q)
+        );
+    }
+
+    input.addEventListener('focus', () => render(filter(input.value)));
+    input.addEventListener('input', () => {
+        hidden.value = ''; // 검색 시 선택값 초기화
+        render(filter(input.value));
+    });
+
+    results.addEventListener('click', (e) => {
+        const link = e.target.closest('.book-pick');
+        if (!link) return;
+        e.preventDefault();
+        hidden.value = link.dataset.id;
+        input.value  = link.dataset.label;
+        results.classList.add('d-none');
+    });
+
+    // 외부 클릭 시 닫기
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !results.contains(e.target)) {
+            results.classList.add('d-none');
+        }
+    });
+
+    // submit 전 hidden 검증
+    document.getElementById('addBookDiscountForm').addEventListener('submit', (e) => {
+        if (!hidden.value) {
+            e.preventDefault();
+            alert('목록에서 도서를 선택해주세요.');
+            input.focus();
+        }
+    });
+})();
+</script>
+@endif
+@endpush
 @endsection
