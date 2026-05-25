@@ -32,7 +32,7 @@
                             <div class="text-muted small"><code>{{ $a->login_id }}</code></div>
                         </td>
                         <td class="small text-muted">
-                            <i class="bi bi-phone"></i> {{ $a->phone }}
+                            <i class="bi bi-phone"></i> {{ format_phone($a->phone) }}
                             @if($a->email)
                                 <div class="text-muted small"><i class="bi bi-envelope"></i> {{ $a->email }}</div>
                             @endif

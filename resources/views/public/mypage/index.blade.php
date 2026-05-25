@@ -39,7 +39,7 @@
                     <dd class="col-8">{{ $user->name }}</dd>
 
                     <dt class="col-4 text-muted">휴대폰</dt>
-                    <dd class="col-8">{{ $user->phone }}</dd>
+                    <dd class="col-8">{{ format_phone($user->phone) }}</dd>
 
                     @if($user->email)
                         <dt class="col-4 text-muted">이메일</dt>
@@ -110,7 +110,7 @@
                     @foreach($my_academies as $a)
                         <li class="list-group-item small d-flex justify-content-between">
                             <span>{{ $a->name }}</span>
-                            <span class="text-muted">{{ $a->mobile }}</span>
+                            <span class="text-muted">{{ format_phone($a->mobile) }}</span>
                         </li>
                     @endforeach
                 </ul>
@@ -148,7 +148,7 @@
                                 @foreach($my_vendors as $v)
                                     <tr>
                                         <td class="small">{{ $v->name }}</td>
-                                        <td class="small text-muted">{{ $v->mobile }}</td>
+                                        <td class="small text-muted">{{ format_phone($v->mobile) }}</td>
                                         <td>
                                             @switch($v->status_code)
                                                 @case('active')    <span class="badge bg-success">정상</span> @break
@@ -179,7 +179,7 @@
                                 @foreach($my_agents as $a)
                                     <tr>
                                         <td class="small">{{ $a->name }}</td>
-                                        <td class="small text-muted">{{ $a->phone }}</td>
+                                        <td class="small text-muted">{{ format_phone($a->phone) }}</td>
                                         <td class="text-end small">{{ rtrim(rtrim($a->discount_rate, '0'), '.') }}%</td>
                                     </tr>
                                 @endforeach

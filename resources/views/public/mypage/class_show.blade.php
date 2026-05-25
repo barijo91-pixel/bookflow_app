@@ -159,7 +159,7 @@
                                     @endif
                                 </td>
                                 <td class="small">{{ $s->parent_name ?? '-' }}</td>
-                                <td class="small text-muted">{{ $s->parent_phone ?? '-' }}</td>
+                                <td class="small text-muted">{{ $s->parent_phone ? format_phone($s->parent_phone) : '-' }}</td>
                                 <td class="text-end">
                                     {{-- 공유링크 발송 --}}
                                     <form method="POST" action="{{ route('my.classes.share', $class->id) }}"

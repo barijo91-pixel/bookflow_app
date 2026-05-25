@@ -70,7 +70,7 @@
                         </td>
                         <td>{{ $v->owner_name }}</td>
                         <td class="text-muted small">{{ $v->business_no }}</td>
-                        <td class="text-muted small">{{ $v->mobile ?: $v->tel }}</td>
+                        <td class="text-muted small">{{ format_phone($v->mobile ?: $v->tel) }}</td>
                         <td><span class="badge bg-light text-dark">{{ $v->type_code }}</span></td>
                         <td>
                             @switch($v->status_code)

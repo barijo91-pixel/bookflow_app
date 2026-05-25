@@ -55,7 +55,7 @@
     @endforeach
 
     <div class="text-center text-muted small mt-4 mb-5">
-        문의: {{ $vendor->mobile ?? $vendor->tel ?? '' }}<br>
+        문의: {{ format_phone($vendor->mobile ?? $vendor->tel ?? '') }}<br>
         <span style="opacity:.6">Powered by BookSys</span>
     </div>
 </div>

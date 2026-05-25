@@ -69,10 +69,10 @@
                         </td>
                         <td class="small">
                             @if($v->mobile)
-                                <i class="bi bi-phone"></i> {{ $v->mobile }}
+                                <i class="bi bi-phone"></i> {{ format_phone($v->mobile) }}
                             @endif
                             @if($v->tel)
-                                <div class="text-muted"><i class="bi bi-telephone"></i> {{ $v->tel }}</div>
+                                <div class="text-muted"><i class="bi bi-telephone"></i> {{ format_phone($v->tel) }}</div>
                             @endif
                         </td>
                         <td class="text-end">
