@@ -35,8 +35,8 @@ function makeIcon(int $size, string $path, bool $maskable = false): void
         imagefilledrectangle($img, 0, 0, $S, $S, $navy);
         $padding = (int) ($S * 0.18); // 18% safe-zone
     } else {
-        // 둥근 사각형
-        $r = (int) ($S * 0.22);
+        // 둥근 사각형 (살짝 더 둥글게)
+        $r = (int) ($S * 0.27);
         drawRoundedRect($img, 0, 0, $S - 1, $S - 1, $r, $navy);
         $padding = (int) ($S * 0.22);
     }
