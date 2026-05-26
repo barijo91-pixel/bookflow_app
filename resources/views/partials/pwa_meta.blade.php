@@ -107,18 +107,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function markAsInstalled() {
-        // 둘 다 opacity만 살짝 낮춤. 클릭은 가능 → 안내 모달 노출
-        // (.disabled 클래스를 쓰면 Bootstrap pointer-events:none으로 클릭 차단됨 — 사용 X)
-        if (heroBtn) {
-            heroBtn.style.opacity = '.85';
-            const txt1 = document.getElementById('heroInstallBtnText');
-            if (txt1) txt1.textContent = '북시스 앱설치 안내';
-        }
-        if (btn) {
-            btn.style.opacity = '.85';
-            const txt2 = document.getElementById('pwaInstallBtnText');
-            if (txt2) txt2.textContent = '북시스 앱설치';
-        }
+        // 텍스트는 그대로 '북시스 앱설치' 유지, opacity만 살짝 낮춤
+        // 클릭 시 안내 모달 (이미 설치된 사용자 대응)
+        if (heroBtn) heroBtn.style.opacity = '.85';
+        if (btn) btn.style.opacity = '.85';
         if (heroInstalledHint) heroInstalledHint.style.display = 'block';
     }
 
