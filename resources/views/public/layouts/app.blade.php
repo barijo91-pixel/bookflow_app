@@ -90,7 +90,7 @@
             border-color: rgba(255,255,255,0.4);
         }
         .public-topbar .user-info .badge { margin-left: .3rem; }
-        .public-content { flex: 1; padding: 2rem 1.5rem; }
+        .public-content { flex: 1; padding: 1.5rem 1.5rem 2rem; }
 
         /* 모바일 (768px 이하): 사이드바 숨김 + 햄버거 */
         @media (max-width: 768px) {
@@ -143,7 +143,7 @@
             </span>
         </header>
         <main class="public-content">
-            <div style="max-width: @yield('max_width', '1100px'); margin: 0 auto;">
+            <div style="max-width: @yield('max_width', '1400px');">
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}<button class="btn-close" data-bs-dismiss="alert"></button></div>
                 @endif
