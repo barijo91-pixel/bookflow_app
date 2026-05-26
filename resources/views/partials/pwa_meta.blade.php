@@ -66,14 +66,16 @@
 </div>
 
 <script>
-(function () {
-    // 1. Service worker 등록
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('{{ asset('service-worker.js') }}').catch(() => {});
-        });
-    }
+// Service worker 등록은 즉시 가능
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('{{ asset('service-worker.js') }}').catch(() => {});
+    });
+}
 
+// 나머지 DOM 요소 의존 로직은 DOMContentLoaded 후 실행
+// (이 스크립트는 <head>에 있어서 body의 heroInstallBtn이 아직 없는 시점)
+document.addEventListener('DOMContentLoaded', function () {
     const btn = document.getElementById('pwaInstallBtn');
     const modal = document.getElementById('pwaInstallModal');
     const closeBtn = document.getElementById('pwaInstallClose');
@@ -203,5 +205,5 @@
             if (e.target === modal) modal.classList.remove('show');
         });
     }
-})();
+});
 </script>
