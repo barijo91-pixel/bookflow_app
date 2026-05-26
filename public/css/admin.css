@@ -129,12 +129,25 @@ a { color: var(--accent); }
     min-width: 0;
 }
 .admin-topbar {
-    background: #fff;
+    background: var(--sidebar-bg);
     border-bottom: 1px solid var(--sidebar-border);
-    padding: .6rem 1.5rem;
+    padding: .65rem 1.5rem;
     display: flex;
     align-items: center;
+    color: var(--sidebar-text);
 }
+.admin-topbar .text-muted { color: var(--sidebar-text) !important; }
+.admin-topbar .btn-outline-secondary {
+    color: var(--sidebar-text);
+    border-color: rgba(255,255,255,0.25);
+}
+.admin-topbar .btn-outline-secondary:hover,
+.admin-topbar .btn-outline-secondary:focus {
+    background: rgba(255,255,255,0.1);
+    color: var(--sidebar-text-strong);
+    border-color: rgba(255,255,255,0.4);
+}
+.admin-topbar .bi { opacity: .9; }
 .admin-content {
     padding: 1.5rem;
     flex: 1;
