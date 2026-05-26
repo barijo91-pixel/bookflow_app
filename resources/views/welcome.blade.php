@@ -62,7 +62,7 @@
             color: #fff;
             padding: 5rem 1rem;
         }
-        .hero h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: -.02em; }
+        .hero h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: -.02em; word-break: keep-all; }
         .hero .lead { font-size: 1.15rem; opacity: .92; }
         .hero .badge-tag { background: rgba(255,255,255,.15); color: #fff; padding: .35rem .8rem; border-radius: 99px; font-size: .85rem; font-weight: 500; }
 
@@ -128,8 +128,12 @@
 
         @media (max-width: 767.98px) {
             .hero { padding: 3rem 1rem; }
-            .hero h1 { font-size: 1.9rem; }
+            .hero h1 { font-size: 1.6rem; line-height: 1.35; }
+            .hero .lead { font-size: 1rem; }
             section { padding: 3rem 1rem; }
+        }
+        @media (max-width: 400px) {
+            .hero h1 { font-size: 1.35rem; }
         }
     </style>
 </head>
