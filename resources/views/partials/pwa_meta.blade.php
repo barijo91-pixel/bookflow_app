@@ -105,17 +105,17 @@
     }
 
     function markAsInstalled() {
-        // 둘 다 텍스트만 '이미 설치됨'으로 변경 (보이긴 함, 클릭 시 안내 모달)
+        // 둘 다 opacity만 살짝 낮춤. 클릭은 가능 → 안내 모달 노출
+        // (.disabled 클래스를 쓰면 Bootstrap pointer-events:none으로 클릭 차단됨 — 사용 X)
         if (heroBtn) {
-            heroBtn.classList.add('disabled');
-            heroBtn.style.opacity = '.7';
+            heroBtn.style.opacity = '.85';
             const txt1 = document.getElementById('heroInstallBtnText');
-            if (txt1) txt1.textContent = '이미 설치됨';
+            if (txt1) txt1.textContent = '북시스 앱설치 안내';
         }
         if (btn) {
-            btn.style.opacity = '.7';
+            btn.style.opacity = '.85';
             const txt2 = document.getElementById('pwaInstallBtnText');
-            if (txt2) txt2.textContent = '이미 설치됨';
+            if (txt2) txt2.textContent = '북시스 앱설치';
         }
         if (heroInstalledHint) heroInstalledHint.style.display = 'block';
     }
