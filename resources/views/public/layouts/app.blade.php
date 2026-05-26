@@ -116,6 +116,7 @@
             padding: 1.5rem 1rem; color: var(--text-muted-2); font-size: .85rem; text-align: center;
         }
     </style>
+    @include('partials.pwa_meta')
     @stack('head')
 </head>
 <body>

@@ -136,6 +136,7 @@
             .hero h1 { font-size: 1.35rem; }
         }
     </style>
+    @include('partials.pwa_meta')
 </head>
 <body>
 
