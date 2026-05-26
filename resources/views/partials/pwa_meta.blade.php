@@ -46,8 +46,8 @@
     .pwa-install-modal button { background: #1a1d2e; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
 </style>
 
-<button id="pwaInstallBtn" class="pwa-install-btn" type="button" aria-label="앱 설치">
-    <i class="bi bi-download"></i> 앱 설치
+<button id="pwaInstallBtn" class="pwa-install-btn" type="button" aria-label="북시스 앱설치">
+    <i class="bi bi-download"></i> <span id="pwaInstallBtnText">북시스 앱설치</span>
     <span class="close" id="pwaInstallClose" title="이번엔 안 함">×</span>
 </button>
 
@@ -97,7 +97,7 @@
 
     function showButtons() {
         if (heroBtn) heroBtn.style.display = 'inline-flex';
-        // floating은 24시간 dismiss 룰 적용
+        // floating은 dismiss 24시간 룰 적용
         const dismissed = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
         if (!dismissed || Date.now() - dismissed >= 24 * 60 * 60 * 1000) {
             if (btn) btn.style.display = 'inline-flex';
@@ -105,13 +105,17 @@
     }
 
     function markAsInstalled() {
-        // floating은 숨김, hero 버튼은 텍스트만 '이미 설치됨'으로 변경 (계속 보이게)
-        if (btn) btn.style.display = 'none';
+        // 둘 다 텍스트만 '이미 설치됨'으로 변경 (보이긴 함, 클릭 시 안내 모달)
         if (heroBtn) {
             heroBtn.classList.add('disabled');
             heroBtn.style.opacity = '.7';
-            const txt = document.getElementById('heroInstallBtnText');
-            if (txt) txt.textContent = '이미 설치됨';
+            const txt1 = document.getElementById('heroInstallBtnText');
+            if (txt1) txt1.textContent = '이미 설치됨';
+        }
+        if (btn) {
+            btn.style.opacity = '.7';
+            const txt2 = document.getElementById('pwaInstallBtnText');
+            if (txt2) txt2.textContent = '이미 설치됨';
         }
         if (heroInstalledHint) heroInstalledHint.style.display = 'block';
     }
@@ -121,11 +125,14 @@
         if (heroBtn) heroBtn.style.display = 'none';
     }
 
-    // 4. 이미 standalone(PWA로 실행 중) → 모두 숨김
+    // 4. 이미 standalone(PWA로 실행 중) → 둘 다 숨김
     if (isStandalone) {
         hideButtons();
         return;
     }
+
+    // 4-1. 페이지 로드 시 floating은 dismiss 룰 무관하게 일단 표시 (엣지·크롬 일관성)
+    if (btn) btn.style.display = 'inline-flex';
 
     // 5. Chrome/Edge/Android: beforeinstallprompt 캡처
     window.addEventListener('beforeinstallprompt', (e) => {
