@@ -29,16 +29,13 @@ function makeIcon(int $size, string $path, bool $maskable = false): void
     $white = imagecolorallocate($img, 0xff, 0xff, 0xff);
     $gray  = imagecolorallocate($img, 0x9f, 0xb3, 0xc8);
 
-    // 배경
+    // 배경 — 모서리 더 강하게 둥글게
     if ($maskable) {
-        // maskable도 둥근 모서리 적용 (Windows·일부 OS에서 직사각 표시 방지)
-        // safe-zone(중앙 80%)에 콘텐츠가 있으므로 모서리 라운딩은 가변 마스킹과 호환됨
-        $r = (int) ($S * 0.18);
+        $r = (int) ($S * 0.28); // 0.18 → 0.28
         drawRoundedRect($img, 0, 0, $S - 1, $S - 1, $r, $navy);
         $padding = (int) ($S * 0.18);
     } else {
-        // 일반(any) 둥근 사각형
-        $r = (int) ($S * 0.27);
+        $r = (int) ($S * 0.34); // 0.27 → 0.34 (더 부드럽게)
         drawRoundedRect($img, 0, 0, $S - 1, $S - 1, $r, $navy);
         $padding = (int) ($S * 0.22);
     }
@@ -49,11 +46,12 @@ function makeIcon(int $size, string $path, bool $maskable = false): void
     $bookX = $padding;
     $bookY = (int) (($S - $bookH) / 2);
 
-    // 좌우 페이지 (흰색)
+    // 좌우 페이지 (흰색) — 모서리 살짝 둥글게
     $spineW = max(2, (int) ($S * 0.012));
     $halfW = (int) (($bookW - $spineW) / 2);
-    imagefilledrectangle($img, $bookX,                          $bookY, $bookX + $halfW,             $bookY + $bookH, $white);
-    imagefilledrectangle($img, $bookX + $halfW + $spineW,       $bookY, $bookX + $bookW,             $bookY + $bookH, $white);
+    $pageR = (int) ($S * 0.03);
+    drawRoundedRect($img, $bookX,                    $bookY, $bookX + $halfW,             $bookY + $bookH, $pageR, $white);
+    drawRoundedRect($img, $bookX + $halfW + $spineW, $bookY, $bookX + $bookW,             $bookY + $bookH, $pageR, $white);
 
     // 가운데 책등 (회색)
     imagefilledrectangle($img, $bookX + $halfW, $bookY - (int) ($S * 0.02),
