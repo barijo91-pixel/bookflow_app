@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
         // 학원 전용 - 주문하기 + 장바구니
         Route::get('order/new',  [\App\Http\Controllers\MyPageController::class, 'orderNew'])->name('order_new');
         Route::post('cart/add',     [\App\Http\Controllers\MyPageController::class, 'cartAdd'])->name('cart.add');
+        Route::post('cart/scan',    [\App\Http\Controllers\MyPageController::class, 'cartScanAdd'])->name('cart.scan');
         Route::post('cart/update',  [\App\Http\Controllers\MyPageController::class, 'cartUpdate'])->name('cart.update');
         Route::post('cart/remove',  [\App\Http\Controllers\MyPageController::class, 'cartRemove'])->name('cart.remove');
         Route::post('order/store',  [\App\Http\Controllers\MyPageController::class, 'storeOrder'])->name('order.store');

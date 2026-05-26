@@ -1053,6 +1053,56 @@ class MyPageController extends Controller
         ]);
     }
 
+    /**
+     * 바코드 스캔 → 장바구니 추가 (ISBN 기반)
+     * - 핸디 바코드 리더기: 키보드 입력 → Enter
+     * - 응답은 JSON (페이지 reload 없이 추가)
+     */
+    public function cartScanAdd(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'academy') {
+            return response()->json(['ok' => false, 'msg' => '학원만 사용 가능합니다.'], 403);
+        }
+
+        $data = $request->validate([
+            'isbn'     => ['required', 'string', 'max:30'],
+            'cart_key' => ['required', 'string'],
+            'qty'      => ['nullable', 'integer', 'min:1', 'max:99'],
+        ]);
+
+        // ISBN 정제 (숫자/X만 남김)
+        $isbn = preg_replace('/[^0-9Xx]/', '', $data['isbn']);
+        if (strlen($isbn) !== 13 && strlen($isbn) !== 10) {
+            return response()->json(['ok' => false, 'msg' => "ISBN 형식이 올바르지 않습니다 ({$isbn})"], 422);
+        }
+
+        $book = DB::table('books')
+            ->whereNull('deleted_at')
+            ->where('isbn', $isbn)
+            ->where('status_code', 'selling')
+            ->select('id', 'isbn', 'title', 'price')
+            ->first();
+        if (! $book) {
+            return response()->json(['ok' => false, 'msg' => "도서를 찾을 수 없습니다 (ISBN: {$isbn})"], 404);
+        }
+
+        $qty = (int) ($data['qty'] ?? 1);
+        $cart = $request->session()->get($data['cart_key'], []);
+        $cart[$book->id] = ($cart[$book->id] ?? 0) + $qty;
+        $request->session()->put($data['cart_key'], $cart);
+
+        return response()->json([
+            'ok'       => true,
+            'book'     => $book,
+            'qty'      => $cart[$book->id], // 누적 수량
+            'added'    => $qty,
+            'msg'      => "{$book->title} ({$qty}권) 추가 — 현재 {$cart[$book->id]}권",
+            'cart_count' => count($cart),
+            'cart_total_qty' => array_sum($cart),
+        ]);
+    }
+
     /** 장바구니 - 추가 */
     public function cartAdd(Request $request)
     {

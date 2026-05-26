@@ -85,6 +85,38 @@
     </div>
 </div>
 
+{{-- 바코드 스캔 입력 (핸디 바코드 리더기 또는 ISBN 직접 입력) --}}
+<div class="card border-0 shadow-sm mb-3 border-start border-4 border-warning">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <strong><i class="bi bi-upc-scan text-warning"></i> 바코드 스캔</strong>
+                <div class="small text-muted">ISBN 바코드 → 자동 추가</div>
+            </div>
+            <div class="col-md-7">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-upc"></i></span>
+                    <input type="text" id="scanIsbnInput" class="form-control"
+                           placeholder="ISBN을 스캔하거나 직접 입력 후 Enter (예: 9788937834790)"
+                           autocomplete="off" inputmode="numeric">
+                    <input type="number" id="scanQtyInput" class="form-control text-end" min="1" max="99"
+                           value="1" style="max-width:80px;" title="수량">
+                    <button type="button" id="scanAddBtn" class="btn btn-warning">
+                        <i class="bi bi-plus-circle"></i> 추가
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-2 text-end">
+                <div id="scanFocusToggle" class="form-check form-switch d-inline-block">
+                    <input type="checkbox" id="scanAutoFocus" class="form-check-input" checked>
+                    <label for="scanAutoFocus" class="form-check-label small">자동 포커스</label>
+                </div>
+            </div>
+        </div>
+        <div id="scanFeedback" class="small mt-2" style="display:none;"></div>
+    </div>
+</div>
+
 {{-- 필터 카드 - Progressive Disclosure --}}
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body py-3">
@@ -321,6 +353,81 @@ function removeCartItem(bookId) {
     document.getElementById('removeBookId').value = bookId;
     document.getElementById('removeForm').submit();
 }
+
+// 바코드 스캔 → AJAX 카트 추가
+(function () {
+    const input   = document.getElementById('scanIsbnInput');
+    const qtyEl   = document.getElementById('scanQtyInput');
+    const btn     = document.getElementById('scanAddBtn');
+    const focusEl = document.getElementById('scanAutoFocus');
+    const feedback = document.getElementById('scanFeedback');
+    if (!input) return;
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+              || document.querySelector('input[name="_token"]')?.value;
+    const cartKey = @json($cartKey);
+    const scanUrl = @json(route('my.cart.scan'));
+
+    let timer = null;
+    function showFeedback(ok, msg, book) {
+        feedback.style.display = 'block';
+        feedback.className = 'small mt-2 alert py-2 ' + (ok ? 'alert-success' : 'alert-danger');
+        feedback.innerHTML = ok && book
+            ? `<i class="bi bi-check-circle"></i> <strong>${escapeHtml(book.title)}</strong> 추가됨 · ${msg}`
+            : `<i class="bi bi-exclamation-circle"></i> ${escapeHtml(msg)}`;
+        clearTimeout(timer);
+        timer = setTimeout(() => { feedback.style.display = 'none'; }, 4000);
+    }
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    async function scanAdd() {
+        const isbn = input.value.trim();
+        const qty  = Math.max(1, Math.min(99, parseInt(qtyEl.value, 10) || 1));
+        if (!isbn) return;
+
+        btn.disabled = true;
+        try {
+            const res = await fetch(scanUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                },
+                body: new URLSearchParams({ isbn, qty: String(qty), cart_key: cartKey }),
+            });
+            const data = await res.json();
+            if (data.ok) {
+                showFeedback(true, data.msg, data.book);
+                input.value = '';
+                qtyEl.value = 1;
+                // 카트 갱신 위해 페이지 reload (간단한 v1) — 사용성 부드럽게 하려면 partial update 가능
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showFeedback(false, data.msg || '도서를 추가할 수 없습니다.');
+                input.select();
+            }
+        } catch (e) {
+            showFeedback(false, '서버 통신 오류: ' + e.message);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); scanAdd(); }
+    });
+    btn.addEventListener('click', scanAdd);
+
+    // 자동 포커스 (다른 input 클릭하면 잠시 해제)
+    function maybeFocus() {
+        if (!focusEl.checked) return;
+        const ae = document.activeElement;
+        if (!ae || ae.tagName === 'BODY') input.focus();
+    }
+    setInterval(maybeFocus, 1500);
+    input.focus();
+})();
 </script>
 @endpush
 @endsection
