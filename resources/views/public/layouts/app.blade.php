@@ -15,8 +15,13 @@
             --navy: #1f3a5f;
             --navy-dark: #15294a;
             --navy-soft: #eaf0fa;
-            --sidebar-bg: #ffffff;
-            --sidebar-border: #e6e9ef;
+            --sidebar-bg: #1a1d2e;            /* 짙은 네이비-블랙 */
+            --sidebar-border: #2a2e44;
+            --sidebar-text: #e2e8f0;
+            --sidebar-text-strong: #ffffff;
+            --sidebar-section: #6b7280;
+            --sidebar-active-bg: #262a40;
+            --sidebar-hover-bg: rgba(255,255,255,0.06);
             --content-bg: #f6f7fb;
             --text-muted-2: #6c757d;
         }
@@ -44,31 +49,46 @@
         .public-sidebar-brand { padding: 1.2rem 1.3rem; border-bottom: 1px solid var(--sidebar-border); }
         .public-sidebar-brand a {
             display: flex; align-items: center; gap: .6rem;
-            color: var(--navy); text-decoration: none; font-weight: 700; font-size: 1.15rem;
+            color: var(--sidebar-text-strong); text-decoration: none; font-weight: 700; font-size: 1.15rem;
         }
         .public-sidebar-brand i { font-size: 1.4rem; }
         .public-nav { flex: 1; overflow-y: auto; padding: .6rem 0 2rem; }
+        .public-nav::-webkit-scrollbar { width: 6px; }
+        .public-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+        .public-nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
         .public-nav .nav-section {
-            padding: .8rem 1.3rem .3rem; font-size: .72rem; color: var(--text-muted-2);
-            text-transform: uppercase; letter-spacing: .04em;
+            padding: .9rem 1.3rem .35rem; font-size: .7rem; color: var(--sidebar-section);
+            text-transform: uppercase; letter-spacing: .06em; font-weight: 600;
         }
         .public-nav .nav-item {
             display: flex; align-items: center; gap: .7rem;
-            padding: .55rem 1.3rem; color: #495057; text-decoration: none;
+            padding: .6rem 1.3rem; color: var(--sidebar-text); text-decoration: none;
             font-size: .92rem; transition: background .15s, color .15s;
+            border-left: 3px solid transparent;
         }
-        .public-nav .nav-item i { width: 18px; text-align: center; }
-        .public-nav .nav-item:hover { background: var(--navy-soft); color: var(--navy); }
+        .public-nav .nav-item i { width: 18px; text-align: center; opacity: .85; }
+        .public-nav .nav-item:hover { background: var(--sidebar-hover-bg); color: var(--sidebar-text-strong); }
+        .public-nav .nav-item:hover i { opacity: 1; }
         .public-nav .nav-item.active {
-            background: var(--navy-soft); color: var(--navy); font-weight: 600;
-            border-left: 3px solid var(--navy); padding-left: calc(1.3rem - 3px);
+            background: var(--sidebar-active-bg); color: var(--sidebar-text-strong); font-weight: 600;
+            border-left-color: #5b8def;
         }
+        .public-nav .nav-item.active i { opacity: 1; }
         .public-main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; }
         .public-topbar {
-            background: #fff; border-bottom: 1px solid var(--sidebar-border);
+            background: var(--sidebar-bg); border-bottom: 1px solid var(--sidebar-border);
             padding: .8rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+            color: var(--sidebar-text);
         }
-        .public-topbar .user-info { font-size: .85rem; color: var(--text-muted-2); }
+        .public-topbar .user-info { font-size: .85rem; color: var(--sidebar-text); }
+        .public-topbar .btn-outline-secondary {
+            color: var(--sidebar-text); border-color: rgba(255,255,255,0.25);
+        }
+        .public-topbar .btn-outline-secondary:hover,
+        .public-topbar .btn-outline-secondary:focus {
+            background: rgba(255,255,255,0.1); color: var(--sidebar-text-strong);
+            border-color: rgba(255,255,255,0.4);
+        }
         .public-topbar .user-info .badge { margin-left: .3rem; }
         .public-content { flex: 1; padding: 2rem 1.5rem; }
 
