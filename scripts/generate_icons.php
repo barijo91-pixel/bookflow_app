@@ -31,11 +31,13 @@ function makeIcon(int $size, string $path, bool $maskable = false): void
 
     // 배경
     if ($maskable) {
-        // 가득 채움 (safe zone 위해 콘텐츠는 80% 영역에 그림)
-        imagefilledrectangle($img, 0, 0, $S, $S, $navy);
-        $padding = (int) ($S * 0.18); // 18% safe-zone
+        // maskable도 둥근 모서리 적용 (Windows·일부 OS에서 직사각 표시 방지)
+        // safe-zone(중앙 80%)에 콘텐츠가 있으므로 모서리 라운딩은 가변 마스킹과 호환됨
+        $r = (int) ($S * 0.18);
+        drawRoundedRect($img, 0, 0, $S - 1, $S - 1, $r, $navy);
+        $padding = (int) ($S * 0.18);
     } else {
-        // 둥근 사각형 (살짝 더 둥글게)
+        // 일반(any) 둥근 사각형
         $r = (int) ($S * 0.27);
         drawRoundedRect($img, 0, 0, $S - 1, $S - 1, $r, $navy);
         $padding = (int) ($S * 0.22);
