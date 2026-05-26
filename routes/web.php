@@ -94,6 +94,20 @@ Route::middleware('auth')->group(function () {
         Route::post('classes/{id}/books',             [\App\Http\Controllers\MyPageController::class, 'classAttachBook'])->name('classes.books.attach');
         Route::delete('classes/{id}/books/{cbid}',    [\App\Http\Controllers\MyPageController::class, 'classDetachBook'])->name('classes.books.detach');
         Route::post('classes/{id}/share',             [\App\Http\Controllers\MyPageController::class, 'classCreateShareLink'])->name('classes.share');
+
+        // 학생 엑셀 일괄 등록 (학원·영업자 공용 — 컨트롤러에서 권한 분기)
+        Route::get('classes/{id}/students/import',
+            [\App\Http\Controllers\Public\StudentImportController::class, 'show'])->name('classes.students.import.show');
+        Route::get('classes/{id}/students/import/template',
+            [\App\Http\Controllers\Public\StudentImportController::class, 'template'])->name('classes.students.import.template');
+        Route::post('classes/{id}/students/import/preview',
+            [\App\Http\Controllers\Public\StudentImportController::class, 'preview'])->name('classes.students.import.preview');
+        Route::post('classes/{id}/students/import/{jobId}/run',
+            [\App\Http\Controllers\Public\StudentImportController::class, 'run'])->name('classes.students.import.run');
+
+        // 영업자 진입점 (학원·학급 선택)
+        Route::get('student-import',
+            [\App\Http\Controllers\Public\StudentImportController::class, 'agentSelect'])->name('agent.student.import');
     });
 });
 

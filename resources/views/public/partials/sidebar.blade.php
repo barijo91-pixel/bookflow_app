@@ -42,6 +42,9 @@
                 <a href="{{ route('my.discounts.index') }}" class="nav-item {{ $startsWith('my.discounts') }}">
                     <i class="bi bi-percent"></i> 할인율 관리
                 </a>
+                <a href="{{ route('my.agent.student.import') }}" class="nav-item {{ $is('my.agent.student.import') }}">
+                    <i class="bi bi-people"></i> 학생 일괄 등록
+                </a>
                 @break
 
             @case('academy')

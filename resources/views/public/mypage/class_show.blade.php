@@ -142,7 +142,12 @@
     <div class="col-lg-6">
         {{-- 학생 목록 + 추가 --}}
         <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong><i class="bi bi-people"></i> 학생/학부모 ({{ $students->count() }})</strong></div>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-people"></i> 학생/학부모 ({{ $students->count() }})</strong>
+                <a href="{{ route('my.classes.students.import.show', $class->id) }}" class="btn btn-sm btn-outline-navy">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> 엑셀 일괄 등록
+                </a>
+            </div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light"><tr>
