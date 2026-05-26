@@ -2,13 +2,13 @@
     --accent: #1f3a5f;
     --accent-dark: #15294a;
     --accent-soft: #eaf0fa;
-    --sidebar-bg: #1f3a5f;            /* 브랜드 네이비 배경 */
-    --sidebar-border: #15294a;        /* 더 진한 네이비 (구분선) */
-    --sidebar-text: #cbd5e1;          /* 밝은 회색 */
+    --sidebar-bg: #1a1d2e;            /* 짙은 네이비-블랙 (스크린샷 톤) */
+    --sidebar-border: #2a2e44;        /* 약간 밝은 짙은 회색 (구분선) */
+    --sidebar-text: #e2e8f0;          /* 거의 흰색 */
     --sidebar-text-strong: #ffffff;
-    --sidebar-section: #94a3b8;       /* 섹션 헤더 (흐린 회색) */
-    --sidebar-active-bg: #15294a;     /* active 어두운 네이비 */
-    --sidebar-hover-bg: rgba(255,255,255,0.08);
+    --sidebar-section: #6b7280;       /* 섹션 헤더 (흐린 회색) */
+    --sidebar-active-bg: #262a40;     /* active 약간 밝은 짙은 회색 */
+    --sidebar-hover-bg: rgba(255,255,255,0.06);
     --content-bg: #f6f7fb;
     --text-muted-2: #6c757d;
 }
