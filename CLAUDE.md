@@ -186,6 +186,11 @@ php artisan migrate:fresh --seed   # 전체 재생성 + 시드
 - 관리자 좌측 메뉴는 **독립 스크롤** (`position:fixed` 사이드바 + `.admin-nav` overflow).
 - 이미지는 액박(깨진 이미지) 금지 — 항상 실제 파일이 존재해야 함.
 - 사용자 정보 편집/거래처 편집/도서 편집은 **모두 한 페이지에 통합** (좌: 폼, 우: 관계/이력).
+- **🎯 디자인 변경 일관성 정책**: 사이드바·상단바·버튼·색상·간격 등 시각적 변경은
+  **관리자(admin)·마이페이지(public mypage)·게스트(welcome 등) 모두 동일하게 적용**.
+  한 영역만 따로 톤·스타일을 다르게 변경 ❌. 특별한 사유가 있을 때만 예외.
+  - 사이드바 색상 변수: `--sidebar-bg #1a1d2e`, `--sidebar-text #e2e8f0`, `--sidebar-active-bg #262a40`, 액센트 보더 `#5b8def`
+  - admin은 `public/css/admin.css`, mypage는 `resources/views/public/layouts/app.blade.php` 인라인 — **둘 다 같이 갱신**.
 
 ## 외부 연동 (관리자 > 사이트 설정 > 외부 연동에서 키 입력)
 
