@@ -71,75 +71,119 @@
         });
     }
 
-    // 2. 이미 standalone(설치된 상태)면 아무것도 표시 안 함
+    const btn = document.getElementById('pwaInstallBtn');
+    const modal = document.getElementById('pwaInstallModal');
+    const closeBtn = document.getElementById('pwaInstallClose');
+    // welcome 페이지 hero에 있는 버튼 (없을 수도 있음)
+    const heroBtn = document.getElementById('heroInstallBtn');
+    const heroInstalledHint = document.getElementById('heroInstalledHint');
+
+    // 2. 이미 standalone(설치된 상태) 감지
     const isStandalone =
         window.matchMedia('(display-mode: standalone)').matches ||
         window.navigator.standalone === true ||
         document.referrer.startsWith('android-app://');
-    if (isStandalone) return;
 
-    // 3. 사용자가 24시간 내 닫았으면 표시 안 함
-    const DISMISS_KEY = 'pwa-install-dismissed-at';
-    const dismissed = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
-    if (dismissed && Date.now() - dismissed < 24 * 60 * 60 * 1000) return;
-
-    const btn = document.getElementById('pwaInstallBtn');
-    const modal = document.getElementById('pwaInstallModal');
-    const closeBtn = document.getElementById('pwaInstallClose');
-
-    // 4. iOS Safari 감지 — beforeinstallprompt 없으니 모달로 안내
+    // 3. iOS Safari 감지
     const ua = navigator.userAgent.toLowerCase();
     const isIos = /iphone|ipad|ipod/.test(ua);
     const isSafari = /safari/.test(ua) && !/chrome|crios|fxios|edgios/.test(ua);
 
     let deferredPrompt = null;
+    const DISMISS_KEY = 'pwa-install-dismissed-at';
+
+    function showButtons() {
+        if (heroBtn) heroBtn.style.display = 'inline-flex';
+        // floating은 24시간 dismiss 룰 적용
+        const dismissed = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
+        if (!dismissed || Date.now() - dismissed >= 24 * 60 * 60 * 1000) {
+            if (btn) btn.style.display = 'inline-flex';
+        }
+    }
+
+    function hideButtons() {
+        if (btn) btn.style.display = 'none';
+        if (heroBtn) heroBtn.style.display = 'none';
+    }
+
+    // 4. 이미 설치된 상태 → 모든 설치 버튼 숨기고 안내 표시
+    if (isStandalone) {
+        hideButtons();
+        return;
+    }
 
     // 5. Chrome/Edge/Android: beforeinstallprompt 캡처
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        btn.style.display = 'inline-flex';
+        showButtons();
     });
 
     // 6. iOS Safari는 beforeinstallprompt 없으니 바로 노출
     if (isIos && isSafari) {
-        btn.style.display = 'inline-flex';
+        showButtons();
     }
 
-    // 7. 버튼 클릭
-    btn.addEventListener('click', async (e) => {
-        if (e.target === closeBtn) return; // 닫기 X 클릭은 별도 처리
+    // 7. 설치 가능 여부 한 번 더 체크 (이미 설치되어 있으면 beforeinstallprompt 안 옴)
+    if ('getInstalledRelatedApps' in navigator) {
+        navigator.getInstalledRelatedApps().then((apps) => {
+            if (apps.length > 0) {
+                hideButtons();
+                if (heroInstalledHint) heroInstalledHint.style.display = 'block';
+            }
+        }).catch(() => {});
+    }
+
+    // 8. 클릭 핸들러 (floating, hero 공용)
+    async function triggerInstall() {
         if (deferredPrompt) {
-            // Chrome/Edge/Android
             deferredPrompt.prompt();
             const choice = await deferredPrompt.userChoice;
             deferredPrompt = null;
-            btn.style.display = 'none';
+            hideButtons();
             if (choice.outcome === 'dismissed') {
                 localStorage.setItem(DISMISS_KEY, String(Date.now()));
             }
         } else if (isIos && isSafari) {
-            // iOS Safari — 안내 모달
             modal.classList.add('show');
+        } else {
+            // 데스크톱이지만 beforeinstallprompt가 안 옴 → 이미 설치되어 있을 가능성
+            if (heroInstalledHint) heroInstalledHint.style.display = 'block';
+            alert('이미 BookSys가 설치되어 있거나, 브라우저 주소창 우측의 "앱 설치" 아이콘을 사용해주세요.');
         }
-    });
+    }
 
-    // 8. 닫기(X) 클릭 — 24시간 표시 안 함
-    closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        btn.style.display = 'none';
-        localStorage.setItem(DISMISS_KEY, String(Date.now()));
-    });
+    if (btn) {
+        btn.addEventListener('click', (e) => {
+            if (e.target === closeBtn) return;
+            triggerInstall();
+        });
+    }
+    if (heroBtn) {
+        heroBtn.addEventListener('click', triggerInstall);
+    }
 
-    // 9. 설치 완료 시 자동 숨김
+    // 9. 닫기(X)
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (btn) btn.style.display = 'none';
+            localStorage.setItem(DISMISS_KEY, String(Date.now()));
+        });
+    }
+
+    // 10. 설치 완료 시 자동 숨김
     window.addEventListener('appinstalled', () => {
-        btn.style.display = 'none';
+        hideButtons();
         deferredPrompt = null;
+        if (heroInstalledHint) heroInstalledHint.style.display = 'block';
     });
 
-    // 10. 모달 바깥 클릭 시 닫기
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('show');
-    });
+    // 11. 모달 바깥 클릭 시 닫기
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.remove('show');
+        });
+    }
 })();
 </script>
