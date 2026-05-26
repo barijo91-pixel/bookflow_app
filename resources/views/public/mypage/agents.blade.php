@@ -10,6 +10,41 @@
     <p class="text-muted small mb-0">본 총판 산하 영업자 목록과 활동 현황</p>
 </div>
 
+<form method="GET" action="{{ route('my.agents.index') }}" class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">시도</label>
+                <select name="sido_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">전체</option>
+                    @foreach($sidos as $s)
+                        <option value="{{ $s->id }}" @selected($sidoId == $s->id)>{{ $s->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">시군구</label>
+                <select name="sigungu_id" class="form-select form-select-sm" @disabled(! $sidoId)>
+                    <option value="">@if($sidoId) 전체 @else 시도 먼저 @endif</option>
+                    @foreach($sigungus as $sg)
+                        <option value="{{ $sg->id }}" @selected($sigungu == $sg->id)>{{ $sg->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">이름/아이디/연락처</label>
+                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="이름·로그인ID·휴대폰 일부">
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-search"></i> 조회</button>
+                <a href="{{ route('my.agents.index') }}" class="btn btn-sm btn-outline-secondary" title="초기화">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">

@@ -26,11 +26,13 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
-        $status = $request->query('status');
-        $vendor = $request->query('vendor');
-        $agent  = $request->query('agent');
-        $dist   = $request->query('dist');
-        $q      = trim((string) $request->query('q'));
+        $status   = $request->query('status');
+        $vendor   = $request->query('vendor');
+        $agent    = $request->query('agent');
+        $dist     = $request->query('dist');
+        $q        = trim((string) $request->query('q'));
+        $dateFrom = $request->query('date_from');
+        $dateTo   = $request->query('date_to');
 
         $query = DB::table('orders as o')
             ->leftJoin('vendors as v', 'v.id', '=', 'o.vendor_id')
@@ -46,10 +48,12 @@ class OrderController extends Controller
             ->whereNull('o.deleted_at')
             ->orderByDesc('o.id');
 
-        if ($status) $query->where('o.status_code', $status);
-        if ($vendor) $query->where('o.vendor_id', $vendor);
-        if ($agent)  $query->where('o.agent_user_id', $agent);
-        if ($dist)   $query->where('o.distributor_user_id', $dist);
+        if ($status)   $query->where('o.status_code', $status);
+        if ($vendor)   $query->where('o.vendor_id', $vendor);
+        if ($agent)    $query->where('o.agent_user_id', $agent);
+        if ($dist)     $query->where('o.distributor_user_id', $dist);
+        if ($dateFrom) $query->whereDate('o.created_at', '>=', $dateFrom);
+        if ($dateTo)   $query->whereDate('o.created_at', '<=', $dateTo);
         if ($q !== '') {
             $query->where(function ($w) use ($q) {
                 $w->where('o.order_no', 'like', "%{$q}%")
@@ -73,7 +77,7 @@ class OrderController extends Controller
 
         return view('admin.orders.index', compact(
             'orders', 'statusOptions', 'vendors', 'agents', 'distributors',
-            'status', 'vendor', 'agent', 'dist', 'q', 'summary'
+            'status', 'vendor', 'agent', 'dist', 'q', 'dateFrom', 'dateTo', 'summary'
         ));
     }
 

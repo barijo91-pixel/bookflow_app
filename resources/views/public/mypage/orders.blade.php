@@ -40,7 +40,7 @@
         </a>
         @foreach($statusOptions as $code => [$label, $cls])
             @if($statusCounts->get($code, 0) > 0)
-                <a href="{{ route('my.orders.index', ['status' => $code]) }}"
+                <a href="{{ route('my.orders.index', array_merge(request()->only(['date_from','date_to','q']), ['status' => $code])) }}"
                    class="btn btn-sm {{ $status === $code ? 'btn-navy' : 'btn-outline-secondary' }}">
                     {{ $label }} ({{ $statusCounts->get($code, 0) }})
                 </a>
@@ -48,6 +48,33 @@
         @endforeach
     </div>
 </div>
+
+{{-- 주문일자 + 키워드 검색 --}}
+<form method="GET" action="{{ route('my.orders.index') }}" class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">주문일자 From</label>
+                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">주문일자 To</label>
+                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">검색 (주문번호 / 학원명)</label>
+                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="예: BF20260520 또는 학원명">
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button class="btn btn-sm btn-navy flex-grow-1"><i class="bi bi-search"></i> 조회</button>
+                <a href="{{ route('my.orders.index') }}" class="btn btn-sm btn-outline-secondary" title="초기화">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+            @if($status)<input type="hidden" name="status" value="{{ $status }}">@endif
+        </div>
+    </div>
+</form>
 
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">

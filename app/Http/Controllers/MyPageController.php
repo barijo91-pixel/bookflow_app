@@ -500,7 +500,10 @@ class MyPageController extends Controller
     public function ordersIndex(Request $request)
     {
         $user = Auth::user();
-        $status = $request->query('status'); // 필터링용
+        $status   = $request->query('status');
+        $dateFrom = $request->query('date_from'); // YYYY-MM-DD
+        $dateTo   = $request->query('date_to');
+        $q        = trim((string) $request->query('q'));
 
         $query = DB::table('orders as o')
             ->leftJoin('vendors as v', 'v.id', '=', 'o.vendor_id')
@@ -535,8 +538,14 @@ class MyPageController extends Controller
                 abort(403);
         }
 
-        if ($status) {
-            $query->where('o.status_code', $status);
+        if ($status)   $query->where('o.status_code', $status);
+        if ($dateFrom) $query->whereDate('o.created_at', '>=', $dateFrom);
+        if ($dateTo)   $query->whereDate('o.created_at', '<=', $dateTo);
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('o.order_no', 'like', "%{$q}%")
+                  ->orWhere('v.name', 'like', "%{$q}%");
+            });
         }
 
         $orders = $query->orderByDesc('o.id')->paginate(20)->withQueryString();
@@ -556,6 +565,9 @@ class MyPageController extends Controller
             'orders' => $orders,
             'title'  => $title,
             'status' => $status,
+            'dateFrom' => $dateFrom,
+            'dateTo'   => $dateTo,
+            'q'        => $q,
             'statusCounts' => $statusCounts,
         ]);
     }
@@ -681,15 +693,19 @@ class MyPageController extends Controller
     }
 
     /** 소속 영업자 (총판) - Phase B-9 */
-    public function agentsIndex()
+    public function agentsIndex(Request $request)
     {
         $user = Auth::user();
         if ($user->role_code !== 'distributor') {
             abort(403, '총판만 접근 가능합니다.');
         }
 
+        $q       = trim((string) $request->query('q'));
+        $sidoId  = (int) $request->query('sido_id');
+        $sigungu = (int) $request->query('sigungu_id');
+
         // user_relations 에서 본 총판의 영업자 (active)
-        $agents = DB::table('user_relations as r')
+        $query = DB::table('user_relations as r')
             ->join('users as u', 'u.id', '=', 'r.child_user_id')
             ->leftJoin('regions as rg', 'rg.id', '=', 'u.region_id')
             ->leftJoin('regions as p', 'p.id', '=', 'rg.parent_id')
@@ -698,12 +714,33 @@ class MyPageController extends Controller
             ->where('r.status', 'active')
             ->select(
                 'u.id', 'u.login_id', 'u.name', 'u.phone', 'u.email', 'u.status_code',
-                'u.last_login_at', 'u.approved_at',
-                'rg.name as sigungu_name', 'p.name as sido_name',
+                'u.last_login_at', 'u.approved_at', 'u.region_id',
+                'rg.name as sigungu_name', 'p.name as sido_name', 'p.id as sido_id',
                 'r.started_at'
-            )
-            ->orderBy('u.name')
-            ->get();
+            );
+
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('u.name', 'like', "%{$q}%")
+                  ->orWhere('u.login_id', 'like', "%{$q}%")
+                  ->orWhere('u.phone', 'like', "%{$q}%");
+            });
+        }
+        if ($sigungu) {
+            $query->where('u.region_id', $sigungu);
+        } elseif ($sidoId) {
+            $query->where('p.id', $sidoId);
+        }
+
+        $agents = $query->orderBy('u.name')->get();
+
+        // 지역 필터 옵션
+        $sidos = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get(['id', 'name']);
+        $sigungus = collect();
+        if ($sidoId) {
+            $sigungus = DB::table('regions')->where('parent_id', $sidoId)->where('level', 'sigungu')
+                ->orderBy('sort_order')->get(['id', 'name']);
+        }
 
         // 각 영업자가 담당하는 학원 수 + 처리 주문 수
         $agentIds = $agents->pluck('id')->toArray();
@@ -729,7 +766,9 @@ class MyPageController extends Controller
             }
         }
 
-        return view('public.mypage.agents', compact('user', 'agents'));
+        return view('public.mypage.agents', compact(
+            'user', 'agents', 'q', 'sidoId', 'sigungu', 'sidos', 'sigungus'
+        ));
     }
 
     /** 담당 학원 (영업자) */

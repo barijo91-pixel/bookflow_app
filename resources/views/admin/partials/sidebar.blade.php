@@ -25,17 +25,13 @@
             <i class="bi bi-building"></i> 거래처(학원)
         </a>
         <a href="{{ route('admin.books.index') }}" class="nav-item {{ $is('admin.books') }}">
-            <i class="bi bi-journals"></i> 도서
+            <i class="bi bi-journals"></i> 도서관리
         </a>
         <a href="{{ route('admin.stocks.index') }}" class="nav-item {{ $is('admin.stocks') }}">
-            <i class="bi bi-box-seam"></i> 재고
+            <i class="bi bi-box-seam"></i> 재고관리
         </a>
         <a href="{{ route('admin.orders.index') }}" class="nav-item {{ $is('admin.orders') }}">
-            <i class="bi bi-receipt"></i> 주문
-        </a>
-        <div class="nav-section">B2C</div>
-        <a href="{{ route('admin.classes.index') }}" class="nav-item {{ $is('admin.classes') }}">
-            <i class="bi bi-mortarboard"></i> 학급/학생/학부모
+            <i class="bi bi-receipt"></i> 주문관리
         </a>
         <div class="nav-section">운영</div>
         <a href="{{ route('admin.code-groups.index') }}" class="nav-item {{ $is('admin.code-groups') . $is('admin.codes') }}">

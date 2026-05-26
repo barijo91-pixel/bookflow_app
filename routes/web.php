@@ -63,6 +63,11 @@ Route::middleware('auth')->group(function () {
 
         // 총판 전용 - 재고 관리 (Phase B-6)
         Route::get('stocks',                [\App\Http\Controllers\MyPageController::class, 'stocksIndex'])->name('stocks.index');
+        // 총판 재고 엑셀 일괄 등록
+        Route::get('stocks/import',         [\App\Http\Controllers\Public\StockImportController::class, 'show'])->name('stocks.import.show');
+        Route::get('stocks/import/template',[\App\Http\Controllers\Public\StockImportController::class, 'template'])->name('stocks.import.template');
+        Route::post('stocks/import/preview',[\App\Http\Controllers\Public\StockImportController::class, 'preview'])->name('stocks.import.preview');
+        Route::post('stocks/import/{jobId}/run', [\App\Http\Controllers\Public\StockImportController::class, 'run'])->name('stocks.import.run');
         Route::post('stocks',               [\App\Http\Controllers\MyPageController::class, 'stockStore'])->name('stocks.store');
         Route::put('stocks/{stockId}',      [\App\Http\Controllers\MyPageController::class, 'stockUpdate'])->name('stocks.update');
         Route::delete('stocks/{stockId}',   [\App\Http\Controllers\MyPageController::class, 'stockDestroy'])->name('stocks.destroy');

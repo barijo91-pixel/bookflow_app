@@ -72,12 +72,25 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">검색 (주문번호/거래처)</label>
                 <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm">
             </div>
             <div class="col-md-1 d-grid">
                 <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+            </div>
+        </div>
+        <div class="row g-2 align-items-end mt-1">
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">주문일자 From</label>
+                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">주문일자 To</label>
+                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-2 d-grid">
+                <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i> 초기화</a>
             </div>
         </div>
     </div>

@@ -8,9 +8,14 @@
         <h1 class="h4 navy mb-1"><i class="bi bi-box-seam"></i> 재고 관리</h1>
         <p class="text-muted small mb-0">{{ $user->name }} 총판의 보유 도서 재고</p>
     </div>
-    <button type="button" class="btn btn-navy btn-sm" data-bs-toggle="modal" data-bs-target="#stockAddModal">
-        <i class="bi bi-plus-lg"></i> 신규 도서 재고 등록
-    </button>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-navy btn-sm" data-bs-toggle="modal" data-bs-target="#stockAddModal">
+            <i class="bi bi-plus-lg"></i> 신규 도서 재고 등록
+        </button>
+        <a href="{{ route('my.stocks.import.show') }}" class="btn btn-outline-navy btn-sm">
+            <i class="bi bi-file-earmark-spreadsheet"></i> 신규 도서 등록 (엑셀)
+        </a>
+    </div>
 </div>
 
 @if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif
