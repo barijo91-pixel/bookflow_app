@@ -1,12 +1,12 @@
 @extends('public.layouts.app')
-@section('title', '담당 학원')
+@section('title', '거래처(학원)')
 @section('max_width', '1100px')
 
 @section('content')
 <div class="mb-3 d-flex justify-content-between align-items-end flex-wrap gap-2">
     <div>
         <h1 class="h4 navy mb-1">
-            <i class="bi bi-building"></i> 담당 학원
+            <i class="bi bi-building"></i> 거래처(학원)
             <small class="text-muted fs-6">{{ $vendors->count() }}개</small>
         </h1>
         <p class="text-muted small mb-0">본인이 담당하는 학원과 적용 중인 할인율. 인라인 수정 가능.</p>
@@ -126,7 +126,7 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-5">
                             <i class="bi bi-building-x" style="font-size:2rem"></i>
-                            <p class="mb-0 mt-2">담당 학원이 없습니다.</p>
+                            <p class="mb-0 mt-2">거래처(학원)이 없습니다.</p>
                             <p class="small mb-0">관리자에게 매핑 요청을 해주세요.</p>
                         </td>
                     </tr>

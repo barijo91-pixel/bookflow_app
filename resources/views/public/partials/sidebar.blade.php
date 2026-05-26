@@ -34,7 +34,7 @@
             @case('agent')
                 <div class="nav-section">영업자 메뉴</div>
                 <a href="{{ route('my.vendors.index') }}" class="nav-item {{ $is('my.vendors.index') }}">
-                    <i class="bi bi-building"></i> 제휴학원
+                    <i class="bi bi-building"></i> 거래처(학원)
                 </a>
                 <a href="{{ route('my.vendors.create') }}" class="nav-item {{ $is('my.vendors.create') }}">
                     <i class="bi bi-building-add"></i> 학원등록
