@@ -33,8 +33,11 @@
 
             @case('agent')
                 <div class="nav-section">영업자 메뉴</div>
-                <a href="{{ route('my.vendors.index') }}" class="nav-item {{ $startsWith('my.vendors') }}">
+                <a href="{{ route('my.vendors.index') }}" class="nav-item {{ $is('my.vendors.index') }}">
                     <i class="bi bi-building"></i> 담당 학원
+                </a>
+                <a href="{{ route('my.vendors.create') }}" class="nav-item {{ $is('my.vendors.create') }}">
+                    <i class="bi bi-building-add"></i> 새 학원 등록
                 </a>
                 <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
                     <i class="bi bi-receipt"></i> 주문 확인

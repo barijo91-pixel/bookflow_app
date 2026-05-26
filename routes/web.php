@@ -70,6 +70,9 @@ Route::middleware('auth')->group(function () {
 
         // 영업자 전용
         Route::get('vendors',    [\App\Http\Controllers\MyPageController::class, 'vendorsIndex'])->name('vendors.index');
+        Route::get('vendors/create', [\App\Http\Controllers\Public\AgentVendorController::class, 'create'])->name('vendors.create');
+        Route::post('vendors',       [\App\Http\Controllers\Public\AgentVendorController::class, 'store'])->name('vendors.store');
+        Route::get('regions/sigungu', [\App\Http\Controllers\Admin\RegionController::class, 'sigungu'])->name('regions.sigungu');
         Route::get('discounts',  [\App\Http\Controllers\MyPageController::class, 'discountsIndex'])->name('discounts.index');
         Route::put('discounts/vendor/{avdId}',     [\App\Http\Controllers\MyPageController::class, 'discountVendorUpdate'])->name('discounts.vendor.update');
         Route::delete('discounts/vendor/{avdId}',  [\App\Http\Controllers\MyPageController::class, 'discountVendorDestroy'])->name('discounts.vendor.destroy');

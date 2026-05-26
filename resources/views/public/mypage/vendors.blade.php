@@ -11,9 +11,14 @@
         </h1>
         <p class="text-muted small mb-0">본인이 담당하는 학원과 적용 중인 할인율. 인라인 수정 가능.</p>
     </div>
-    <a href="{{ route('my.discounts.index') }}" class="btn btn-sm btn-outline-navy">
-        <i class="bi bi-percent"></i> 도서별 개별 할인율 관리
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('my.vendors.create') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-building-add"></i> 새 학원 등록
+        </a>
+        <a href="{{ route('my.discounts.index') }}" class="btn btn-sm btn-outline-navy">
+            <i class="bi bi-percent"></i> 도서별 개별 할인율 관리
+        </a>
+    </div>
 </div>
 
 @if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif
