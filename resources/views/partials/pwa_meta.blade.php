@@ -53,12 +53,15 @@
 
 <div id="pwaInstallModal" class="pwa-install-modal" role="dialog" aria-modal="true">
     <div class="box">
-        <h3><i class="bi bi-phone"></i> 홈 화면에 BookSys 추가</h3>
-        <p>아이폰/사파리에서는 직접 추가해주세요.</p>
-        <div class="step">1) 하단 공유 버튼 <strong>⬆️</strong> 누르기</div>
-        <div class="step">2) <strong>"홈 화면에 추가"</strong> 선택</div>
-        <div class="step">3) 이름 확인 후 <strong>"추가"</strong></div>
-        <button type="button" onclick="document.getElementById('pwaInstallModal').classList.remove('show')">닫기</button>
+        <h3><i class="bi bi-download"></i> BookSys 설치 안내</h3>
+        <p class="text-start mb-2"><strong>크롬·엣지 (PC)</strong></p>
+        <div class="step text-start">주소창 우측 <strong>⊕ 아이콘</strong> 또는 ⋮ 메뉴 → <strong>"BookSys 설치"</strong> 클릭</div>
+        <p class="text-start mb-2 mt-3"><strong>안드로이드 크롬</strong></p>
+        <div class="step text-start">⋮ 메뉴 → <strong>"홈 화면에 추가"</strong> 선택</div>
+        <p class="text-start mb-2 mt-3"><strong>아이폰 사파리</strong></p>
+        <div class="step text-start">하단 공유 <strong>⬆️</strong> → <strong>"홈 화면에 추가"</strong></div>
+        <p class="small text-muted mt-3 mb-0">이미 설치되어 있다면 주소창 우측 "앱에서 열기" 사용</p>
+        <button type="button" class="mt-3" onclick="document.getElementById('pwaInstallModal').classList.remove('show')">닫기</button>
     </div>
 </div>
 
@@ -101,12 +104,24 @@
         }
     }
 
+    function markAsInstalled() {
+        // floating은 숨김, hero 버튼은 텍스트만 '이미 설치됨'으로 변경 (계속 보이게)
+        if (btn) btn.style.display = 'none';
+        if (heroBtn) {
+            heroBtn.classList.add('disabled');
+            heroBtn.style.opacity = '.7';
+            const txt = document.getElementById('heroInstallBtnText');
+            if (txt) txt.textContent = '이미 설치됨';
+        }
+        if (heroInstalledHint) heroInstalledHint.style.display = 'block';
+    }
+
     function hideButtons() {
         if (btn) btn.style.display = 'none';
         if (heroBtn) heroBtn.style.display = 'none';
     }
 
-    // 4. 이미 설치된 상태 → 모든 설치 버튼 숨기고 안내 표시
+    // 4. 이미 standalone(PWA로 실행 중) → 모두 숨김
     if (isStandalone) {
         hideButtons();
         return;
@@ -124,15 +139,12 @@
         showButtons();
     }
 
-    // 7. 설치 가능 여부 한 번 더 체크 (이미 설치되어 있으면 beforeinstallprompt 안 옴)
-    if ('getInstalledRelatedApps' in navigator) {
-        navigator.getInstalledRelatedApps().then((apps) => {
-            if (apps.length > 0) {
-                hideButtons();
-                if (heroInstalledHint) heroInstalledHint.style.display = 'block';
-            }
-        }).catch(() => {});
-    }
+    // 7. 1.5초 후에도 beforeinstallprompt 안 오면 → 이미 설치된 상태로 간주
+    setTimeout(() => {
+        if (!deferredPrompt && !isStandalone && !(isIos && isSafari)) {
+            markAsInstalled();
+        }
+    }, 1500);
 
     // 8. 클릭 핸들러 (floating, hero 공용)
     async function triggerInstall() {
@@ -147,9 +159,8 @@
         } else if (isIos && isSafari) {
             modal.classList.add('show');
         } else {
-            // 데스크톱이지만 beforeinstallprompt가 안 옴 → 이미 설치되어 있을 가능성
-            if (heroInstalledHint) heroInstalledHint.style.display = 'block';
-            alert('이미 BookSys가 설치되어 있거나, 브라우저 주소창 우측의 "앱 설치" 아이콘을 사용해주세요.');
+            // beforeinstallprompt가 안 오는 경우 — 이미 설치되어 있거나 브라우저가 PWA 미지원
+            modal.classList.add('show');
         }
     }
 
