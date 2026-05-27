@@ -59,7 +59,7 @@
                 <select name="agent_id" class="form-select form-select-sm" onchange="this.form.submit()">
                     @foreach($agents as $a)
                         <option value="{{ $a->id }}" @selected($selectedAgent && $a->id == $selectedAgent->id)>
-                            {{ $a->name }} · 기본 할인율 {{ rtrim(rtrim($a->general_rate, '0'), '.') }}%
+                            {{ $a->name }}
                         </option>
                     @endforeach
                 </select>

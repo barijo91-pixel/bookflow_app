@@ -139,9 +139,40 @@
         </div>
     </div>
 
-    {{-- 4. 은행 정보 (선택) --}}
+    {{-- 4. 결제 구분 --}}
     <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white"><strong>4. 결제·은행 정보 <small class="text-muted">(선택)</small></strong></div>
+        <div class="card-header bg-white"><strong>4. 결제 구분</strong></div>
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="payment_type" id="payCash" value="cash"
+                               @checked(old('payment_type', 'cash') === 'cash')>
+                        <label class="form-check-label" for="payCash"><strong>현매</strong> (현금 매출)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="payment_type" id="payCredit" value="credit"
+                               @checked(old('payment_type') === 'credit')>
+                        <label class="form-check-label" for="payCredit"><strong>여신</strong> (외상 매출)</label>
+                    </div>
+                </div>
+                <div class="col-md-4" id="creditLimitWrap">
+                    <label class="form-label small text-muted mb-1">여신 한도 (원)</label>
+                    <input type="number" name="credit_limit" min="0" step="10000"
+                           value="{{ old('credit_limit', 0) }}"
+                           class="form-control text-end" placeholder="예: 1000000">
+                </div>
+                <div class="col-md-4 small text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    현재는 단순 구분 용도. 추후 한도 체크·여신 잔액 관리 기능이 추가될 예정.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 5. 은행 정보 (선택) --}}
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white"><strong>5. 은행 정보 <small class="text-muted">(선택)</small></strong></div>
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-3">
@@ -215,6 +246,26 @@
         wrap.querySelectorAll('input').forEach(i => i.disabled = !tog.checked);
     }
     tog.addEventListener('change', sync);
+    sync();
+})();
+
+// 결제 구분 — 여신 선택 시에만 한도 입력 활성화
+(function() {
+    const cash = document.getElementById('payCash');
+    const credit = document.getElementById('payCredit');
+    const wrap = document.getElementById('creditLimitWrap');
+    if (!cash || !credit || !wrap) return;
+    const input = wrap.querySelector('input[name="credit_limit"]');
+    function sync() {
+        const isCredit = credit.checked;
+        wrap.style.opacity = isCredit ? '1' : '0.4';
+        if (input) {
+            input.disabled = !isCredit;
+            if (!isCredit) input.value = 0;
+        }
+    }
+    cash.addEventListener('change', sync);
+    credit.addEventListener('change', sync);
     sync();
 })();
 </script>

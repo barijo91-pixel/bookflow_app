@@ -57,6 +57,8 @@ class AgentVendorController extends Controller
             'bank_code'      => ['nullable', 'string', 'max:10'],
             'bank_account'   => ['nullable', 'string', 'max:50'],
             'bank_holder'    => ['nullable', 'string', 'max:50'],
+            'payment_type'   => ['nullable', 'in:cash,credit'],
+            'credit_limit'   => ['nullable', 'integer', 'min:0', 'max:999999999'],
             'memo'           => ['nullable', 'string', 'max:2000'],
             // 학원 계정 (선택 — 비워두면 계정 없이 거래처만 등록)
             'create_account'    => ['nullable', 'in:0,1'],
@@ -99,6 +101,9 @@ class AgentVendorController extends Controller
             $phone = ! empty($data['vendor_mobile']) ? preg_replace('/[^0-9]/', '', $data['vendor_mobile']) : null;
             $tel   = ! empty($data['vendor_tel'])    ? preg_replace('/[^0-9]/', '', $data['vendor_tel'])    : null;
 
+            $paymentType = ($data['payment_type'] ?? 'cash') === 'credit' ? 'credit' : 'cash';
+            $creditLimit = $paymentType === 'credit' ? (int) ($data['credit_limit'] ?? 0) : 0;
+
             $vendorId = DB::table('vendors')->insertGetId([
                 'name'           => $data['vendor_name'],
                 'owner_name'     => $data['owner_name'] ?? null,
@@ -113,6 +118,8 @@ class AgentVendorController extends Controller
                 'bank_code'      => $data['bank_code'] ?? null,
                 'bank_account'   => $data['bank_account'] ?? null,
                 'bank_holder'    => $data['bank_holder'] ?? null,
+                'payment_type'   => $paymentType,
+                'credit_limit'   => $creditLimit,
                 'memo'           => $data['memo'] ?? null,
                 'created_at'     => now(),
                 'updated_at'     => now(),
