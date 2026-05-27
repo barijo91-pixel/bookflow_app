@@ -107,10 +107,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function markAsInstalled() {
-        // 텍스트는 그대로 '북시스 앱설치' 유지, opacity만 살짝 낮춤
-        // 클릭 시 안내 모달 (이미 설치된 사용자 대응)
-        if (heroBtn) heroBtn.style.opacity = '.85';
-        if (btn) btn.style.opacity = '.85';
+        // 이미 설치된 사용자: 설치 버튼 둘 다 숨기고 안내 텍스트만 노출
+        hideButtons();
         if (heroInstalledHint) heroInstalledHint.style.display = 'block';
     }
 
