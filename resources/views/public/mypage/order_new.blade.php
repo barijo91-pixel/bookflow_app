@@ -88,29 +88,27 @@
 {{-- 바코드 스캔 입력 (핸디 바코드 리더기 또는 ISBN 직접 입력) --}}
 <div class="card border-0 shadow-sm mb-3 border-start border-4 border-warning">
     <div class="card-body py-3">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-3">
-                <strong><i class="bi bi-upc-scan text-warning"></i> 바코드 스캔</strong>
-                <div class="small text-muted">ISBN 바코드 → 자동 추가</div>
-            </div>
-            <div class="col-md-7">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white"><i class="bi bi-upc"></i></span>
-                    <input type="text" id="scanIsbnInput" class="form-control"
-                           placeholder="ISBN을 스캔하거나 직접 입력 후 Enter (예: 9788937834790)"
-                           autocomplete="off" inputmode="numeric">
-                    <input type="number" id="scanQtyInput" class="form-control text-end" min="1" max="99"
-                           value="1" style="max-width:80px;" title="수량">
-                    <button type="button" id="scanAddBtn" class="btn btn-warning">
-                        <i class="bi bi-plus-circle"></i> 추가
-                    </button>
-                </div>
-            </div>
-            <div class="col-md-2 text-end">
-                <div id="scanFocusToggle" class="form-check form-switch d-inline-block">
-                    <input type="checkbox" id="scanAutoFocus" class="form-check-input" checked>
-                    <label for="scanAutoFocus" class="form-check-label small">자동 포커스</label>
-                </div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <strong><i class="bi bi-upc-scan text-warning fs-5"></i> 바코드 스캔으로 빠른 주문</strong>
+            <span class="badge bg-warning text-dark">NEW</span>
+            <span class="small text-muted d-none d-md-inline">ISBN 바코드를 스캔하면 자동으로 장바구니에 담깁니다</span>
+        </div>
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-upc"></i></span>
+            <input type="text" id="scanIsbnInput" class="form-control"
+                   placeholder="ISBN을 스캔하거나 직접 입력 후 Enter (예: 9788937834790)"
+                   autocomplete="off" inputmode="numeric">
+            <input type="number" id="scanQtyInput" class="form-control text-end" min="1" max="99"
+                   value="1" style="max-width:70px;" title="수량">
+            <button type="button" id="scanAddBtn" class="btn btn-warning">
+                <i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">담기</span>
+            </button>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <small class="text-muted d-md-none">ISBN 바코드 스캔 또는 직접 입력</small>
+            <div id="scanFocusToggle" class="form-check form-switch ms-auto small">
+                <input type="checkbox" id="scanAutoFocus" class="form-check-input" checked>
+                <label for="scanAutoFocus" class="form-check-label small text-muted">자동 포커스</label>
             </div>
         </div>
         <div id="scanFeedback" class="small mt-2" style="display:none;"></div>

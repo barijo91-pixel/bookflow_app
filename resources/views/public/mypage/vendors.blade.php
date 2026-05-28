@@ -33,7 +33,7 @@
     </form>
     <form id="vendor-del-{{ $v->avd_id }}" method="POST"
           action="{{ route('my.discounts.vendor.destroy', $v->avd_id) }}"
-          onsubmit="return confirm('「{{ addslashes($v->name) }}」 할인 매핑을 비활성화하시겠어요?\n\n· 할인율 row는 유지되며 비활성 상태로 전환됩니다.\n· 재활성화는 관리자 문의가 필요합니다.')">
+          onsubmit="return confirm('「{{ addslashes($v->name) }}」 거래를 일시 중단할까요?\n\n· 학원 정보는 유지되고 거래만 멈춥니다.\n· 다시 시작하려면 관리자에게 문의해주세요.')">
         @csrf @method('DELETE')
     </form>
 @endforeach
@@ -81,11 +81,13 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            <div class="input-group input-group-sm" style="max-width:130px; margin-left:auto;">
+                            <div class="input-group input-group-sm rate-stepper" style="max-width:170px; margin-left:auto;">
+                                <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1" aria-label="감소">−</button>
                                 <input type="number" step="0.5" min="0" max="100" name="discount_rate"
                                        form="vendor-edit-{{ $v->avd_id }}"
                                        value="{{ rtrim(rtrim($v->discount_rate, '0'), '.') }}"
-                                       class="form-control text-end">
+                                       class="form-control text-end" inputmode="decimal">
+                                <button type="button" class="btn btn-outline-secondary rate-up" tabindex="-1" aria-label="증가">+</button>
                                 <span class="input-group-text">%</span>
                             </div>
                         </td>
@@ -116,7 +118,7 @@
                             @if($v->discount_active)
                                 <button type="submit" form="vendor-del-{{ $v->avd_id }}"
                                         class="btn btn-sm btn-link text-danger p-0 ms-1"
-                                        title="할인 매핑 비활성화">
+                                        title="거래 일시 중단">
                                     <i class="bi bi-x-circle"></i> 삭제
                                 </button>
                             @endif
@@ -139,8 +141,28 @@
 <div class="alert alert-light border mt-3 small text-muted mb-0">
     <i class="bi bi-info-circle"></i>
     <strong>안내</strong>:
-    할인율은 0.5% 단위로 조정 가능합니다. <strong>삭제</strong>는 매핑을 비활성화하는 것으로
-    데이터는 보존되며, 재활성화는 관리자에게 요청해야 합니다.
-    도서별 개별 할인율은 <a href="{{ route('my.discounts.index') }}" class="text-decoration-none">할인율 관리</a> 페이지에서 설정하세요.
+    할인율은 0.5% 단위로 조정할 수 있어요.
+    <strong>삭제</strong>를 누르면 거래가 일시 중단되며, 다시 시작하려면 관리자에게 문의해주세요.
+    도서마다 다른 할인율을 주려면 <a href="{{ route('my.discounts.index') }}" class="text-decoration-none">할인율 관리</a> 페이지에서 설정하세요.
 </div>
+
+@push('scripts')
+<script>
+// 할인율 입력 +/- 버튼 (모바일 친화 0.5% 단위 stepper)
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.rate-stepper .rate-up, .rate-stepper .rate-down');
+    if (!btn) return;
+    const wrap = btn.closest('.rate-stepper');
+    const input = wrap.querySelector('input[type=number]');
+    if (!input) return;
+    let v = parseFloat(input.value) || 0;
+    const step = parseFloat(input.step) || 0.5;
+    const min = input.min !== '' ? parseFloat(input.min) : -Infinity;
+    const max = input.max !== '' ? parseFloat(input.max) : Infinity;
+    v = btn.classList.contains('rate-up') ? v + step : v - step;
+    v = Math.max(min, Math.min(max, v));
+    input.value = (Math.round(v * 10) / 10).toString().replace(/\.0$/, '');
+});
+</script>
+@endpush
 @endsection

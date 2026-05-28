@@ -923,7 +923,7 @@ class MyPageController extends Controller
             ['is_active' => (bool) $row->is_active],
             ['is_active' => false]);
 
-        return back()->with('success', '학원 할인 매핑이 비활성화되었습니다. (재활성화는 관리자 문의)');
+        return back()->with('success', '거래가 일시 중단되었습니다. (재시작은 관리자에게 문의)');
     }
 
     /** 도서별 개별 할인율 제거 */

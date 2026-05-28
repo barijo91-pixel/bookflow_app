@@ -87,7 +87,7 @@
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead class="table-light"><tr>
-                    <th>행</th><th>학생</th><th>학년</th><th>학부모</th><th>휴대폰</th><th>이메일</th><th>메모</th>
+                    <th>행</th><th>학생</th><th>학년</th><th>학급</th><th>학부모</th><th>휴대폰</th><th>이메일</th><th>메모</th>
                 </tr></thead>
                 <tbody>
                     @foreach($validRows as $r)
@@ -95,6 +95,7 @@
                             <td>{{ $r['_row'] }}</td>
                             <td class="small">{{ $r['name'] }}</td>
                             <td class="small">{{ $r['grade_code'] ?? '-' }}</td>
+                            <td class="small text-muted">{{ $r['class_name'] ?? '-' }}</td>
                             <td class="small">{{ $r['parent_name'] }}</td>
                             <td class="small">{{ format_phone($r['parent_phone']) }}</td>
                             <td class="small text-muted">{{ $r['parent_email'] ?? '-' }}</td>

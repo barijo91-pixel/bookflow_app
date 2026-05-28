@@ -13,6 +13,9 @@ class StudentImportService
         '학생명'          => 'name',
         '이름'            => 'name',
         '학년'            => 'grade_code',
+        '학급명'          => 'class_name',
+        '학급'            => 'class_name',
+        '반'              => 'class_name',
         '학부모이름'      => 'parent_name',
         '학부모명'        => 'parent_name',
         '학부모휴대폰'    => 'parent_phone',
@@ -24,7 +27,7 @@ class StudentImportService
     ];
 
     public const TEMPLATE_HEADERS = [
-        '학생이름', '학년', '학부모이름', '학부모휴대폰', '학부모이메일', '메모',
+        '학생이름', '학년', '학급명', '학부모이름', '학부모휴대폰', '학부모이메일', '메모',
     ];
 
     /** 학년 코드 매핑 (한글명 → code) */
@@ -50,11 +53,11 @@ class StudentImportService
             $sheet->setCellValue($col.'1', $h);
         }
 
-        // 예시 행
+        // 예시 행 (학생이름, 학년, 학급명, 학부모이름, 학부모휴대폰, 학부모이메일, 메모)
         $samples = [
-            ['김민준', '초3', '김아빠', '01012340001', null, '영어 회화반'],
-            ['이서윤', '초3', '이엄마', '01012340002', 'mom@example.com', null],
-            ['박지호', '초4', '박아빠', '01012340003', null, '수학 보충'],
+            ['김민준', '초3', '초3-A반', '김아빠', '01012340001', null, '영어 회화반'],
+            ['이서윤', '초3', '초3-A반', '이엄마', '01012340002', 'mom@example.com', null],
+            ['박지호', '초4', '초4-B반', '박아빠', '01012340003', null, '수학 보충'],
         ];
         foreach ($samples as $rowIdx => $sample) {
             foreach ($sample as $colIdx => $val) {
@@ -78,11 +81,13 @@ class StudentImportService
         $info->setCellValue('A1', '학생 일괄 등록 가이드');
         $info->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $info->setCellValue('A3', '필수 컬럼: 학생이름, 학부모이름, 학부모휴대폰');
-        $info->setCellValue('A4', '선택 컬럼: 학년, 학부모이메일, 메모');
+        $info->setCellValue('A4', '선택 컬럼: 학년, 학급명, 학부모이메일, 메모');
         $info->setCellValue('A6', '학년 예시: 초1, 초2, 초3, 초4, 초5, 초6, 중1, 중2, 중3, 고1, 고2, 고3');
         $info->setCellValue('A7', '학년은 한글명 또는 code 어느 쪽이든 입력 가능');
-        $info->setCellValue('A9', '학부모 휴대폰이 같으면 한 학부모로 인식 (형제·자매 자동 연결)');
-        $info->setCellValue('A10', '한 행에 학생 1명. 형제·자매도 행을 따로 만드세요 (학부모는 자동 묶임)');
+        $info->setCellValue('A9', '학급명: 빈 칸이면 업로드 페이지에서 선택한 학급에 등록');
+        $info->setCellValue('A10', '학급명이 있으면 메모로 기록됨 (학급별 자동 분류는 추후 지원)');
+        $info->setCellValue('A12', '학부모 휴대폰이 같으면 한 학부모로 인식 (형제·자매 자동 연결)');
+        $info->setCellValue('A13', '한 행에 학생 1명. 형제·자매도 행을 따로 만드세요 (학부모는 자동 묶임)');
         $info->getColumnDimension('A')->setAutoSize(true);
 
         $spreadsheet->setActiveSheetIndex(0);
@@ -171,6 +176,13 @@ class StudentImportService
                 }
             } else {
                 $row['grade_code'] = null;
+            }
+
+            // 학급명: 값 있으면 메모 앞에 prefix (학급별 자동 분류는 v2)
+            $className = trim((string) ($row['class_name'] ?? ''));
+            if ($className !== '') {
+                $existingMemo = trim((string) ($row['memo'] ?? ''));
+                $row['memo'] = '[학급] '.$className.($existingMemo !== '' ? ' · '.$existingMemo : '');
             }
 
             // 메모 길이

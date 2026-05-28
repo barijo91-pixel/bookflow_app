@@ -1,8 +1,27 @@
 @php
+    use Illuminate\Support\Facades\DB;
     $user  = auth()->user();
     $route = request()->route() ? request()->route()->getName() : '';
     $is = fn($name) => $route === $name ? 'active' : '';
     $startsWith = fn($prefix) => str_starts_with($route, $prefix) ? 'active' : '';
+
+    // 역할별 미처리 주문 건수 (사이드바 뱃지)
+    $orderBadge = 0;
+    if ($user->role_code === 'agent') {
+        $orderBadge = DB::table('orders')->where('agent_user_id', $user->id)
+            ->where('status_code', 'requested')->whereNull('deleted_at')->count();
+    } elseif ($user->role_code === 'distributor') {
+        $orderBadge = DB::table('orders')->where('distributor_user_id', $user->id)
+            ->where('status_code', 'confirmed')->whereNull('deleted_at')->count();
+    } elseif ($user->role_code === 'academy') {
+        $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
+        if ($vendorIds->isNotEmpty()) {
+            // 진행 중 (requested~accepted) — 단순 시각 알림
+            $orderBadge = DB::table('orders')->whereIn('vendor_id', $vendorIds)
+                ->whereIn('status_code', ['confirmed', 'accepted', 'shipped'])
+                ->whereNull('deleted_at')->count();
+        }
+    }
 @endphp
 <aside class="public-sidebar">
     <div class="public-sidebar-brand">
@@ -22,6 +41,7 @@
                 <div class="nav-section">총판 메뉴</div>
                 <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
                     <i class="bi bi-receipt"></i> 주문관리
+                    @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
                 <a href="{{ route('my.stocks.index') }}" class="nav-item {{ $startsWith('my.stocks') }}">
                     <i class="bi bi-box-seam"></i> 재고관리
@@ -41,6 +61,7 @@
                 </a>
                 <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
                     <i class="bi bi-receipt"></i> 주문확인
+                    @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
                 <a href="{{ route('my.discounts.index') }}" class="nav-item {{ $startsWith('my.discounts') }}">
                     <i class="bi bi-percent"></i> 할인율 관리
@@ -57,6 +78,7 @@
                 </a>
                 <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
                     <i class="bi bi-clipboard-data"></i> 주문내역
+                    @if($orderBadge > 0)<span class="badge bg-secondary ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
                 <a href="{{ route('my.classes.index') }}" class="nav-item {{ $startsWith('my.classes') }}">
                     <i class="bi bi-mortarboard"></i> 학급/학생

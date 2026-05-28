@@ -25,17 +25,19 @@
                         <div class="list-group-item {{ $v->vendor_id == $selectedVendorId ? 'bg-light' : '' }}">
                             <form method="POST" action="{{ route('my.discounts.vendor.update', $v->avd_id) }}" class="row g-2 align-items-center">
                                 @csrf @method('PUT')
-                                <div class="col-5">
+                                <div class="col-4">
                                     <a href="{{ route('my.discounts.index', ['vendor_id' => $v->vendor_id]) }}"
-                                       class="text-decoration-none {{ $v->vendor_id == $selectedVendorId ? 'fw-bold navy' : '' }}">
+                                       class="text-decoration-none small {{ $v->vendor_id == $selectedVendorId ? 'fw-bold navy' : '' }}">
                                         {{ $v->vendor_name }}
                                     </a>
                                 </div>
-                                <div class="col-3">
-                                    <div class="input-group input-group-sm">
+                                <div class="col-4">
+                                    <div class="input-group input-group-sm rate-stepper">
+                                        <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
                                         <input type="number" step="0.5" min="0" max="100" name="discount_rate"
                                                value="{{ rtrim(rtrim($v->general_rate, '0'), '.') }}"
-                                               class="form-control text-end">
+                                               class="form-control text-end" inputmode="decimal">
+                                        <button type="button" class="btn btn-outline-secondary rate-up" tabindex="-1">+</button>
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
@@ -90,11 +92,13 @@
                                             @csrf
                                             <input type="hidden" name="vendor_id" value="{{ $selectedVendorId }}">
                                             <input type="hidden" name="book_id" value="{{ $bd->book_id }}">
-                                            <div class="input-group input-group-sm" style="max-width:100px">
+                                            <div class="input-group input-group-sm rate-stepper" style="max-width:170px">
+                                                <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
                                                 <input type="number" step="0.5" min="0" max="100" name="discount_rate"
                                                        value="{{ rtrim(rtrim($bd->discount_rate, '0'), '.') }}"
-                                                       class="form-control text-end">
-                                                <button class="btn btn-outline-navy btn-sm"><i class="bi bi-save"></i></button>
+                                                       class="form-control text-end" inputmode="decimal">
+                                                <button type="button" class="btn btn-outline-secondary rate-up" tabindex="-1">+</button>
+                                                <button class="btn btn-outline-navy" title="저장"><i class="bi bi-save"></i></button>
                                             </div>
                                         </form>
                                     </td>
@@ -131,9 +135,13 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small text-muted mb-1">할인율 %</label>
-                                <input type="number" step="0.5" min="0" max="100" name="discount_rate"
-                                       value="{{ rtrim(rtrim($selectedVendor->general_rate, '0'), '.') }}"
-                                       class="form-control form-control-sm text-end">
+                                <div class="input-group input-group-sm rate-stepper">
+                                    <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
+                                    <input type="number" step="0.5" min="0" max="100" name="discount_rate"
+                                           value="{{ rtrim(rtrim($selectedVendor->general_rate, '0'), '.') }}"
+                                           class="form-control text-end" inputmode="decimal">
+                                    <button type="button" class="btn btn-outline-secondary rate-up" tabindex="-1">+</button>
+                                </div>
                             </div>
                             <div class="col-md-2 d-grid">
                                 <button class="btn btn-sm btn-outline-navy" type="submit"><i class="bi bi-plus"></i> 추가</button>
@@ -152,6 +160,23 @@
     </div>
 </div>
 @push('scripts')
+<script>
+// 할인율 +/- 버튼 (모바일 친화)
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.rate-stepper .rate-up, .rate-stepper .rate-down');
+    if (!btn) return;
+    const wrap = btn.closest('.rate-stepper');
+    const input = wrap.querySelector('input[type=number]');
+    if (!input) return;
+    let v = parseFloat(input.value) || 0;
+    const step = parseFloat(input.step) || 0.5;
+    const min = input.min !== '' ? parseFloat(input.min) : -Infinity;
+    const max = input.max !== '' ? parseFloat(input.max) : Infinity;
+    v = btn.classList.contains('rate-up') ? v + step : v - step;
+    v = Math.max(min, Math.min(max, v));
+    input.value = (Math.round(v * 10) / 10).toString().replace(/\.0$/, '');
+});
+</script>
 @if($selectedVendor && $availableBooks->isNotEmpty())
 @php
     $booksJsArray = $availableBooks->map(function ($b) {
