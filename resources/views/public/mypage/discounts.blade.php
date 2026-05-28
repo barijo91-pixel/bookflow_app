@@ -73,7 +73,7 @@
                             <tr>
                                 <th>도서</th>
                                 <th class="text-end">정가</th>
-                                <th style="width:120px" class="text-end">할인율</th>
+                                <th style="width:230px" class="text-end">할인율</th>
                                 <th style="width:120px" class="text-end">할인가</th>
                                 <th style="width:60px"></th>
                             </tr>
@@ -92,7 +92,7 @@
                                             @csrf
                                             <input type="hidden" name="vendor_id" value="{{ $selectedVendorId }}">
                                             <input type="hidden" name="book_id" value="{{ $bd->book_id }}">
-                                            <div class="input-group input-group-sm rate-stepper" style="max-width:170px">
+                                            <div class="input-group input-group-sm rate-stepper ms-auto">
                                                 <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
                                                 <input type="number" step="0.5" min="0" max="100" name="discount_rate"
                                                        value="{{ rtrim(rtrim($bd->discount_rate, '0'), '.') }}"

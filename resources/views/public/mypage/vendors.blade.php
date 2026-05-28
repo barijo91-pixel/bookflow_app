@@ -46,7 +46,7 @@
                     <th>학원명</th>
                     <th>지역</th>
                     <th>연락처</th>
-                    <th style="width:150px" class="text-end">할인율</th>
+                    <th style="width:240px" class="text-end">할인율</th>
                     <th style="width:80px" class="text-center">활성</th>
                     <th style="width:120px">상태</th>
                     <th style="width:170px" class="text-end">작업</th>
@@ -81,7 +81,7 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            <div class="input-group input-group-sm rate-stepper" style="max-width:170px; margin-left:auto;">
+                            <div class="input-group input-group-sm rate-stepper ms-auto">
                                 <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1" aria-label="감소">−</button>
                                 <input type="number" step="0.5" min="0" max="100" name="discount_rate"
                                        form="vendor-edit-{{ $v->avd_id }}"

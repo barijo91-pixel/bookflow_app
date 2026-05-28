@@ -12,6 +12,23 @@
 <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('icons/icon-512.png') }}">
 
 <style>
+    /* 할인율 stepper (모바일·웹 공통) */
+    .rate-stepper { width: 100%; max-width: 220px; }
+    .rate-stepper .btn { padding: .25rem .55rem; font-weight: 600; min-width: 32px; }
+    .rate-stepper input[type=number] {
+        min-width: 60px;
+        -moz-appearance: textfield;
+    }
+    .rate-stepper input[type=number]::-webkit-inner-spin-button,
+    .rate-stepper input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none; margin: 0;
+    }
+    .rate-stepper .input-group-text { padding-left: .4rem; padding-right: .4rem; }
+    @media (max-width: 575.98px) {
+        .rate-stepper { max-width: 200px; }
+        .rate-stepper .btn { padding: .25rem .45rem; min-width: 28px; }
+    }
+
     /* 앱 설치 안내 floating 버튼 */
     .pwa-install-btn {
         position: fixed; right: 20px; bottom: 20px;
