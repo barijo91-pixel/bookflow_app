@@ -34,7 +34,7 @@ class AgentVendorController extends Controller
             ->where('agent_user_id', $user->id)
             ->where('is_active', true)
             ->orderBy('id')
-            ->value('discount_rate') ?? 30;
+            ->value('discount_rate') ?? 10;
 
         return view('public.mypage.vendor_create', compact('user', 'bankOptions', 'sidos', 'defaultRate'));
     }
