@@ -94,15 +94,37 @@
             <span class="small text-muted d-none d-md-inline">ISBN 바코드를 스캔하면 자동으로 장바구니에 담깁니다</span>
         </div>
         <div class="input-group">
-            <span class="input-group-text bg-white"><i class="bi bi-upc"></i></span>
+            <button type="button" id="scanCameraBtn" class="btn btn-outline-warning" title="카메라로 스캔">
+                <i class="bi bi-camera"></i><span class="d-none d-md-inline ms-1">카메라</span>
+            </button>
             <input type="text" id="scanIsbnInput" class="form-control"
-                   placeholder="ISBN을 스캔하거나 직접 입력 후 Enter (예: 9788937834790)"
+                   placeholder="ISBN 스캔 또는 입력 후 Enter (예: 9788937834790)"
                    autocomplete="off" inputmode="numeric">
             <input type="number" id="scanQtyInput" class="form-control text-end" min="1" max="99"
                    value="1" style="max-width:70px;" title="수량">
             <button type="button" id="scanAddBtn" class="btn btn-warning">
                 <i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">담기</span>
             </button>
+        </div>
+
+        {{-- 카메라 스캔 모달 (풀스크린) --}}
+        <div id="scanCameraModal" class="scan-camera-modal" role="dialog" aria-modal="true">
+            <div class="scan-camera-box">
+                <div class="scan-camera-header">
+                    <strong><i class="bi bi-camera"></i> 카메라로 ISBN 바코드 스캔</strong>
+                    <button type="button" id="scanCameraClose" class="btn btn-sm btn-light">
+                        <i class="bi bi-x-lg"></i> 닫기
+                    </button>
+                </div>
+                <div id="scanCameraReader" style="width:100%; min-height:300px; background:#000;"></div>
+                <div class="scan-camera-footer">
+                    <div class="small text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        책 뒷면 바코드를 화면 중앙에 맞춰주세요. 인식되면 자동으로 장바구니에 담깁니다.
+                    </div>
+                    <div id="scanCameraStatus" class="small mt-1"></div>
+                </div>
+            </div>
         </div>
         <div class="d-flex justify-content-between align-items-center mt-2">
             <small class="text-muted d-md-none">ISBN 바코드 스캔 또는 직접 입력</small>
@@ -345,6 +367,21 @@
 </form>
 
 @push('scripts')
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+.scan-camera-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 10500; display: none; align-items: center; justify-content: center; padding: 16px;
+}
+.scan-camera-modal.show { display: flex; }
+.scan-camera-box { background: #fff; border-radius: 12px; max-width: 480px; width: 100%; overflow: hidden; }
+.scan-camera-header {
+    padding: .75rem 1rem; background: #1a1d2e; color: #fff;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.scan-camera-footer { padding: .75rem 1rem; background: #f8f9fa; }
+#scanCameraReader video { width: 100% !important; }
+</style>
 <script>
 function removeCartItem(bookId) {
     if (!confirm('장바구니에서 제거할까요?')) return;
@@ -425,6 +462,79 @@ function removeCartItem(bookId) {
     }
     setInterval(maybeFocus, 1500);
     input.focus();
+
+    // ===== 카메라 스캔 (모바일·PC) =====
+    const camBtn   = document.getElementById('scanCameraBtn');
+    const camModal = document.getElementById('scanCameraModal');
+    const camClose = document.getElementById('scanCameraClose');
+    const camStatus = document.getElementById('scanCameraStatus');
+    let html5QrCode = null;
+    let lastScanned = '';
+    let lastScanTime = 0;
+
+    async function startCamera() {
+        if (!window.Html5Qrcode) {
+            alert('스캐너 라이브러리 로드 실패 — 새로고침 후 다시 시도해주세요.');
+            return;
+        }
+        camModal.classList.add('show');
+        camStatus.textContent = '카메라 시작 중...';
+        try {
+            html5QrCode = new Html5Qrcode("scanCameraReader");
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: function (vw, vh) {
+                        const s = Math.min(vw, vh);
+                        return { width: Math.round(s * 0.85), height: Math.round(s * 0.4) };
+                    },
+                    formatsToSupport: window.Html5QrcodeSupportedFormats
+                        ? [
+                            Html5QrcodeSupportedFormats.EAN_13,
+                            Html5QrcodeSupportedFormats.EAN_8,
+                            Html5QrcodeSupportedFormats.CODE_128,
+                        ]
+                        : undefined,
+                },
+                onCameraScan,
+                () => {} // 인식 실패 무시
+            );
+            camStatus.textContent = '바코드를 화면 중앙에 맞춰주세요...';
+        } catch (e) {
+            camStatus.innerHTML = '<span class="text-danger">카메라 접근 실패: '
+                + (e.message || e)
+                + '<br>브라우저 권한(주소창 자물쇠) → 카메라 허용 후 다시 시도</span>';
+        }
+    }
+
+    function onCameraScan(decodedText) {
+        if (decodedText === lastScanned && Date.now() - lastScanTime < 3000) return;
+        lastScanned = decodedText;
+        lastScanTime = Date.now();
+        camStatus.innerHTML = '<span class="text-success">인식: ' + decodedText + ' — 담는 중...</span>';
+        input.value = decodedText;
+        scanAdd().then(() => {
+            // 연속 스캔 — 카메라 유지. 다른 책 가져다 대면 됨.
+            setTimeout(() => {
+                camStatus.textContent = '다음 바코드를 화면에 맞춰주세요...';
+            }, 1500);
+        });
+    }
+
+    async function stopCamera() {
+        camModal.classList.remove('show');
+        if (html5QrCode) {
+            try { await html5QrCode.stop(); html5QrCode.clear(); } catch (e) {}
+            html5QrCode = null;
+        }
+    }
+
+    if (camBtn)   camBtn.addEventListener('click', startCamera);
+    if (camClose) camClose.addEventListener('click', stopCamera);
+    if (camModal) camModal.addEventListener('click', (e) => {
+        if (e.target === camModal) stopCamera();
+    });
 })();
 </script>
 @endpush
