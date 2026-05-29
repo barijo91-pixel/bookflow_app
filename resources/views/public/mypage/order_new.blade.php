@@ -480,27 +480,49 @@ function removeCartItem(bookId) {
         camModal.classList.add('show');
         camStatus.textContent = '카메라 시작 중...';
         try {
-            html5QrCode = new Html5Qrcode("scanCameraReader");
+            html5QrCode = new Html5Qrcode("scanCameraReader", /* verbose= */ false);
+            // 인식률 향상 옵션:
+            // - 네이티브 BarcodeDetector 사용 (모바일 브라우저 더 정확)
+            // - 해상도 1080p 권장 (작은 ISBN 바코드 인식)
+            // - 연속 자동초점
+            // - qrbox 가로 길쭉 (바코드는 가로형)
             await html5QrCode.start(
-                { facingMode: "environment" },
                 {
-                    fps: 10,
+                    facingMode: { exact: "environment" }
+                },
+                {
+                    fps: 15,
                     qrbox: function (vw, vh) {
-                        const s = Math.min(vw, vh);
-                        return { width: Math.round(s * 0.85), height: Math.round(s * 0.4) };
+                        return { width: Math.round(vw * 0.9), height: Math.round(vh * 0.35) };
                     },
-                    formatsToSupport: window.Html5QrcodeSupportedFormats
-                        ? [
-                            Html5QrcodeSupportedFormats.EAN_13,
-                            Html5QrcodeSupportedFormats.EAN_8,
-                            Html5QrcodeSupportedFormats.CODE_128,
-                        ]
-                        : undefined,
+                    aspectRatio: 1.777,
+                    videoConstraints: {
+                        facingMode: "environment",
+                        width:  { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        advanced: [{ focusMode: "continuous" }]
+                    },
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
+                    // formatsToSupport 미지정 → 라이브러리가 자동으로 모든 1D/2D 시도
                 },
                 onCameraScan,
                 () => {} // 인식 실패 무시
-            );
-            camStatus.textContent = '바코드를 화면 중앙에 맞춰주세요...';
+            ).catch(async function (e1) {
+                // exact:environment 실패 시 일반 facingMode로 재시도 (PC 웹캠 등)
+                try {
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        { fps: 15, qrbox: { width: 300, height: 100 } },
+                        onCameraScan,
+                        () => {}
+                    );
+                } catch (e2) {
+                    throw e2;
+                }
+            });
+            camStatus.innerHTML = '<strong>바코드를 화면 중앙에 맞춰주세요</strong> · 책에서 약 10-15cm 거리';
         } catch (e) {
             camStatus.innerHTML = '<span class="text-danger">카메라 접근 실패: '
                 + (e.message || e)
