@@ -132,9 +132,15 @@
                     </button>
                 </div>
                 <div class="scan-camera-footer">
+                    <div class="d-grid gap-2 mb-2">
+                        <label for="scanFileInput" class="btn btn-primary">
+                            <i class="bi bi-camera-fill"></i> 폰 카메라로 한 컷 찍기 (가장 정확)
+                        </label>
+                        <input type="file" id="scanFileInput" accept="image/*" capture="environment" style="display:none">
+                    </div>
                     <div class="small text-muted">
                         <i class="bi bi-info-circle"></i>
-                        책 뒷면 바코드를 화면 중앙에 맞춰주세요. 인식되면 자동으로 장바구니에 담깁니다.
+                        라이브 인식이 안 되면 위 <strong>"폰 카메라로 한 컷 찍기"</strong> 사용 → 책 뒷면 바코드를 또렷이 찍으면 즉시 자동 인식.
                     </div>
                     <div id="scanCameraStatus" class="small mt-1"></div>
                 </div>
@@ -564,6 +570,44 @@ function removeCartItem(bookId) {
     if (camModal) camModal.addEventListener('click', (e) => {
         if (e.target === camModal) stopCamera();
     });
+
+    // 📷 폰 네이티브 카메라 앱 호출 → 사진 받으면 ZXing으로 분석
+    // (라이브 인식이 안 되는 폰에서 가장 안정적 — 자동초점·HDR 모두 OS 카메라가 처리)
+    const fileInput = document.getElementById('scanFileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            camStatus.innerHTML = '<span class="text-info">사진 분석 중...</span>';
+
+            try {
+                const dataUrl = await new Promise((res, rej) => {
+                    const r = new FileReader();
+                    r.onload = () => res(r.result);
+                    r.onerror = rej;
+                    r.readAsDataURL(file);
+                });
+                const hints = new Map();
+                hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+                    ZXing.BarcodeFormat.EAN_13,
+                    ZXing.BarcodeFormat.EAN_8,
+                    ZXing.BarcodeFormat.UPC_A,
+                    ZXing.BarcodeFormat.UPC_E,
+                    ZXing.BarcodeFormat.CODE_128,
+                ]);
+                hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+                const imgReader = new ZXing.BrowserMultiFormatReader(hints);
+                const result = await imgReader.decodeFromImageUrl(dataUrl);
+                onCameraScan(result.getText());
+            } catch (err) {
+                camStatus.innerHTML = '<span class="text-danger">'
+                    + '<i class="bi bi-exclamation-triangle"></i> 바코드 인식 실패. '
+                    + '다시 찍거나 ISBN 13자리를 직접 입력하세요.</span>';
+            } finally {
+                fileInput.value = ''; // 같은 파일 재선택 가능하도록 reset
+            }
+        });
+    }
 
     // 📸 사진 캡처 → 정지 이미지에서 디코드 (라이브 인식 안 될 때 폴백)
     const captureBtn = document.getElementById('scanCaptureBtn');
