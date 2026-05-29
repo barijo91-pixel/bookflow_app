@@ -117,11 +117,19 @@
                     </button>
                 </div>
                 <div style="position:relative; background:#000;">
-                    <video id="scanCameraVideo" style="width:100%; display:block;" playsinline muted></video>
+                    <video id="scanCameraVideo" style="width:100%; display:block;" playsinline autoplay muted></video>
                     {{-- 가운데 가이드 라인 (바코드 정렬용) --}}
                     <div style="position:absolute; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center;">
-                        <div style="width:80%; height:80px; border:2px solid rgba(255,193,7,0.85); border-radius:8px; box-shadow:0 0 0 9999px rgba(0,0,0,0.35);"></div>
+                        <div style="width:85%; height:120px; border:2px solid rgba(255,193,7,0.9); border-radius:8px; box-shadow:0 0 0 9999px rgba(0,0,0,0.45);"></div>
                     </div>
+                    {{-- 캡처 버튼 (비디오 인식 안 되면 사진으로) --}}
+                    <button type="button" id="scanCaptureBtn"
+                            style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+                                   background:#ffc107; color:#000; border:none; padding:.7rem 1.4rem;
+                                   border-radius:50px; font-weight:700; font-size:.95rem;
+                                   box-shadow:0 4px 12px rgba(0,0,0,0.4); z-index:5;">
+                        <i class="bi bi-camera-fill"></i> 사진으로 인식
+                    </button>
                 </div>
                 <div class="scan-camera-footer">
                     <div class="small text-muted">
@@ -556,6 +564,48 @@ function removeCartItem(bookId) {
     if (camModal) camModal.addEventListener('click', (e) => {
         if (e.target === camModal) stopCamera();
     });
+
+    // 📸 사진 캡처 → 정지 이미지에서 디코드 (라이브 인식 안 될 때 폴백)
+    const captureBtn = document.getElementById('scanCaptureBtn');
+    if (captureBtn) {
+        captureBtn.addEventListener('click', async () => {
+            if (!camVideo.videoWidth) {
+                camStatus.innerHTML = '<span class="text-warning">카메라가 아직 준비 중입니다...</span>';
+                return;
+            }
+            captureBtn.disabled = true;
+            camStatus.innerHTML = '<span class="text-info">사진 분석 중...</span>';
+            try {
+                // 현재 프레임을 캔버스에 캡처
+                const canvas = document.createElement('canvas');
+                canvas.width = camVideo.videoWidth;
+                canvas.height = camVideo.videoHeight;
+                canvas.getContext('2d').drawImage(camVideo, 0, 0);
+                const dataUrl = canvas.toDataURL('image/png');
+
+                // 별도 reader로 이미지 디코드 (live reader와 충돌 방지)
+                const hints = new Map();
+                hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+                    ZXing.BarcodeFormat.EAN_13,
+                    ZXing.BarcodeFormat.EAN_8,
+                    ZXing.BarcodeFormat.UPC_A,
+                    ZXing.BarcodeFormat.CODE_128,
+                ]);
+                hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+                const imgReader = new ZXing.BrowserMultiFormatReader(hints);
+
+                const result = await imgReader.decodeFromImageUrl(dataUrl);
+                onCameraScan(result.getText());
+            } catch (e) {
+                camStatus.innerHTML = '<span class="text-danger">'
+                    + '<i class="bi bi-exclamation-triangle"></i> 바코드 인식 실패 — '
+                    + '책에서 약 15-20cm 거리에서, 바코드가 또렷이 보이게 다시 찍어주세요.'
+                    + '<br>계속 안 되면 ISBN 13자리를 입력칸에 직접 입력하세요.</span>';
+            } finally {
+                captureBtn.disabled = false;
+            }
+        });
+    }
 })();
 </script>
 @endpush
