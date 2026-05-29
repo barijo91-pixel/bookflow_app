@@ -116,7 +116,13 @@
                         <i class="bi bi-x-lg"></i> 닫기
                     </button>
                 </div>
-                <div id="scanCameraReader" style="width:100%; min-height:300px; background:#000;"></div>
+                <div style="position:relative; background:#000;">
+                    <video id="scanCameraVideo" style="width:100%; display:block;" playsinline muted></video>
+                    {{-- 가운데 가이드 라인 (바코드 정렬용) --}}
+                    <div style="position:absolute; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center;">
+                        <div style="width:80%; height:80px; border:2px solid rgba(255,193,7,0.85); border-radius:8px; box-shadow:0 0 0 9999px rgba(0,0,0,0.35);"></div>
+                    </div>
+                </div>
                 <div class="scan-camera-footer">
                     <div class="small text-muted">
                         <i class="bi bi-info-circle"></i>
@@ -367,7 +373,7 @@
 </form>
 
 @push('scripts')
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <style>
 .scan-camera-modal {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85);
@@ -463,92 +469,85 @@ function removeCartItem(bookId) {
     setInterval(maybeFocus, 1500);
     input.focus();
 
-    // ===== 카메라 스캔 (모바일·PC) =====
-    const camBtn   = document.getElementById('scanCameraBtn');
-    const camModal = document.getElementById('scanCameraModal');
-    const camClose = document.getElementById('scanCameraClose');
+    // ===== 카메라 스캔 (ZXing-js — ISBN/EAN-13 인식 정확도 최고) =====
+    const camBtn    = document.getElementById('scanCameraBtn');
+    const camModal  = document.getElementById('scanCameraModal');
+    const camClose  = document.getElementById('scanCameraClose');
     const camStatus = document.getElementById('scanCameraStatus');
-    let html5QrCode = null;
+    const camVideo  = document.getElementById('scanCameraVideo');
+    let codeReader  = null;
     let lastScanned = '';
     let lastScanTime = 0;
 
     async function startCamera() {
-        if (!window.Html5Qrcode) {
+        if (!window.ZXing) {
             alert('스캐너 라이브러리 로드 실패 — 새로고침 후 다시 시도해주세요.');
             return;
         }
         camModal.classList.add('show');
         camStatus.textContent = '카메라 시작 중...';
+
         try {
-            html5QrCode = new Html5Qrcode("scanCameraReader", /* verbose= */ false);
-            // 인식률 향상 옵션:
-            // - 네이티브 BarcodeDetector 사용 (모바일 브라우저 더 정확)
-            // - 해상도 1080p 권장 (작은 ISBN 바코드 인식)
-            // - 연속 자동초점
-            // - qrbox 가로 길쭉 (바코드는 가로형)
-            await html5QrCode.start(
-                {
-                    facingMode: { exact: "environment" }
-                },
-                {
-                    fps: 15,
-                    qrbox: function (vw, vh) {
-                        return { width: Math.round(vw * 0.9), height: Math.round(vh * 0.35) };
-                    },
-                    aspectRatio: 1.777,
-                    videoConstraints: {
-                        facingMode: "environment",
-                        width:  { ideal: 1920 },
-                        height: { ideal: 1080 },
-                        advanced: [{ focusMode: "continuous" }]
-                    },
-                    experimentalFeatures: {
-                        useBarCodeDetectorIfSupported: true
-                    }
-                    // formatsToSupport 미지정 → 라이브러리가 자동으로 모든 1D/2D 시도
-                },
-                onCameraScan,
-                () => {} // 인식 실패 무시
-            ).catch(async function (e1) {
-                // exact:environment 실패 시 일반 facingMode로 재시도 (PC 웹캠 등)
-                try {
-                    await html5QrCode.start(
-                        { facingMode: "environment" },
-                        { fps: 15, qrbox: { width: 300, height: 100 } },
-                        onCameraScan,
-                        () => {}
-                    );
-                } catch (e2) {
-                    throw e2;
+            // 1D 포맷 우선 (ISBN/책 바코드)
+            const hints = new Map();
+            const formats = [
+                ZXing.BarcodeFormat.EAN_13,
+                ZXing.BarcodeFormat.EAN_8,
+                ZXing.BarcodeFormat.UPC_A,
+                ZXing.BarcodeFormat.UPC_E,
+                ZXing.BarcodeFormat.CODE_128,
+                ZXing.BarcodeFormat.CODE_39,
+            ];
+            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+            hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+            codeReader = new ZXing.BrowserMultiFormatReader(hints, 200); // 200ms timeBetweenScans
+
+            // 사용 가능한 카메라 중 후면 카메라 자동 선택
+            const devices = await codeReader.listVideoInputDevices();
+            let deviceId = null;
+            if (devices && devices.length > 0) {
+                // label에 'back', '후면', 'rear', 'environment' 들어간 카메라 우선
+                const rear = devices.find(d =>
+                    /back|rear|environment|후면/i.test(d.label || '')
+                );
+                deviceId = (rear || devices[devices.length - 1]).deviceId;
+            }
+
+            await codeReader.decodeFromVideoDevice(deviceId, camVideo, (result, err) => {
+                if (result) {
+                    onCameraScan(result.getText());
                 }
+                // err는 NotFoundException이 정상 (프레임마다 시도 — 무시)
             });
-            camStatus.innerHTML = '<strong>바코드를 화면 중앙에 맞춰주세요</strong> · 책에서 약 10-15cm 거리';
+
+            camStatus.innerHTML = '<strong>바코드를 노란 박스 안에 맞춰주세요</strong> · 책에서 약 10-15cm 거리';
         } catch (e) {
             camStatus.innerHTML = '<span class="text-danger">카메라 접근 실패: '
                 + (e.message || e)
-                + '<br>브라우저 권한(주소창 자물쇠) → 카메라 허용 후 다시 시도</span>';
+                + '<br>주소창 자물쇠 → 카메라 허용 후 다시 시도</span>';
         }
     }
 
     function onCameraScan(decodedText) {
+        if (!decodedText) return;
         if (decodedText === lastScanned && Date.now() - lastScanTime < 3000) return;
         lastScanned = decodedText;
         lastScanTime = Date.now();
-        camStatus.innerHTML = '<span class="text-success">인식: ' + decodedText + ' — 담는 중...</span>';
+        camStatus.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> 인식: ' + decodedText + ' — 담는 중...</span>';
         input.value = decodedText;
         scanAdd().then(() => {
-            // 연속 스캔 — 카메라 유지. 다른 책 가져다 대면 됨.
             setTimeout(() => {
                 camStatus.textContent = '다음 바코드를 화면에 맞춰주세요...';
-            }, 1500);
+            }, 1200);
         });
     }
 
-    async function stopCamera() {
+    function stopCamera() {
         camModal.classList.remove('show');
-        if (html5QrCode) {
-            try { await html5QrCode.stop(); html5QrCode.clear(); } catch (e) {}
-            html5QrCode = null;
+        if (codeReader) {
+            try { codeReader.reset(); } catch (e) {}
+            codeReader = null;
         }
     }
 
