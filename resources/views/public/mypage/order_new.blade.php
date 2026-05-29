@@ -117,32 +117,27 @@
                     </button>
                 </div>
                 <div style="position:relative; background:#000;">
-                    <video id="scanCameraVideo" style="width:100%; display:block;" playsinline autoplay muted></video>
+                    <video id="scanCameraVideo" style="width:100%; display:block; pointer-events:none;" playsinline autoplay muted></video>
                     {{-- 가운데 가이드 라인 (바코드 정렬용) --}}
                     <div style="position:absolute; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center;">
                         <div style="width:85%; height:120px; border:2px solid rgba(255,193,7,0.9); border-radius:8px; box-shadow:0 0 0 9999px rgba(0,0,0,0.45);"></div>
                     </div>
-                    {{-- 캡처 버튼 (비디오 인식 안 되면 사진으로) --}}
-                    <button type="button" id="scanCaptureBtn"
-                            style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
-                                   background:#ffc107; color:#000; border:none; padding:.7rem 1.4rem;
-                                   border-radius:50px; font-weight:700; font-size:.95rem;
-                                   box-shadow:0 4px 12px rgba(0,0,0,0.4); z-index:5;">
-                        <i class="bi bi-camera-fill"></i> 사진으로 인식
-                    </button>
                 </div>
                 <div class="scan-camera-footer">
                     <div class="d-grid gap-2 mb-2">
-                        <label for="scanFileInput" class="btn btn-primary">
-                            <i class="bi bi-camera-fill"></i> 폰 카메라로 한 컷 찍기 (가장 정확)
+                        <button type="button" id="scanCaptureBtn" class="btn btn-warning btn-lg">
+                            <i class="bi bi-camera-fill"></i> 현재 화면 사진으로 인식
+                        </button>
+                        <label for="scanFileInput" class="btn btn-primary btn-lg">
+                            <i class="bi bi-camera"></i> 폰 카메라 앱으로 찍기 (가장 정확)
                         </label>
                         <input type="file" id="scanFileInput" accept="image/*" capture="environment" style="display:none">
                     </div>
                     <div class="small text-muted">
                         <i class="bi bi-info-circle"></i>
-                        라이브 인식이 안 되면 위 <strong>"폰 카메라로 한 컷 찍기"</strong> 사용 → 책 뒷면 바코드를 또렷이 찍으면 즉시 자동 인식.
+                        라이브가 안 잡히면 위 버튼 둘 중 하나 사용. <strong>책에서 약 15-20cm</strong>, 바코드 또렷이 보이게.
                     </div>
-                    <div id="scanCameraStatus" class="small mt-1"></div>
+                    <div id="scanCameraStatus" class="small mt-2"></div>
                 </div>
             </div>
         </div>
@@ -494,52 +489,52 @@ function removeCartItem(bookId) {
     let lastScanTime = 0;
 
     async function startCamera() {
+        camModal.classList.add('show');
         if (!window.ZXing) {
-            alert('스캐너 라이브러리 로드 실패 — 새로고침 후 다시 시도해주세요.');
+            camStatus.innerHTML = '<span class="text-danger">⚠️ 스캐너 라이브러리 로드 실패. '
+                + '네트워크 확인 후 새로고침해주세요.</span>';
             return;
         }
-        camModal.classList.add('show');
         camStatus.textContent = '카메라 시작 중...';
 
         try {
-            // 1D 포맷 우선 (ISBN/책 바코드)
             const hints = new Map();
-            const formats = [
+            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
                 ZXing.BarcodeFormat.EAN_13,
                 ZXing.BarcodeFormat.EAN_8,
                 ZXing.BarcodeFormat.UPC_A,
                 ZXing.BarcodeFormat.UPC_E,
                 ZXing.BarcodeFormat.CODE_128,
                 ZXing.BarcodeFormat.CODE_39,
-            ];
-            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+            ]);
             hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
 
-            codeReader = new ZXing.BrowserMultiFormatReader(hints, 200); // 200ms timeBetweenScans
+            codeReader = new ZXing.BrowserMultiFormatReader(hints, 200);
 
-            // 사용 가능한 카메라 중 후면 카메라 자동 선택
-            const devices = await codeReader.listVideoInputDevices();
             let deviceId = null;
-            if (devices && devices.length > 0) {
-                // label에 'back', '후면', 'rear', 'environment' 들어간 카메라 우선
-                const rear = devices.find(d =>
-                    /back|rear|environment|후면/i.test(d.label || '')
-                );
-                deviceId = (rear || devices[devices.length - 1]).deviceId;
+            try {
+                const devices = await codeReader.listVideoInputDevices();
+                if (devices && devices.length > 0) {
+                    const rear = devices.find(d =>
+                        /back|rear|environment|후면/i.test(d.label || '')
+                    );
+                    deviceId = (rear || devices[devices.length - 1]).deviceId;
+                }
+            } catch (e) {
+                // 권한 없으면 listVideoInputDevices 실패 — null로 호출하면 기본 카메라 사용
             }
 
             await codeReader.decodeFromVideoDevice(deviceId, camVideo, (result, err) => {
                 if (result) {
                     onCameraScan(result.getText());
                 }
-                // err는 NotFoundException이 정상 (프레임마다 시도 — 무시)
             });
 
-            camStatus.innerHTML = '<strong>바코드를 노란 박스 안에 맞춰주세요</strong> · 책에서 약 10-15cm 거리';
+            camStatus.innerHTML = '<strong>바코드를 노란 박스 안에 맞춰주세요</strong> · 인식이 안 되면 아래 버튼 사용';
         } catch (e) {
             camStatus.innerHTML = '<span class="text-danger">카메라 접근 실패: '
                 + (e.message || e)
-                + '<br>주소창 자물쇠 → 카메라 허용 후 다시 시도</span>';
+                + '<br>주소창 자물쇠 → 카메라 허용 후 다시 시도. 또는 아래 [폰 카메라 앱으로 찍기] 사용.</span>';
         }
     }
 
