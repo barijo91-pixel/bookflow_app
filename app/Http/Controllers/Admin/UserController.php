@@ -18,9 +18,10 @@ class UserController extends Controller
     // -------------------- LIST --------------------
     public function index(Request $request)
     {
-        $role = $request->query('role');
-        $status = $request->query('status');
-        $q = trim((string) $request->query('q'));
+        $role        = $request->query('role');
+        $status      = $request->query('status');
+        $q           = trim((string) $request->query('q'));
+        $distributor = (int) $request->query('distributor');
 
         $query = User::query()->orderByDesc('id');
 
@@ -34,17 +35,43 @@ class UserController extends Controller
                   ->orWhere('phone', 'like', "%{$q}%");
             });
         }
+        // 총판 필터: 그 총판 본인 + 산하 영업자 + 영업자가 담당하는 학원 사용자
+        if ($distributor) {
+            // 산하 영업자 ID
+            $agentIds = DB::table('user_relations')
+                ->where('parent_user_id', $distributor)
+                ->where('relation_type', 'distributor_agent')
+                ->where('status', 'active')
+                ->pluck('child_user_id')->toArray();
+            // 그 영업자들이 담당하는 vendor ID
+            $vendorIds = DB::table('agent_vendor_discounts')
+                ->whereIn('agent_user_id', $agentIds)
+                ->where('is_active', true)
+                ->pluck('vendor_id')->unique()->toArray();
+            // 그 vendor의 학원 사용자 ID
+            $academyIds = DB::table('vendor_users')
+                ->whereIn('vendor_id', $vendorIds)
+                ->pluck('user_id')->unique()->toArray();
+
+            $includeIds = array_unique(array_merge([$distributor], $agentIds, $academyIds));
+            $query->whereIn('id', $includeIds);
+        }
 
         $users = $query->paginate(20)->withQueryString();
         $roleOptions   = DB::table('codes')->where('group_code', 'user_role')->orderBy('sort_order')->get();
         $statusOptions = DB::table('codes')->where('group_code', 'user_status')->orderBy('sort_order')->get();
+
+        // 총판 셀렉트 옵션
+        $distributorOptions = User::where('role_code', 'distributor')
+            ->orderBy('name')->get(['id', 'name', 'login_id']);
 
         // 소속 정보 일괄 조회 (N+1 방지)
         $userIds = $users->pluck('id')->toArray();
         $affiliations = $this->loadAffiliations($userIds);
 
         return view('admin.users.index', compact(
-            'users', 'roleOptions', 'statusOptions', 'role', 'status', 'q', 'affiliations'
+            'users', 'roleOptions', 'statusOptions', 'role', 'status', 'q',
+            'affiliations', 'distributorOptions', 'distributor'
         ));
     }
 

@@ -18,7 +18,7 @@
 <form method="GET" class="card border-0 shadow-sm mb-3">
     <div class="card-body py-3">
         <div class="row g-2 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">역할</label>
                 <select name="role" class="form-select form-select-sm">
                     <option value="">전체</option>
@@ -27,7 +27,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">상태</label>
                 <select name="status" class="form-select form-select-sm">
                     <option value="">전체</option>
@@ -36,14 +36,26 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">총판별 (산하 영업자·학원)</label>
+                <select name="distributor" class="form-select form-select-sm">
+                    <option value="">전체</option>
+                    @foreach($distributorOptions as $d)
+                        <option value="{{ $d->id }}" @selected($distributor == $d->id)>{{ $d->name }} ({{ $d->login_id }})</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">검색 (이름/아이디/이메일/연락처)</label>
                 <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm">
             </div>
-            <div class="col-md-2 d-grid">
-                <button type="submit" class="btn btn-sm btn-primary">
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
                     <i class="bi bi-search"></i> 조회
                 </button>
+                <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary" title="초기화">
+                    <i class="bi bi-x-lg"></i>
+                </a>
             </div>
         </div>
     </div>
