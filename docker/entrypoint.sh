@@ -13,6 +13,12 @@ fi
 # 2. storage:link (이미 있으면 무시)
 php artisan storage:link --force >/dev/null 2>&1 || true
 
+# 2-1. 엑셀 업로드용 디렉토리 보장 (Flysystem이 못 만드는 케이스 대응)
+mkdir -p /var/www/html/storage/app/private/imports
+mkdir -p /var/www/html/storage/app/public
+chown -R www-data:www-data /var/www/html/storage/app 2>/dev/null || true
+chmod -R 775 /var/www/html/storage/app 2>/dev/null || true
+
 # 3. 캐시 워밍 (route, config, view) — 첫 부팅 시
 if [ "${RUN_CACHE_OPTIMIZE:-1}" = "1" ]; then
     echo "[entrypoint] optimize caches"
