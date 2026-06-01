@@ -244,8 +244,8 @@ class BookImportService
         return null;
     }
 
-    /** 빈 템플릿 엑셀 생성 (다운로드용 경로 리턴) */
-    public function generateTemplate(): string
+    /** 빈 템플릿 Spreadsheet 객체 (streamDownload용 — 컨트롤러에서 직접 출력) */
+    public function buildTemplate(): \PhpOffice\PhpSpreadsheet\Spreadsheet
     {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -278,9 +278,14 @@ class BookImportService
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        $tmp = storage_path('app/private/book_template_'.time().'.xlsx');
-        if (! is_dir(dirname($tmp))) mkdir(dirname($tmp), 0755, true);
-        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        return $spreadsheet;
+    }
+
+    /** 후방 호환 — 임시 파일 경로 반환 (sys_get_temp_dir 사용, 운영 권한 무관) */
+    public function generateTemplate(): string
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'book_tpl_').'.xlsx';
+        $writer = IOFactory::createWriter($this->buildTemplate(), 'Xlsx');
         $writer->save($tmp);
         return $tmp;
     }

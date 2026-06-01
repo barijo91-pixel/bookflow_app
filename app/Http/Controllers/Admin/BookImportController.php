@@ -25,11 +25,19 @@ class BookImportController extends Controller
         return view('admin.books.import', compact('recentJobs'));
     }
 
-    /** 템플릿 다운로드 */
+    /** 템플릿 다운로드 — streamDownload (디스크 권한 무관, UserImport와 동일 패턴) */
     public function template()
     {
-        $path = $this->importer->generateTemplate();
-        return response()->download($path, 'book_import_template.xlsx')->deleteFileAfterSend();
+        $spreadsheet = $this->importer->buildTemplate();
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, '도서_등록_템플릿.xlsx', [
+            'Content-Type'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma'        => 'no-cache',
+        ]);
     }
 
     /** 파일 업로드 → 미리보기 */
