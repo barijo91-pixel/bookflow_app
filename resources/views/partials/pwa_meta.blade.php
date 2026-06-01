@@ -12,10 +12,10 @@
 <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('icons/icon-512.png') }}">
 
 <style>
-    /* ===== 조회/필터 영역 (공통) — 본문과 구분되는 약한 톤 + 좌측 액센트 ===== */
+    /* ===== 조회/필터 영역 (공통) — 본문과 구분되는 톤 + 좌측 액센트 ===== */
     form[method="GET"].card,
     .filter-card {
-        background: #eef2f7 !important;
+        background: #d4e0ee !important;
         border-left: 4px solid #1f3a5f !important;
     }
     form[method="GET"].card .form-label,
