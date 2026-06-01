@@ -35,6 +35,34 @@
                 <label class="form-label small text-muted">이메일 (선택, 알림 수신용)</label>
                 <input type="email" name="email" value="{{ old('email', $user->email) }}" class="form-control" maxlength="150">
             </div>
+
+            {{-- 총판 전용: 수금 계좌 (학부모 결제 → 총판 PG/계좌로 일원화) --}}
+            @if($user->role_code === 'distributor')
+                <hr>
+                <div class="mb-2">
+                    <strong class="navy"><i class="bi bi-cash-coin"></i> 수금 계좌</strong>
+                    <div class="small text-muted">학부모 결제 → 이 계좌로 입금. 정산은 본 계좌 기준.</div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted">은행</label>
+                        <select name="bank_code" class="form-select">
+                            <option value="">선택</option>
+                            @foreach($bankOptions as $b)
+                                <option value="{{ $b->code }}" @selected(old('bank_code', $user->bank_code) === $b->code)>{{ $b->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label small text-muted">계좌번호</label>
+                        <input type="text" name="bank_account" value="{{ old('bank_account', $user->bank_account) }}" class="form-control" maxlength="50" placeholder="-없이 숫자만">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">예금주</label>
+                        <input type="text" name="bank_holder" value="{{ old('bank_holder', $user->bank_holder) }}" class="form-control" maxlength="50">
+                    </div>
+                </div>
+            @endif
         </div>
         <div class="card-footer bg-white text-end">
             <button class="btn btn-navy"><i class="bi bi-save"></i> 저장</button>

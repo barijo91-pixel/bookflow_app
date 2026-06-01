@@ -88,7 +88,7 @@
                 </div>
                 <div class="col-md-9">
                     <p class="text-muted small mb-0">
-                        본인의 기본 매핑 할인율로 설정됩니다 ({{ $defaultRate }}% 기본). 도서별 개별 할인은 등록 후
+                        신규 학원 기본 할인율은 <strong>10%</strong>입니다. 도서별 개별 할인은 등록 후
                         <strong>할인율 관리</strong>에서 조정 가능합니다.
                     </p>
                 </div>
@@ -170,30 +170,9 @@
         </div>
     </div>
 
-    {{-- 5. 은행 정보 (선택) --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white"><strong>5. 은행 정보 <small class="text-muted">(선택)</small></strong></div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">은행</label>
-                    <select name="bank_code" class="form-select">
-                        <option value="">선택</option>
-                        @foreach($bankOptions as $b)
-                            <option value="{{ $b->code }}">{{ $b->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label small text-muted mb-1">계좌번호</label>
-                    <input type="text" name="bank_account" class="form-control" value="{{ old('bank_account') }}" maxlength="50">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label small text-muted mb-1">예금주</label>
-                    <input type="text" name="bank_holder" class="form-control" value="{{ old('bank_holder') }}" maxlength="50">
-                </div>
-            </div>
-        </div>
+    <div class="alert alert-light border small text-muted mb-3">
+        <i class="bi bi-info-circle"></i>
+        <strong>안내</strong>: 수금 계좌는 <strong>총판</strong>이 관리합니다. 학원 등록 시 별도 입력 X — 학부모 결제는 총판 PG/입금 계좌로 일원화됩니다.
     </div>
 
     <div class="d-flex justify-content-between">

@@ -111,17 +111,28 @@ class MyPageController extends Controller
 
     public function showProfile()
     {
-        return view('public.mypage.profile', ['user' => Auth::user()]);
+        $bankOptions = DB::table('codes')->where('group_code', 'bank')->orderBy('sort_order')->get();
+        return view('public.mypage.profile', [
+            'user' => Auth::user(),
+            'bankOptions' => $bankOptions,
+        ]);
     }
 
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        $data = $request->validate([
+        $rules = [
             'name'  => ['required', 'string', 'max:100'],
             'phone' => ['required', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:150'],
-        ]);
+        ];
+        // 총판은 PG/입금 계좌도 함께 저장
+        if ($user->role_code === 'distributor') {
+            $rules['bank_code']    = ['nullable', 'string', 'max:10'];
+            $rules['bank_account'] = ['nullable', 'string', 'max:50'];
+            $rules['bank_holder']  = ['nullable', 'string', 'max:50'];
+        }
+        $data = $request->validate($rules);
         $user->update($data);
         return back()->with('success', '정보가 저장되었습니다.');
     }
@@ -343,8 +354,9 @@ class MyPageController extends Controller
         $user  = $this->authorizeOrder($order);
 
         $data = $request->validate([
-            'to_status' => ['required', 'in:confirmed,accepted,canceled'],
-            'reason'    => ['nullable', 'string', 'max:500'],
+            'to_status'     => ['required', 'in:confirmed,accepted,canceled'],
+            'reason'        => ['nullable', 'string', 'max:500'],
+            'delivery_type' => ['nullable', 'in:parcel,direct'], // 영업자 confirm 시 배송 방식 선택
         ]);
         $to = $data['to_status'];
         $from = $order->status_code;
@@ -372,7 +384,13 @@ class MyPageController extends Controller
         DB::transaction(function () use ($order, $to, $from, $data) {
             $update = ['status_code' => $to, 'updated_at' => now()];
             switch ($to) {
-                case 'confirmed': $update['confirmed_at'] = now(); break;
+                case 'confirmed':
+                    $update['confirmed_at'] = now();
+                    // 영업자 확정 시 배송 방식 저장 (없으면 parcel 유지)
+                    if (! empty($data['delivery_type'])) {
+                        $update['delivery_type'] = $data['delivery_type'];
+                    }
+                    break;
                 case 'accepted':  $update['accepted_at']  = now(); break;
                 case 'canceled':  $update['canceled_at']  = now(); break;
             }

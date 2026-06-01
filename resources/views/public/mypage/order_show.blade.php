@@ -44,6 +44,14 @@
                     <dd class="col-8">{{ $agent->name ?? '-' }}</dd>
                     <dt class="col-4 text-muted">총판</dt>
                     <dd class="col-8">{{ $dist->name ?? '(미배정)' }}</dd>
+                    <dt class="col-4 text-muted">배송 방식</dt>
+                    <dd class="col-8">
+                        @if(($order->delivery_type ?? 'parcel') === 'direct')
+                            <span class="badge bg-warning text-dark">직접 배송</span>
+                        @else
+                            <span class="badge bg-light text-dark">택배</span>
+                        @endif
+                    </dd>
                     <dt class="col-4 text-muted">소계</dt>
                     <dd class="col-8 text-end">{{ number_format($order->subtotal_amount) }}원</dd>
                     <dt class="col-4 text-muted">배송비</dt>
@@ -69,6 +77,12 @@
                               onsubmit="return confirm('주문을 확정하시겠습니까? 확정 후 총판에게 전달됩니다.')">
                             @csrf
                             <input type="hidden" name="to_status" value="confirmed">
+                            <div class="form-check form-switch mb-2">
+                                <input type="checkbox" name="delivery_type" value="direct" class="form-check-input" id="deliveryDirect">
+                                <label for="deliveryDirect" class="form-check-label small">
+                                    <strong>직접 배송 요청</strong> <span class="text-muted">(대형 학원·택배 X)</span>
+                                </label>
+                            </div>
                             <button class="btn btn-primary w-100">
                                 <i class="bi bi-check-lg"></i> 영업자 확정
                             </button>

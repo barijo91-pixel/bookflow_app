@@ -26,17 +26,12 @@ class AgentVendorController extends Controller
     {
         $user = $this->authorizeAgent();
 
-        $bankOptions = DB::table('codes')->where('group_code', 'bank')->orderBy('sort_order')->get();
-        $sidos       = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get();
+        $sidos = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get();
 
-        // 영업자의 기본 할인율 (참고용 디폴트) — 본인 첫 매핑의 rate
-        $defaultRate = DB::table('agent_vendor_discounts')
-            ->where('agent_user_id', $user->id)
-            ->where('is_active', true)
-            ->orderBy('id')
-            ->value('discount_rate') ?? 10;
+        // 학원 등록 시 할인율 디폴트 — 항상 10% (정책: 신규 학원 일괄 10% 시작)
+        $defaultRate = 10;
 
-        return view('public.mypage.vendor_create', compact('user', 'bankOptions', 'sidos', 'defaultRate'));
+        return view('public.mypage.vendor_create', compact('user', 'sidos', 'defaultRate'));
     }
 
     /** 학원 + 학원 계정 + 매핑 동시 생성 */
@@ -54,9 +49,6 @@ class AgentVendorController extends Controller
             'region_id'      => ['nullable', 'integer', 'exists:regions,id'],
             'address'        => ['nullable', 'string', 'max:255'],
             'address_detail' => ['nullable', 'string', 'max:255'],
-            'bank_code'      => ['nullable', 'string', 'max:10'],
-            'bank_account'   => ['nullable', 'string', 'max:50'],
-            'bank_holder'    => ['nullable', 'string', 'max:50'],
             'payment_type'   => ['nullable', 'in:cash,credit'],
             'credit_limit'   => ['nullable', 'integer', 'min:0', 'max:999999999'],
             'memo'           => ['nullable', 'string', 'max:2000'],
@@ -115,9 +107,6 @@ class AgentVendorController extends Controller
                 'region_id'      => $data['region_id'] ?? null,
                 'address'        => $data['address'] ?? null,
                 'address_detail' => $data['address_detail'] ?? null,
-                'bank_code'      => $data['bank_code'] ?? null,
-                'bank_account'   => $data['bank_account'] ?? null,
-                'bank_holder'    => $data['bank_holder'] ?? null,
                 'payment_type'   => $paymentType,
                 'credit_limit'   => $creditLimit,
                 'memo'           => $data['memo'] ?? null,
