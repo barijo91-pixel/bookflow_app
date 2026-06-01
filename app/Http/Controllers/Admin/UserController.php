@@ -39,7 +39,75 @@ class UserController extends Controller
         $roleOptions   = DB::table('codes')->where('group_code', 'user_role')->orderBy('sort_order')->get();
         $statusOptions = DB::table('codes')->where('group_code', 'user_status')->orderBy('sort_order')->get();
 
-        return view('admin.users.index', compact('users', 'roleOptions', 'statusOptions', 'role', 'status', 'q'));
+        // 소속 정보 일괄 조회 (N+1 방지)
+        $userIds = $users->pluck('id')->toArray();
+        $affiliations = $this->loadAffiliations($userIds);
+
+        return view('admin.users.index', compact(
+            'users', 'roleOptions', 'statusOptions', 'role', 'status', 'q', 'affiliations'
+        ));
+    }
+
+    /**
+     * 사용자 ID 배열에 대한 소속 정보 일괄 조회
+     * @return array<int, array{names: array, count: int}>  [user_id => ['names' => [...], 'count' => N]]
+     */
+    private function loadAffiliations(array $userIds): array
+    {
+        if (empty($userIds)) return [];
+
+        $result = [];
+
+        // 영업자 → 속한 총판들
+        $agentToDistributors = DB::table('user_relations as r')
+            ->join('users as u', 'u.id', '=', 'r.parent_user_id')
+            ->whereIn('r.child_user_id', $userIds)
+            ->where('r.relation_type', 'distributor_agent')
+            ->where('r.status', 'active')
+            ->select('r.child_user_id as user_id', 'u.name as parent_name')
+            ->get()
+            ->groupBy('user_id');
+
+        foreach ($agentToDistributors as $userId => $rows) {
+            $result[$userId] = [
+                'names' => $rows->pluck('parent_name')->all(),
+                'count' => $rows->count(),
+            ];
+        }
+
+        // 학원 → 속한 vendor(거래처) 명
+        $academyToVendors = DB::table('vendor_users as vu')
+            ->join('vendors as v', 'v.id', '=', 'vu.vendor_id')
+            ->whereIn('vu.user_id', $userIds)
+            ->whereNull('v.deleted_at')
+            ->select('vu.user_id', 'v.name as vendor_name')
+            ->get()
+            ->groupBy('user_id');
+
+        foreach ($academyToVendors as $userId => $rows) {
+            $result[$userId] = [
+                'names' => $rows->pluck('vendor_name')->all(),
+                'count' => $rows->count(),
+            ];
+        }
+
+        // 총판 → 산하 영업자 수 (이름은 너무 길어질 수 있으니 카운트만)
+        $distributorAgentCount = DB::table('user_relations')
+            ->whereIn('parent_user_id', $userIds)
+            ->where('relation_type', 'distributor_agent')
+            ->where('status', 'active')
+            ->select('parent_user_id', DB::raw('count(*) as cnt'))
+            ->groupBy('parent_user_id')->get();
+
+        foreach ($distributorAgentCount as $row) {
+            $result[$row->parent_user_id] = [
+                'names' => [], // 카운트만
+                'count' => $row->cnt,
+                'is_distributor' => true,
+            ];
+        }
+
+        return $result;
     }
 
     public function pending()

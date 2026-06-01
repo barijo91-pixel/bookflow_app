@@ -59,6 +59,7 @@
                     <th>아이디</th>
                     <th>연락처</th>
                     <th>역할</th>
+                    <th>소속</th>
                     <th>상태</th>
                     <th>가입일</th>
                     <th class="text-end" style="width:240px;">조치</th>
@@ -83,6 +84,26 @@
                         <td class="text-muted small"><code>{{ $u->login_id }}</code></td>
                         <td class="text-muted small">{{ format_phone($u->phone) }}</td>
                         <td><span class="badge bg-light text-dark">{{ $u->role_code }}</span></td>
+                        <td class="small">
+                            @php $aff = $affiliations[$u->id] ?? null; @endphp
+                            @if(! $aff)
+                                <span class="text-muted">—</span>
+                            @elseif(! empty($aff['is_distributor']))
+                                <span class="text-muted">산하 영업자 {{ $aff['count'] }}명</span>
+                            @elseif(empty($aff['names']))
+                                <span class="text-muted">—</span>
+                            @else
+                                @php
+                                    $names = $aff['names'];
+                                    $first = $names[0];
+                                    $extra = count($names) - 1;
+                                @endphp
+                                <span>{{ $first }}</span>
+                                @if($extra > 0)
+                                    <span class="badge bg-secondary ms-1" title="{{ implode(', ', $names) }}">외 {{ $extra }}</span>
+                                @endif
+                            @endif
+                        </td>
                         <td>
                             @switch($u->status_code)
                                 @case('active') <span class="badge bg-success">승인</span> @break
@@ -117,7 +138,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="text-center text-muted py-4">데이터가 없습니다.</td></tr>
+                    <tr><td colspan="9" class="text-center text-muted py-4">데이터가 없습니다.</td></tr>
                 @endforelse
             </tbody>
         </table>
