@@ -26,6 +26,7 @@ Route::get('/', function () {
 
 // 학부모 공유링크 (공개, 토큰 기반)
 Route::get('/p/{token}', [\App\Http\Controllers\ParentShareController::class, 'show'])->name('parent.share');
+Route::get('/pay/{token}', [\App\Http\Controllers\PaymentRequestController::class, 'publicShow'])->name('public.pay');
 
 // SEO
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
@@ -60,6 +61,14 @@ Route::middleware('auth')->group(function () {
         Route::put('orders/{id}',                  [\App\Http\Controllers\MyPageController::class, 'updateOrder'])->name('orders.update');
         Route::post('orders/{id}/transition',      [\App\Http\Controllers\MyPageController::class, 'transitionOrder'])->name('orders.transition');
         Route::post('orders/{id}/ship',            [\App\Http\Controllers\MyPageController::class, 'shipOrder'])->name('orders.ship');
+
+        // 학원 — 학부모 결제 요청
+        Route::get('orders/{id}/payment-requests/create',
+            [\App\Http\Controllers\PaymentRequestController::class, 'create'])->name('orders.payment.create');
+        Route::post('orders/{id}/payment-requests',
+            [\App\Http\Controllers\PaymentRequestController::class, 'store'])->name('orders.payment.store');
+        Route::get('classes/{classId}/students-with-parents',
+            [\App\Http\Controllers\PaymentRequestController::class, 'studentsWithParents'])->name('classes.students_parents');
 
         // 총판 전용 - 재고 관리 (Phase B-6)
         Route::get('stocks',                [\App\Http\Controllers\MyPageController::class, 'stocksIndex'])->name('stocks.index');

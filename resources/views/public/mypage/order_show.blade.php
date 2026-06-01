@@ -63,13 +63,19 @@
         </div>
 
         {{-- 액션 카드 --}}
-        @if($canConfirm || $canAccept || $canShip || $canCancel || $canEdit)
+        @php $isAcademy = $user->role_code === 'academy'; @endphp
+        @if($canConfirm || $canAccept || $canShip || $canCancel || $canEdit || $isAcademy)
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-header bg-white"><strong><i class="bi bi-lightning"></i> 처리</strong></div>
                 <div class="card-body">
                     @if($canEdit)
                         <a href="{{ route('my.orders.edit', $order->id) }}" class="btn btn-outline-primary w-100 mb-2">
                             <i class="bi bi-pencil-square"></i> 주문 수정 (수량/도서 삭제)
+                        </a>
+                    @endif
+                    @if($user->role_code === 'academy' && in_array($order->status_code, ['requested','confirmed','accepted','shipped']))
+                        <a href="{{ route('my.orders.payment.create', $order->id) }}" class="btn btn-warning w-100 mb-2">
+                            <i class="bi bi-chat-dots-fill"></i> 학부모에게 결제 요청
                         </a>
                     @endif
                     @if($canConfirm)

@@ -51,6 +51,13 @@ class NotificationTemplateSeeder extends Seeder
             ['b2c.share_link', 'sms', '학부모 공유링크 SMS 폴백',
                 "[BookSys] #{academy_name} 교재 안내: #{link_url}",
                 ['academy_name','link_url']],
+
+            ['payment.requested', 'alimtalk', '학부모 결제 요청',
+                "[BookSys] #{vendor_name}에서 #{student_name} 학생 교재 결제 요청드립니다.\n금액: #{amount_fmt}원\n결제하기: #{pay_url}",
+                ['vendor_name','student_name','parent_name','amount_fmt','pay_url']],
+            ['payment.requested', 'sms', '학부모 결제 요청 SMS 폴백',
+                "[BookSys] #{vendor_name} 교재 #{amount_fmt}원 결제: #{pay_url}",
+                ['vendor_name','amount_fmt','pay_url']],
         ];
 
         foreach ($templates as [$event, $channel, $name, $body, $vars]) {
