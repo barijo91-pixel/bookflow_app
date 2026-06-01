@@ -12,6 +12,19 @@
 <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('icons/icon-512.png') }}">
 
 <style>
+    /* ===== 조회/필터 영역 (공통) — 본문과 구분되는 약한 톤 + 좌측 액센트 ===== */
+    form[method="GET"].card,
+    .filter-card {
+        background: #eef2f7 !important;
+        border-left: 4px solid #1f3a5f !important;
+    }
+    form[method="GET"].card .form-label,
+    .filter-card .form-label {
+        color: #1f3a5f !important;
+        font-weight: 600;
+    }
+    /* 다크 사이드바 톤과 어울리도록 카드 헤더가 별도 있으면 그대로 (form 단독 카드만 적용) */
+
     /* 할인율 stepper (모바일·웹 공통) */
     .rate-stepper { width: 100%; max-width: 220px; }
     .rate-stepper .btn { padding: .25rem .55rem; font-weight: 600; min-width: 32px; }
