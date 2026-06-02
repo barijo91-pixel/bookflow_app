@@ -50,7 +50,7 @@
 @endphp
 
 {{-- 영업자 선택 + 검색 --}}
-<div class="card border-0 shadow-sm mb-3">
+<div class="card border-0 shadow-sm mb-3 filter-card">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('my.order_new') }}" class="row g-2 align-items-end">
             {{-- 영업자 --}}
