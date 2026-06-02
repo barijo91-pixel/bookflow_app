@@ -73,8 +73,12 @@
                            placeholder="제목 · ISBN · 시리즈 · 저자로 검색">
                 </div>
             </div>
-            <div class="col-md-2 d-grid">
-                <button class="btn btn-sm btn-navy"><i class="bi bi-search"></i> 검색</button>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-navy flex-grow-1"><i class="bi bi-search"></i> 검색</button>
+                <button type="button" class="btn btn-sm btn-warning" id="toggleBarcodeBtn"
+                        title="바코드 스캔 열기/닫기">
+                    <i class="bi bi-upc-scan"></i>
+                </button>
             </div>
             {{-- 현재 필터 hidden (필터 유지) --}}
             @if($activeFilters['school'])   <input type="hidden" name="school"   value="{{ $activeFilters['school'] }}"> @endif
@@ -85,13 +89,16 @@
     </div>
 </div>
 
-{{-- 바코드 스캔 입력 (핸디 바코드 리더기 또는 ISBN 직접 입력) --}}
-<div class="card border-0 shadow-sm mb-3 border-start border-4 border-warning">
+{{-- 바코드 스캔 입력 — 검색 옆 [📷] 버튼으로 토글 (기본 접힘) --}}
+<div class="card border-0 shadow-sm mb-3 border-start border-4 border-warning" id="barcodeCard" style="display:none;">
     <div class="card-body py-3">
         <div class="d-flex align-items-center gap-2 mb-2">
             <strong><i class="bi bi-upc-scan text-warning fs-5"></i> 바코드 스캔으로 빠른 주문</strong>
             <span class="badge bg-warning text-dark">NEW</span>
             <span class="small text-muted d-none d-md-inline">ISBN 바코드를 스캔하면 자동으로 장바구니에 담깁니다</span>
+            <button type="button" class="btn btn-sm btn-link text-muted ms-auto p-0" id="closeBarcodeBtn" title="닫기">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
         <div class="input-group">
             <button type="button" id="scanCameraBtn" class="btn btn-outline-warning" title="카메라로 스캔">
@@ -645,6 +652,26 @@ function removeCartItem(bookId) {
             }
         });
     }
+
+    // 검색 옆 바코드 토글 버튼 — 카드 열기/닫기
+    const toggleBtn = document.getElementById('toggleBarcodeBtn');
+    const closeBarcodeBtn = document.getElementById('closeBarcodeBtn');
+    const barcodeCard = document.getElementById('barcodeCard');
+    function showBarcode() {
+        if (!barcodeCard) return;
+        barcodeCard.style.display = '';
+        // 부드러운 스크롤 + 자동 포커스
+        barcodeCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => input?.focus(), 300);
+    }
+    function hideBarcode() {
+        if (!barcodeCard) return;
+        barcodeCard.style.display = 'none';
+    }
+    toggleBtn?.addEventListener('click', () => {
+        if (barcodeCard.style.display === 'none') showBarcode(); else hideBarcode();
+    });
+    closeBarcodeBtn?.addEventListener('click', hideBarcode);
 })();
 </script>
 @endpush
