@@ -573,40 +573,103 @@ function removeCartItem(bookId) {
         if (e.target === camModal) stopCamera();
     });
 
-    // 📷 폰 네이티브 카메라 앱 호출 → 사진 받으면 ZXing으로 분석
-    // (라이브 인식이 안 되는 폰에서 가장 안정적 — 자동초점·HDR 모두 OS 카메라가 처리)
+    // 📷 폰 네이티브 카메라 앱 → 사진 → 리사이즈 + 4방향 회전 + ZXing 디코드
+    // 고해상도(12MP+) 사진은 ZXing이 처리 어려움 → 1600px max로 리사이즈 + EXIF 무시
     const fileInput = document.getElementById('scanFileInput');
+
+    function makeHints() {
+        const hints = new Map();
+        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+            ZXing.BarcodeFormat.EAN_13,
+            ZXing.BarcodeFormat.EAN_8,
+            ZXing.BarcodeFormat.UPC_A,
+            ZXing.BarcodeFormat.UPC_E,
+            ZXing.BarcodeFormat.CODE_128,
+            ZXing.BarcodeFormat.CODE_39,
+        ]);
+        hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+        return hints;
+    }
+
+    function drawRotated(srcCanvas, degrees) {
+        const c = document.createElement('canvas');
+        const ctx = c.getContext('2d');
+        if (degrees === 90 || degrees === 270) {
+            c.width = srcCanvas.height; c.height = srcCanvas.width;
+        } else {
+            c.width = srcCanvas.width;  c.height = srcCanvas.height;
+        }
+        ctx.translate(c.width / 2, c.height / 2);
+        ctx.rotate(degrees * Math.PI / 180);
+        ctx.drawImage(srcCanvas, -srcCanvas.width / 2, -srcCanvas.height / 2);
+        return c;
+    }
+
+    async function tryDecodeCanvas(canvas) {
+        const reader = new ZXing.BrowserMultiFormatReader(makeHints());
+        // canvas → temp img → decodeFromImageElement
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = async () => {
+                try {
+                    const result = await reader.decodeFromImageElement(img);
+                    resolve(result.getText());
+                } catch (e) { reject(e); }
+            };
+            img.onerror = reject;
+            img.src = canvas.toDataURL('image/png');
+        });
+    }
+
+    async function decodeImageFile(file) {
+        // 1. 파일 → Image
+        const url = URL.createObjectURL(file);
+        const img = await new Promise((res, rej) => {
+            const i = new Image();
+            i.onload = () => res(i);
+            i.onerror = rej;
+            i.src = url;
+        });
+
+        // 2. 1600px max로 리사이즈 (해상도 안정성 + 속도)
+        const MAX = 1600;
+        const ratio = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.round(img.naturalWidth * ratio);
+        const h = Math.round(img.naturalHeight * ratio);
+        const baseCanvas = document.createElement('canvas');
+        baseCanvas.width = w; baseCanvas.height = h;
+        baseCanvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+
+        // 3. 4방향 회전 시도 (EXIF orientation 무시 대응)
+        const rotations = [0, 90, 180, 270];
+        for (const rot of rotations) {
+            try {
+                const canvas = rot === 0 ? baseCanvas : drawRotated(baseCanvas, rot);
+                camStatus.innerHTML = `<span class="text-info">분석 중... (회전 ${rot}°)</span>`;
+                const text = await tryDecodeCanvas(canvas);
+                if (text) return text;
+            } catch (e) { /* 다음 회전 시도 */ }
+        }
+        throw new Error('No barcode in image');
+    }
+
     if (fileInput) {
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files && e.target.files[0];
             if (!file) return;
-            camStatus.innerHTML = '<span class="text-info">사진 분석 중...</span>';
-
+            camStatus.innerHTML = '<span class="text-info">사진 분석 시작... (해상도 조정 + 회전 4방향 시도)</span>';
             try {
-                const dataUrl = await new Promise((res, rej) => {
-                    const r = new FileReader();
-                    r.onload = () => res(r.result);
-                    r.onerror = rej;
-                    r.readAsDataURL(file);
-                });
-                const hints = new Map();
-                hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-                    ZXing.BarcodeFormat.EAN_13,
-                    ZXing.BarcodeFormat.EAN_8,
-                    ZXing.BarcodeFormat.UPC_A,
-                    ZXing.BarcodeFormat.UPC_E,
-                    ZXing.BarcodeFormat.CODE_128,
-                ]);
-                hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-                const imgReader = new ZXing.BrowserMultiFormatReader(hints);
-                const result = await imgReader.decodeFromImageUrl(dataUrl);
-                onCameraScan(result.getText());
+                const text = await decodeImageFile(file);
+                onCameraScan(text);
             } catch (err) {
                 camStatus.innerHTML = '<span class="text-danger">'
-                    + '<i class="bi bi-exclamation-triangle"></i> 바코드 인식 실패. '
-                    + '다시 찍거나 ISBN 13자리를 직접 입력하세요.</span>';
+                    + '<i class="bi bi-exclamation-triangle"></i> 바코드 인식 실패 ('+ (err.message || err) +').<br>'
+                    + '• 바코드를 화면 가득 채워서 다시 찍어보세요<br>'
+                    + '• 빛 반사 피하기 / 정면으로<br>'
+                    + '• 또는 ISBN 13자리를 입력칸에 직접 입력하세요.</span>';
             } finally {
-                fileInput.value = ''; // 같은 파일 재선택 가능하도록 reset
+                fileInput.value = '';
             }
         });
     }
