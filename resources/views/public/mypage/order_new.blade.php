@@ -621,8 +621,44 @@ function removeCartItem(bookId) {
         });
     }
 
+    // 흑백 + 대비 강화 (바코드 인식률 ↑)
+    function enhanceContrast(srcCanvas) {
+        const c = document.createElement('canvas');
+        c.width = srcCanvas.width; c.height = srcCanvas.height;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(srcCanvas, 0, 0);
+        const data = ctx.getImageData(0, 0, c.width, c.height);
+        const px = data.data;
+        for (let i = 0; i < px.length; i += 4) {
+            // 그레이스케일 (BT.601)
+            const g = px[i]*0.299 + px[i+1]*0.587 + px[i+2]*0.114;
+            // 임계값 130으로 이진화 (흑/백 강제)
+            const v = g < 130 ? 0 : 255;
+            px[i] = v; px[i+1] = v; px[i+2] = v;
+        }
+        ctx.putImageData(data, 0, 0);
+        return c;
+    }
+
+    // 네이티브 BarcodeDetector API (Chrome Android 84+ — OS급 정확도)
+    async function nativeDetect(canvas) {
+        if (! ('BarcodeDetector' in window)) return null;
+        try {
+            const detector = new BarcodeDetector({
+                formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39']
+            });
+            const bitmap = await createImageBitmap(canvas);
+            const results = await detector.detect(bitmap);
+            if (results && results.length > 0) {
+                // ISBN(978/979 시작) 우선
+                const isbn = results.find(r => /^97[89]/.test(r.rawValue));
+                return (isbn || results[0]).rawValue;
+            }
+        } catch (e) { /* fallback */ }
+        return null;
+    }
+
     async function decodeImageFile(file) {
-        // 1. 파일 → Image
         const url = URL.createObjectURL(file);
         const img = await new Promise((res, rej) => {
             const i = new Image();
@@ -631,7 +667,6 @@ function removeCartItem(bookId) {
             i.src = url;
         });
 
-        // 2. 1600px max로 리사이즈 (해상도 안정성 + 속도)
         const MAX = 1600;
         const ratio = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
         const w = Math.round(img.naturalWidth * ratio);
@@ -641,20 +676,52 @@ function removeCartItem(bookId) {
         baseCanvas.getContext('2d').drawImage(img, 0, 0, w, h);
         URL.revokeObjectURL(url);
 
-        // 3. 4방향 회전 시도 (EXIF orientation 무시 대응)
+        // === Stage 1: 네이티브 BarcodeDetector (가장 정확) ===
         const rotations = [0, 90, 180, 270];
+        if ('BarcodeDetector' in window) {
+            for (const rot of rotations) {
+                if (typeof showGlobalToast === 'function') {
+                    showGlobalToast(`🧭 OS 디텍터 시도 (회전 ${rot}°)...`, 'info');
+                }
+                const canvas = rot === 0 ? baseCanvas : drawRotated(baseCanvas, rot);
+                const text = await nativeDetect(canvas);
+                if (text) return text;
+            }
+        }
+
+        // === Stage 2: ZXing 원본 ===
         for (const rot of rotations) {
             try {
                 const canvas = rot === 0 ? baseCanvas : drawRotated(baseCanvas, rot);
-                camStatus.innerHTML = `<span class="text-info">분석 중... (회전 ${rot}°)</span>`;
                 if (typeof showGlobalToast === 'function') {
-                    showGlobalToast(`🔄 회전 ${rot}° 시도 중...`, 'info');
+                    showGlobalToast(`🔄 ZXing 시도 (회전 ${rot}°)...`, 'info');
                 }
                 const text = await tryDecodeCanvas(canvas);
                 if (text) return text;
-            } catch (e) { /* 다음 회전 시도 */ }
+            } catch (e) {}
         }
-        throw new Error('4방향 모두 인식 실패');
+
+        // === Stage 3: 흑백 + 대비 강화 후 재시도 ===
+        if (typeof showGlobalToast === 'function') {
+            showGlobalToast('🎨 이미지 보정 후 재시도...', 'info');
+        }
+        const enhanced = enhanceContrast(baseCanvas);
+        if ('BarcodeDetector' in window) {
+            for (const rot of rotations) {
+                const c = rot === 0 ? enhanced : drawRotated(enhanced, rot);
+                const text = await nativeDetect(c);
+                if (text) return text;
+            }
+        }
+        for (const rot of rotations) {
+            try {
+                const c = rot === 0 ? enhanced : drawRotated(enhanced, rot);
+                const text = await tryDecodeCanvas(c);
+                if (text) return text;
+            } catch (e) {}
+        }
+
+        throw new Error('모든 방법으로 인식 실패 (사진 품질 또는 바코드 손상)');
     }
 
     // 화면 상단 고정 토스트 (모달이든 어디든 항상 보임)
