@@ -647,25 +647,58 @@ function removeCartItem(bookId) {
             try {
                 const canvas = rot === 0 ? baseCanvas : drawRotated(baseCanvas, rot);
                 camStatus.innerHTML = `<span class="text-info">분석 중... (회전 ${rot}°)</span>`;
+                if (typeof showGlobalToast === 'function') {
+                    showGlobalToast(`🔄 회전 ${rot}° 시도 중...`, 'info');
+                }
                 const text = await tryDecodeCanvas(canvas);
                 if (text) return text;
             } catch (e) { /* 다음 회전 시도 */ }
         }
-        throw new Error('No barcode in image');
+        throw new Error('4방향 모두 인식 실패');
+    }
+
+    // 화면 상단 고정 토스트 (모달이든 어디든 항상 보임)
+    function showGlobalToast(msg, type = 'info') {
+        let el = document.getElementById('scanGlobalToast');
+        if (! el) {
+            el = document.createElement('div');
+            el.id = 'scanGlobalToast';
+            el.style.cssText = 'position:fixed; top:0; left:0; right:0; padding:14px 16px; '
+                + 'z-index:99999; color:#fff; font-size:14px; font-weight:600; text-align:center; '
+                + 'box-shadow:0 4px 16px rgba(0,0,0,0.3); transition:opacity .3s;';
+            document.body.appendChild(el);
+        }
+        const colors = { info: '#1f3a5f', warn: '#ffc107', error: '#dc3545', success: '#198754' };
+        el.style.background = colors[type] || colors.info;
+        el.style.color = type === 'warn' ? '#000' : '#fff';
+        el.innerHTML = msg;
+        el.style.display = 'block';
+        el.style.opacity = '1';
+        if (type === 'success' || type === 'error') {
+            setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }, 4000);
+        }
     }
 
     if (fileInput) {
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files && e.target.files[0];
-            if (!file) return;
-            camStatus.innerHTML = '<span class="text-info">사진 분석 시작... (해상도 조정 + 회전 4방향 시도)</span>';
+            if (! file) {
+                showGlobalToast('⚠️ 파일을 받지 못했습니다 (취소되었거나 권한 문제)', 'warn');
+                return;
+            }
+            const sizeKB = Math.round(file.size / 1024);
+            showGlobalToast(`📂 파일 수신: ${file.name || '사진'} (${sizeKB}KB) — 분석 시작...`, 'info');
+            camStatus.innerHTML = `<span class="text-info">분석 중... (${sizeKB}KB)</span>`;
             try {
                 const text = await decodeImageFile(file);
+                showGlobalToast(`✅ 인식 성공: ${text} — 장바구니 담는 중...`, 'success');
                 onCameraScan(text);
             } catch (err) {
+                const errMsg = err.message || String(err);
+                showGlobalToast(`❌ 바코드 인식 실패: ${errMsg}`, 'error');
                 camStatus.innerHTML = '<span class="text-danger">'
-                    + '<i class="bi bi-exclamation-triangle"></i> 바코드 인식 실패 ('+ (err.message || err) +').<br>'
-                    + '• 바코드를 화면 가득 채워서 다시 찍어보세요<br>'
+                    + '<i class="bi bi-exclamation-triangle"></i> 바코드 인식 실패: ' + errMsg + '<br>'
+                    + '• 바코드만 화면 가득 채워서 다시 찍어보세요<br>'
                     + '• 빛 반사 피하기 / 정면으로<br>'
                     + '• 또는 ISBN 13자리를 입력칸에 직접 입력하세요.</span>';
             } finally {
@@ -673,6 +706,7 @@ function removeCartItem(bookId) {
             }
         });
     }
+
 
     // 📸 사진 캡처 → 정지 이미지에서 디코드 (라이브 인식 안 될 때 폴백)
     const captureBtn = document.getElementById('scanCaptureBtn');
