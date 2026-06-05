@@ -31,8 +31,9 @@ class OrderController extends Controller
         $agent    = $request->query('agent');
         $dist     = $request->query('dist');
         $q        = trim((string) $request->query('q'));
-        $dateFrom = $request->query('date_from');
-        $dateTo   = $request->query('date_to');
+        // 디폴트: 어제 ~ 오늘 (최근 데이터 위주로 표시)
+        $dateFrom = $request->query('date_from') ?: now()->subDay()->format('Y-m-d');
+        $dateTo   = $request->query('date_to')   ?: now()->format('Y-m-d');
 
         $query = DB::table('orders as o')
             ->leftJoin('vendors as v', 'v.id', '=', 'o.vendor_id')

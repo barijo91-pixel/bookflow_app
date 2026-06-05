@@ -36,7 +36,15 @@
 <form method="GET" class="card border-0 shadow-sm mb-3">
     <div class="card-body py-3">
         <div class="row g-2 align-items-end">
-            <div class="col-md-2">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">주문일자</label>
+                <div class="input-group input-group-sm">
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control">
+                    <span class="input-group-text px-1">~</span>
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control">
+                </div>
+            </div>
+            <div class="col-md-1">
                 <label class="form-label small text-muted mb-1">상태</label>
                 <select name="status" class="form-select form-select-sm">
                     <option value="">전체</option>
@@ -63,7 +71,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <label class="form-label small text-muted mb-1">총판</label>
                 <select name="dist" class="form-select form-select-sm">
                     <option value="">전체</option>
@@ -72,25 +80,13 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">검색 (주문번호/거래처)</label>
-                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-1 d-grid">
-                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
-            </div>
-        </div>
-        <div class="row g-2 align-items-end mt-1">
-            <div class="col-md-2">
-                <label class="form-label small text-muted mb-1">주문일자 From</label>
-                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small text-muted mb-1">주문일자 To</label>
-                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-2 d-grid">
-                <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i> 초기화</a>
+                <div class="input-group input-group-sm">
+                    <input type="text" name="q" value="{{ $q }}" class="form-control" placeholder="주문번호 또는 거래처명">
+                    <button type="submit" class="btn btn-primary" title="조회"><i class="bi bi-search"></i></button>
+                    <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary" title="초기화"><i class="bi bi-x-lg"></i></a>
+                </div>
             </div>
         </div>
     </div>
