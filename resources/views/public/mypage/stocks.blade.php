@@ -81,7 +81,7 @@
 
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
                     <th>도서</th>

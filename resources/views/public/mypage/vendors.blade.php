@@ -38,24 +38,9 @@
     </form>
 @endforeach
 
-<style>
-    /* 행 hover — 할인율 관리 선택된 학원과 동일 톤 (#d4e0ee + 좌측 네이비 보더) */
-    /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 row hover 색을 덮음 → td(>*)에 직접 적용 */
-    .vendor-table tbody tr > * {
-        transition: background-color .12s;
-    }
-    .vendor-table tbody tr:hover > * {
-        background-color: #d4e0ee !important;
-        --bs-table-bg-state: #d4e0ee;
-        --bs-table-accent-bg: #d4e0ee;
-    }
-    .vendor-table tbody tr:hover > td:first-child {
-        box-shadow: inset 4px 0 0 0 #1f3a5f;
-    }
-</style>
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 vendor-table">
+        <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
                     <th>학원명</th>

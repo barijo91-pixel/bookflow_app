@@ -37,6 +37,22 @@
         color: #1f3a5f !important;
         font-weight: 600;
     }
+
+    /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
+    /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */
+    .table-row-highlight tbody tr > * {
+        transition: background-color .12s;
+    }
+    .table-row-highlight tbody tr:hover > * {
+        background-color: #d4e0ee !important;
+        --bs-table-bg-state: #d4e0ee;
+        --bs-table-accent-bg: #d4e0ee;
+    }
+    .table-row-highlight tbody tr:hover > td:first-child {
+        box-shadow: inset 4px 0 0 0 #1f3a5f;
+    }
+    /* 클릭형(클릭 가능) 행 표시 */
+    .table-row-highlight tbody tr.clickable { cursor: pointer; }
     /* 다크 사이드바 톤과 어울리도록 카드 헤더가 별도 있으면 그대로 (form 단독 카드만 적용) */
 
     /* 할인율 stepper (모바일·웹 공통) */
