@@ -53,21 +53,21 @@
 
             @case('agent')
                 <div class="nav-section">영업자 메뉴</div>
+                <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
+                    <i class="bi bi-receipt"></i> 주문확인
+                    @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
+                </a>
                 <a href="{{ route('my.vendors.index') }}" class="nav-item {{ $is('my.vendors.index') }}">
                     <i class="bi bi-building"></i> 거래처(학원)
                 </a>
                 <a href="{{ route('my.vendors.create') }}" class="nav-item {{ $is('my.vendors.create') }}">
                     <i class="bi bi-building-add"></i> 학원등록
                 </a>
-                <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
-                    <i class="bi bi-receipt"></i> 주문확인
-                    @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
+                <a href="{{ route('my.agent.student.import') }}" class="nav-item {{ $is('my.agent.student.import') }}">
+                    <i class="bi bi-people"></i> 학생등록
                 </a>
                 <a href="{{ route('my.discounts.index') }}" class="nav-item {{ $startsWith('my.discounts') }}">
                     <i class="bi bi-percent"></i> 할인율 관리
-                </a>
-                <a href="{{ route('my.agent.student.import') }}" class="nav-item {{ $is('my.agent.student.import') }}">
-                    <i class="bi bi-people"></i> 학생등록
                 </a>
                 @break
 
