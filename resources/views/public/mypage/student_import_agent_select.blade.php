@@ -28,8 +28,7 @@
             @else
                 <div class="list-group list-group-flush">
                     @foreach($vendorClasses[$v->id] as $c)
-                        <a href="{{ route('my.classes.students.import.show', $c->id) }}"
-                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div>
                                 <strong>{{ $c->name }}</strong>
                                 @if($c->grade_code)
@@ -37,8 +36,11 @@
                                 @endif
                                 <span class="text-muted small ms-2">학생 {{ $c->student_count }}명</span>
                             </div>
-                            <i class="bi bi-arrow-right text-muted"></i>
-                        </a>
+                            <a href="{{ route('my.classes.students.import.show', $c->id) }}"
+                               class="btn btn-sm btn-primary">
+                                <i class="bi bi-people-fill"></i> 학생 등록
+                            </a>
+                        </div>
                     @endforeach
                 </div>
             @endif
