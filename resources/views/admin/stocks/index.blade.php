@@ -128,13 +128,8 @@
                                        class="form-control form-control-sm text-end">
                             </td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-link text-danger p-0"
-                                        onclick="if(confirm('이 재고 매핑을 삭제할까요?')) {
-                                            const f = document.createElement('form');
-                                            f.method = 'POST'; f.action = '{{ url('admin/stocks') }}/{{ $s->id }}';
-                                            f.innerHTML = '@csrf @method('DELETE')';
-                                            document.body.appendChild(f); f.submit();
-                                        }">
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0 stock-delete-btn"
+                                        data-stock-id="{{ $s->id }}" title="삭제">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </td>
@@ -151,6 +146,24 @@
         </div>
     </div>
 </form>
+
+{{-- 재고 삭제용 hidden form (table은 일괄저장 form 안이라 form 중첩 X — 외부에 둠) --}}
+<form method="POST" id="stockDeleteForm" class="d-none" action="">
+    @csrf
+    <input type="hidden" name="_method" value="DELETE">
+</form>
+@push('scripts')
+<script>
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.stock-delete-btn');
+    if (! btn) return;
+    if (! confirm('이 재고 매핑을 삭제할까요?')) return;
+    const f = document.getElementById('stockDeleteForm');
+    f.action = '{{ url('admin/stocks') }}/' + btn.dataset.stockId;
+    f.submit();
+});
+</script>
+@endpush
 
 {{-- Add Stock Modal --}}
 <div class="modal fade" id="stockAddModal" tabindex="-1">
