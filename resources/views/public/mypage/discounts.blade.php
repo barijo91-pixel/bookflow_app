@@ -20,9 +20,17 @@
             @if($vendors->isEmpty())
                 <div class="card-body text-center text-muted py-4">담당 학원이 없습니다.</div>
             @else
+                <style>
+                    .vendor-row-selected {
+                        background: #d4e0ee !important;
+                        border-left: 4px solid #1f3a5f !important;
+                        padding-left: calc(1rem - 4px) !important;
+                    }
+                    .vendor-row-selected .navy { color: #15294a !important; font-weight: 700; }
+                </style>
                 <div class="list-group list-group-flush">
                     @foreach($vendors as $v)
-                        <div class="list-group-item {{ $v->vendor_id == $selectedVendorId ? 'bg-light' : '' }}">
+                        <div class="list-group-item {{ $v->vendor_id == $selectedVendorId ? 'vendor-row-selected' : '' }}">
                             <form method="POST" action="{{ route('my.discounts.vendor.update', $v->avd_id) }}" class="row g-2 align-items-center">
                                 @csrf @method('PUT')
                                 <input type="hidden" name="is_active" value="1">
