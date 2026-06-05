@@ -97,7 +97,7 @@
             </button>
         </form>
         {{-- PWA 설치 — JS가 미설치 시에만 표시 --}}
-        <button type="button" id="sidebarInstallBtn" class="nav-item w-100 border-0 bg-transparent text-start" style="display:none;">
+        <button type="button" id="sidebarInstallBtn" class="nav-item w-100 border-0 bg-transparent text-start" style="display:none; margin-top:1.5rem;">
             <i class="bi bi-download"></i> 북시스 앱설치
         </button>
         <div id="sidebarInstalledHint" class="small mt-2 px-3" style="display:none; color:#94a3b8;">
