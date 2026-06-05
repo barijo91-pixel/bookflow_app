@@ -38,9 +38,19 @@
     </form>
 @endforeach
 
+<style>
+    /* 행 hover — 할인율 관리 선택된 학원과 동일 톤 (좌측 네이비 보더 + 진한 배경) */
+    .vendor-table tbody tr {
+        transition: background-color .12s, box-shadow .12s;
+    }
+    .vendor-table tbody tr:hover {
+        background-color: #d4e0ee !important;
+        box-shadow: inset 4px 0 0 0 #1f3a5f;
+    }
+</style>
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0 vendor-table">
             <thead class="table-light">
                 <tr>
                     <th>학원명</th>
