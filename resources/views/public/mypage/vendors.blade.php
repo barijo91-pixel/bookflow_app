@@ -39,12 +39,17 @@
 @endforeach
 
 <style>
-    /* 행 hover — 할인율 관리 선택된 학원과 동일 톤 (좌측 네이비 보더 + 진한 배경) */
-    .vendor-table tbody tr {
-        transition: background-color .12s, box-shadow .12s;
+    /* 행 hover — 할인율 관리 선택된 학원과 동일 톤 (#d4e0ee + 좌측 네이비 보더) */
+    /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 row hover 색을 덮음 → td(>*)에 직접 적용 */
+    .vendor-table tbody tr > * {
+        transition: background-color .12s;
     }
-    .vendor-table tbody tr:hover {
+    .vendor-table tbody tr:hover > * {
         background-color: #d4e0ee !important;
+        --bs-table-bg-state: #d4e0ee;
+        --bs-table-accent-bg: #d4e0ee;
+    }
+    .vendor-table tbody tr:hover > td:first-child {
         box-shadow: inset 4px 0 0 0 #1f3a5f;
     }
 </style>
