@@ -96,5 +96,12 @@
                 <i class="bi bi-box-arrow-right"></i> 로그아웃
             </button>
         </form>
+        {{-- PWA 설치 — JS가 미설치 시에만 표시 --}}
+        <button type="button" id="sidebarInstallBtn" class="nav-item w-100 border-0 bg-transparent text-start" style="display:none;">
+            <i class="bi bi-download"></i> 북시스 앱설치
+        </button>
+        <div id="sidebarInstalledHint" class="small mt-2 px-3" style="display:none; color:#94a3b8;">
+            <i class="bi bi-check-circle"></i> 설치 완료
+        </div>
     </nav>
 </aside>

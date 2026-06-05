@@ -109,9 +109,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const btn = document.getElementById('pwaInstallBtn');
     const modal = document.getElementById('pwaInstallModal');
     const closeBtn = document.getElementById('pwaInstallClose');
-    // welcome 페이지 hero에 있는 버튼 (없을 수도 있음)
-    const heroBtn = document.getElementById('heroInstallBtn');
-    const heroInstalledHint = document.getElementById('heroInstalledHint');
+    // 사이드바(로그아웃 아래) 설치 버튼 — 로그인 사용자에게만 표시
+    const sidebarBtn = document.getElementById('sidebarInstallBtn');
+    const sidebarHint = document.getElementById('sidebarInstalledHint');
 
     // 2. 이미 standalone(설치된 상태) 감지
     const isStandalone =
@@ -128,33 +128,29 @@ document.addEventListener('DOMContentLoaded', function () {
     const DISMISS_KEY = 'pwa-install-dismissed-at';
 
     function showButtons() {
-        if (heroBtn) heroBtn.style.display = 'inline-flex';
-        // floating은 dismiss 24시간 룰 적용
-        const dismissed = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
-        if (!dismissed || Date.now() - dismissed >= 24 * 60 * 60 * 1000) {
-            if (btn) btn.style.display = 'inline-flex';
-        }
+        // 사이드바 버튼만 노출 (floating 사용 X)
+        if (sidebarBtn) sidebarBtn.style.display = '';
     }
 
     function markAsInstalled() {
-        // 이미 설치된 사용자: 설치 버튼 둘 다 숨기고 안내 텍스트만 노출
+        // 이미 설치된 사용자: 설치 버튼 숨기고 안내 텍스트만 노출
         hideButtons();
-        if (heroInstalledHint) heroInstalledHint.style.display = 'block';
+        if (sidebarHint) sidebarHint.style.display = '';
     }
 
     function hideButtons() {
         if (btn) btn.style.display = 'none';
-        if (heroBtn) heroBtn.style.display = 'none';
+        if (sidebarBtn) sidebarBtn.style.display = 'none';
     }
 
-    // 4. 이미 standalone(PWA로 실행 중) → 둘 다 숨김
+    // 4. 이미 standalone(PWA로 실행 중) → 모두 숨김
     if (isStandalone) {
         hideButtons();
         return;
     }
 
-    // 4-1. 페이지 로드 시 floating은 dismiss 룰 무관하게 일단 표시 (엣지·크롬 일관성)
-    if (btn) btn.style.display = 'inline-flex';
+    // floating은 더 이상 표시 X (사이드바로 옮김)
+    if (btn) btn.style.display = 'none';
 
     // 5. Chrome/Edge/Android: beforeinstallprompt 캡처
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -199,8 +195,8 @@ document.addEventListener('DOMContentLoaded', function () {
             triggerInstall();
         });
     }
-    if (heroBtn) {
-        heroBtn.addEventListener('click', triggerInstall);
+    if (sidebarBtn) {
+        sidebarBtn.addEventListener('click', triggerInstall);
     }
 
     // 9. 닫기(X)
@@ -216,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('appinstalled', () => {
         hideButtons();
         deferredPrompt = null;
-        if (heroInstalledHint) heroInstalledHint.style.display = 'block';
+        if (sidebarHint) sidebarHint.style.display = '';
     });
 
     // 11. 모달 바깥 클릭 시 닫기

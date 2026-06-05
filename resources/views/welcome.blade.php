@@ -203,14 +203,7 @@
                     <i class="bi bi-phone"></i> 앱 다운로드
                 </a>
             @endif
-            {{-- PWA 설치 버튼 — 항상 표시. JS가 상태에 따라 동작 분기 --}}
-            <button type="button" id="heroInstallBtn" class="btn btn-outline-light btn-lg px-4">
-                <i class="bi bi-download"></i> <span id="heroInstallBtnText">북시스 앱설치</span>
-            </button>
         </div>
-        <p id="heroInstalledHint" class="small mt-3 mb-0" style="display:none; opacity:.7;">
-            <i class="bi bi-check-circle"></i> 이미 BookSys가 설치되어 있어요 — 주소창 우측 <strong>'앱에서 열기'</strong> 버튼을 눌러보세요.
-        </p>
     </div>
 </div>
 
