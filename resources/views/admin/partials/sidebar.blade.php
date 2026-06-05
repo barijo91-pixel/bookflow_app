@@ -13,16 +13,9 @@
         <a href="{{ route('admin.dashboard') }}" class="nav-item {{ $is('admin.dashboard') }}">
             <i class="bi bi-speedometer2"></i> 대시보드
         </a>
-        <div class="nav-section">회원</div>
-        <a href="{{ route('admin.users.pending') }}" class="nav-item {{ $is('admin.users.pending') }}">
-            <i class="bi bi-person-plus"></i> 승인 대기열
-        </a>
-        <a href="{{ route('admin.users.index') }}" class="nav-item {{ $is('admin.users.index') . $is('admin.users.import') }}">
-            <i class="bi bi-people"></i> 사용자 목록
-        </a>
         <div class="nav-section">거래·도서</div>
-        <a href="{{ route('admin.vendors.index') }}" class="nav-item {{ $is('admin.vendors') }}">
-            <i class="bi bi-building"></i> 거래처(학원)
+        <a href="{{ route('admin.orders.index') }}" class="nav-item {{ $is('admin.orders') }}">
+            <i class="bi bi-receipt"></i> 주문관리
         </a>
         <a href="{{ route('admin.books.index') }}" class="nav-item {{ $is('admin.books') }}">
             <i class="bi bi-journals"></i> 도서관리
@@ -30,8 +23,15 @@
         <a href="{{ route('admin.stocks.index') }}" class="nav-item {{ $is('admin.stocks') }}">
             <i class="bi bi-box-seam"></i> 재고관리
         </a>
-        <a href="{{ route('admin.orders.index') }}" class="nav-item {{ $is('admin.orders') }}">
-            <i class="bi bi-receipt"></i> 주문관리
+        <a href="{{ route('admin.vendors.index') }}" class="nav-item {{ $is('admin.vendors') }}">
+            <i class="bi bi-building"></i> 거래처(학원)
+        </a>
+        <div class="nav-section">회원</div>
+        <a href="{{ route('admin.users.pending') }}" class="nav-item {{ $is('admin.users.pending') }}">
+            <i class="bi bi-person-plus"></i> 승인 대기열
+        </a>
+        <a href="{{ route('admin.users.index') }}" class="nav-item {{ $is('admin.users.index') . $is('admin.users.import') }}">
+            <i class="bi bi-people"></i> 사용자 목록
         </a>
         <div class="nav-section">운영</div>
         <a href="{{ route('admin.code-groups.index') }}" class="nav-item {{ $is('admin.code-groups') . $is('admin.codes') }}">
