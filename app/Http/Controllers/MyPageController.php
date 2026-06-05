@@ -828,15 +828,17 @@ class MyPageController extends Controller
             abort(403, '영업자만 접근 가능합니다.');
         }
 
-        // 본인 담당 학원들 (할인율 포함)
+        // 본인 담당 학원들 — 활성(거래중)만. 중단된 학원은 거래처 페이지에서 재활성화 후 노출.
         $vendors = DB::table('agent_vendor_discounts as avd')
             ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
             ->where('avd.agent_user_id', $user->id)
+            ->where('avd.is_active', true)
+            ->whereNull('v.deleted_at')
             ->select(
                 'avd.id as avd_id', 'avd.discount_rate as general_rate', 'avd.is_active',
                 'v.id as vendor_id', 'v.name as vendor_name'
             )
-            ->orderByDesc('avd.is_active')->orderBy('v.name')->get();
+            ->orderBy('v.name')->get();
 
         // 선택된 학원
         $selectedVendorId = (int) $request->query('vendor_id', $vendors->first()->vendor_id ?? 0);

@@ -25,13 +25,14 @@
                         <div class="list-group-item {{ $v->vendor_id == $selectedVendorId ? 'bg-light' : '' }}">
                             <form method="POST" action="{{ route('my.discounts.vendor.update', $v->avd_id) }}" class="row g-2 align-items-center">
                                 @csrf @method('PUT')
-                                <div class="col-4">
+                                <input type="hidden" name="is_active" value="1">
+                                <div class="col-5">
                                     <a href="{{ route('my.discounts.index', ['vendor_id' => $v->vendor_id]) }}"
                                        class="text-decoration-none small {{ $v->vendor_id == $selectedVendorId ? 'fw-bold navy' : '' }}">
                                         {{ $v->vendor_name }}
                                     </a>
                                 </div>
-                                <div class="col-4">
+                                <div class="col-5">
                                     <div class="input-group input-group-sm rate-stepper">
                                         <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
                                         <input type="number" step="0.5" min="0" max="100" name="discount_rate"
@@ -39,15 +40,6 @@
                                                class="form-control text-end" inputmode="decimal">
                                         <button type="button" class="btn btn-outline-secondary rate-up" tabindex="-1">+</button>
                                         <span class="input-group-text">%</span>
-                                    </div>
-                                </div>
-                                <div class="col-2 text-center">
-                                    <div class="form-check form-switch d-inline-block" title="거래 활성/일시중단">
-                                        <input type="checkbox" name="is_active" value="1" class="form-check-input"
-                                               id="actSw{{ $v->avd_id }}" @checked($v->is_active)>
-                                        <label for="actSw{{ $v->avd_id }}" class="form-check-label small text-muted">
-                                            {{ $v->is_active ? '거래중' : '중단' }}
-                                        </label>
                                     </div>
                                 </div>
                                 <div class="col-2 text-end">
