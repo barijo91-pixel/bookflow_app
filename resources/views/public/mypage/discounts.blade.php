@@ -42,9 +42,12 @@
                                     </div>
                                 </div>
                                 <div class="col-2 text-center">
-                                    <div class="form-check form-switch d-inline-block">
+                                    <div class="form-check form-switch d-inline-block" title="거래 활성/일시중단">
                                         <input type="checkbox" name="is_active" value="1" class="form-check-input"
-                                               @checked($v->is_active)>
+                                               id="actSw{{ $v->avd_id }}" @checked($v->is_active)>
+                                        <label for="actSw{{ $v->avd_id }}" class="form-check-label small text-muted">
+                                            {{ $v->is_active ? '거래중' : '중단' }}
+                                        </label>
                                     </div>
                                 </div>
                                 <div class="col-2 text-end">
