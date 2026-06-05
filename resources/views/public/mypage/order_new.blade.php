@@ -258,7 +258,7 @@
                 <span class="small text-muted">{{ $books->count() }}건 표시 (최대 60건)</span>
             </div>
             <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle mb-0">
+                <table class="table table-sm table-hover align-middle mb-0 table-row-highlight">
                     <thead class="table-light">
                         <tr>
                             <th>도서</th>
