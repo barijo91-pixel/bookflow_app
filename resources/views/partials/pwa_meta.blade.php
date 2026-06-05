@@ -12,6 +12,20 @@
 <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('icons/icon-512.png') }}">
 
 <style>
+    /* ===== 입력 폼 가독성 (공통) — 보더 강화 + focus 액센트 ===== */
+    .form-control, .form-select {
+        border-color: #cbd5e1 !important;
+        background-color: #fbfcfd !important;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #1f3a5f !important;
+        background-color: #fff !important;
+        box-shadow: 0 0 0 .15rem rgba(31, 58, 95, 0.15) !important;
+    }
+    .form-control:disabled, .form-control[readonly], .form-select:disabled {
+        background-color: #eef2f7 !important;
+    }
+
     /* ===== 조회/필터 영역 (공통) — 본문과 구분되는 톤 + 좌측 액센트 ===== */
     form[method="GET"].card,
     .filter-card {

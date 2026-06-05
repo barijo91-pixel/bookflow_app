@@ -58,12 +58,17 @@
                     </select>
                 </div>
                 <div class="col-md-8">
-                    <label class="form-label small text-muted mb-1">주소</label>
-                    <input type="text" name="address" class="form-control" value="{{ old('address') }}" maxlength="255">
+                    <label class="form-label small text-muted mb-1">주소 (도로명 추천)</label>
+                    <div class="input-group">
+                        <button type="button" class="btn btn-outline-navy" onclick="openAddrSearch()">
+                            <i class="bi bi-search"></i> 주소 검색
+                        </button>
+                        <input type="text" name="address" id="addrInput" class="form-control" value="{{ old('address') }}" maxlength="255" placeholder="검색하거나 직접 입력">
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label small text-muted mb-1">상세주소</label>
-                    <input type="text" name="address_detail" class="form-control" value="{{ old('address_detail') }}" maxlength="255">
+                    <input type="text" name="address_detail" id="addrDetailInput" class="form-control" value="{{ old('address_detail') }}" maxlength="255" placeholder="동·호수 등">
                 </div>
                 <div class="col-md-12">
                     <label class="form-label small text-muted mb-1">메모</label>
@@ -184,7 +189,51 @@
 </form>
 
 @push('scripts')
+{{-- 다음 우편번호 검색 (무료, 키 X) --}}
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
+// 주소 검색 팝업 — 결과를 input + 시도/시군구 셀렉트에 자동 채움
+function openAddrSearch() {
+    if (typeof daum === 'undefined') {
+        alert('주소 검색 스크립트 로드 실패 — 직접 입력해주세요.');
+        return;
+    }
+    new daum.Postcode({
+        oncomplete: async function (data) {
+            // data.roadAddress: 도로명, data.jibunAddress: 지번
+            // data.sido / data.sigungu: 시도/시군구명
+            const addr = data.roadAddress || data.jibunAddress;
+            document.getElementById('addrInput').value = addr;
+            document.getElementById('addrDetailInput')?.focus();
+
+            // 시도 셀렉트에서 매칭 시도
+            const sidoSel = document.getElementById('sidoSelect');
+            const sgSel   = document.getElementById('sigunguSelect');
+            if (sidoSel && data.sido) {
+                for (const opt of sidoSel.options) {
+                    if (opt.textContent.trim() === data.sido.trim()
+                        || opt.textContent.trim().startsWith(data.sido.replace(/특별시|광역시|특별자치도|특별자치시|도/g, '').trim())) {
+                        sidoSel.value = opt.value;
+                        sidoSel.dispatchEvent(new Event('change'));
+                        // 시군구는 비동기로 로드되니 잠시 후 매칭
+                        setTimeout(() => {
+                            if (sgSel && data.sigungu) {
+                                for (const sgOpt of sgSel.options) {
+                                    if (sgOpt.textContent.trim() === data.sigungu.trim()) {
+                                        sgSel.value = sgOpt.value;
+                                        break;
+                                    }
+                                }
+                            }
+                        }, 600);
+                        break;
+                    }
+                }
+            }
+        }
+    }).open();
+}
+
 // 시도 → 시군구 동적 로딩
 (function() {
     const sido = document.getElementById('sidoSelect');
