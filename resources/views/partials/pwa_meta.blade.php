@@ -58,6 +58,14 @@
     }
     .section-card > .card-header strong { font-weight: 700; }
     .section-card > .card-header i.bi   { margin-right: .15rem; }
+    /* 헤더 위 outline 버튼 — 헤더 배경(#e3ebf5)과 톤이 비슷해 묻히는 것 방지 */
+    .section-card > .card-header .btn[class*="btn-outline-"] {
+        background-color: #fff !important;
+    }
+    .section-card > .card-header .btn[class*="btn-outline-"]:hover {
+        background-color: #1f3a5f !important;
+        color: #fff !important;
+    }
     .section-card > .card-footer {
         background: #fbfcfd !important;
         border-top: 1px dashed #d4dbe4 !important;
