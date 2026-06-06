@@ -49,13 +49,15 @@
         overflow: hidden;
     }
     .section-card > .card-header {
-        background: #f4f7fb !important;
+        /* !important 없이 — bg-danger/bg-warning 등은 Bootstrap이 우선 적용 (!important 사용) */
+        background: #f4f7fb;
         border-bottom: 1px solid #dde5ee !important;
         padding: .7rem 1rem;
         font-size: .95rem;
+        color: #1f3a5f;  /* strong/i가 상속 — bg-danger.text-white 헤더는 .text-white(!important)가 우선 */
     }
-    .section-card > .card-header strong { color: #1f3a5f; font-weight: 700; }
-    .section-card > .card-header i.bi   { color: #1f3a5f; margin-right: .15rem; }
+    .section-card > .card-header strong { font-weight: 700; }
+    .section-card > .card-header i.bi   { margin-right: .15rem; }
     .section-card > .card-footer {
         background: #fbfcfd !important;
         border-top: 1px dashed #d4dbe4 !important;

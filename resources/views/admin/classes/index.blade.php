@@ -9,7 +9,7 @@
     </a>
 </div>
 
-<form method="GET" class="card border-0 shadow-sm mb-3">
+<form method="GET" class="card section-card mb-3">
     <div class="card-body py-3">
         <div class="row g-2 align-items-end">
             <div class="col-md-4">
@@ -40,7 +40,7 @@
     </div>
 </form>
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
@@ -79,6 +79,6 @@
             </tbody>
         </table>
     </div>
-    <div class="card-footer bg-white">{{ $classes->links() }}</div>
+    <div class="card-footer">{{ $classes->links() }}</div>
 </div>
 @endsection

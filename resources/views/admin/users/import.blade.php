@@ -22,8 +22,8 @@
 
 <div class="row g-3">
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>1. 엑셀 파일 업로드</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>1. 엑셀 파일 업로드</strong></div>
             <form method="POST" action="{{ route('admin.users.import.preview') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="card-body">
@@ -41,7 +41,7 @@
                         </ol>
                     </div>
                 </div>
-                <div class="card-footer bg-white text-end">
+                <div class="card-footer text-end">
                     <button class="btn btn-navy"><i class="bi bi-eye"></i> 미리보기</button>
                 </div>
             </form>
@@ -49,8 +49,8 @@
     </div>
 
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>안내사항</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>안내사항</strong></div>
             <div class="card-body small">
                 <p class="mb-2"><strong>필수 컬럼</strong>: 아이디, 이름, 휴대폰, 역할</p>
                 <ul class="mb-2 ps-3">
@@ -72,8 +72,8 @@
 </div>
 
 @if($recentJobs->isNotEmpty())
-    <div class="card border-0 shadow-sm mt-3">
-        <div class="card-header bg-white"><strong>최근 일괄 등록 이력</strong></div>
+    <div class="card section-card mt-3">
+        <div class="card-header"><strong>최근 일괄 등록 이력</strong></div>
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead class="table-light"><tr>

@@ -46,8 +46,8 @@
 
 <div class="row g-3">
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>기본 정보</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>기본 정보</strong></div>
             <form method="POST" action="{{ route('admin.users.update', $user) }}">
                 @csrf @method('PUT')
                 <div class="card-body">
@@ -119,7 +119,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-white d-flex justify-content-between">
+                <div class="card-footer d-flex justify-content-between">
                     <small class="text-muted">
                         가입: {{ optional($user->created_at)->format('Y-m-d H:i') }}
                         @if($user->approved_at) · 승인: {{ optional($user->approved_at)->format('Y-m-d') }} @endif
@@ -132,8 +132,8 @@
     </div>
 
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong>관계</strong> <small class="text-muted">(총판-영업자-학원)</small></div>
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong>관계</strong> <small class="text-muted">(총판-영업자-학원)</small></div>
             <div class="card-body p-0">
                 @if($relationsAsParent->isEmpty() && $relationsAsChild->isEmpty())
                     <div class="text-muted text-center py-3 small">관계 없음</div>
@@ -172,8 +172,8 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>최근 주문</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>최근 주문</strong></div>
             <div class="card-body p-0">
                 @if($recentOrders->isEmpty())
                     <div class="text-muted text-center py-3 small">주문 이력 없음</div>

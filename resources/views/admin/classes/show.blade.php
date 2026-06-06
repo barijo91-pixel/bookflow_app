@@ -34,8 +34,8 @@
 <div class="row g-3">
     {{-- LEFT: 학급 기본 정보 + 교재 매핑 --}}
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong>학급 정보</strong></div>
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong>학급 정보</strong></div>
             <form method="POST" action="{{ route('admin.classes.update', $class->id) }}">
                 @csrf @method('PUT')
                 <div class="card-body">
@@ -75,15 +75,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-white text-end">
+                <div class="card-footer text-end">
                     <button class="btn btn-primary"><i class="bi bi-save"></i> 저장</button>
                 </div>
             </form>
         </div>
 
         {{-- 교재 매핑 --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-journals"></i> 학급 교재 ({{ $books->count() }}권)</strong>
             </div>
             <div class="card-body p-0">
@@ -131,7 +131,7 @@
                     </table>
                 @endif
             </div>
-            <div class="card-footer bg-white">
+            <div class="card-footer">
                 <form method="POST" action="{{ route('admin.classes.books.attach', $class->id) }}">
                     @csrf
                     <div class="row g-2 align-items-end">
@@ -155,8 +155,8 @@
     {{-- RIGHT: 학생/학부모 + 공유링크 --}}
     <div class="col-lg-5">
         {{-- 학생 / 학부모 --}}
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white">
+        <div class="card section-card mb-3">
+            <div class="card-header">
                 <strong><i class="bi bi-mortarboard"></i> 학생 / 학부모 ({{ $students->count() }}명)</strong>
             </div>
             <div class="card-body p-0">
@@ -195,7 +195,7 @@
                     </table>
                 @endif
             </div>
-            <div class="card-footer bg-white">
+            <div class="card-footer">
                 <form method="POST" action="{{ route('admin.classes.students.attach', $class->id) }}">
                     @csrf
                     <div class="row g-2">
@@ -225,8 +225,8 @@
         </div>
 
         {{-- 공유링크 이력 --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white">
+        <div class="card section-card">
+            <div class="card-header">
                 <strong><i class="bi bi-link-45deg"></i> 공유링크 ({{ $shareLinks->count() }})</strong>
             </div>
             <div class="card-body p-0">

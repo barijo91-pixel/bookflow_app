@@ -7,7 +7,7 @@
     <span class="text-muted small">{{ number_format($users->total()) }}명 대기 중</span>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
@@ -55,7 +55,7 @@
             </tbody>
         </table>
     </div>
-    <div class="card-footer bg-white">
+    <div class="card-footer">
         {{ $users->links() }}
     </div>
 </div>

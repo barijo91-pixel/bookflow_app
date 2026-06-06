@@ -17,7 +17,7 @@
     </div>
 @endif
 
-<div class="card border-0 shadow-sm mb-3">
+<div class="card section-card mb-3">
     <div class="card-body py-3">
         <label class="form-label small text-muted mb-1"><i class="bi bi-upc-scan"></i> ISBN13 알라딘 자동 조회</label>
         <div class="d-flex gap-2">
@@ -34,7 +34,7 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <form method="POST" action="{{ route('admin.books.store') }}" id="book_form">
         @csrf
         <input type="hidden" name="source" id="source_input" value="manual">
@@ -169,7 +169,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer bg-white d-flex justify-content-between">
+        <div class="card-footer d-flex justify-content-between">
             <small class="text-muted">알라딘에서 자동 채움 시 source=aladin 으로 기록됩니다.</small>
             <div>
                 <a href="{{ route('admin.books.index') }}" class="btn btn-secondary">취소</a>

@@ -50,7 +50,7 @@
 @endphp
 
 {{-- 영업자 선택 + 검색 --}}
-<div class="card border-0 shadow-sm mb-3 filter-card">
+<div class="card section-card mb-3 filter-card">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('my.order_new') }}" class="row g-2 align-items-end">
             {{-- 영업자 --}}
@@ -90,7 +90,7 @@
 </div>
 
 {{-- 바코드 스캔 입력 — 검색 옆 [📷] 버튼으로 토글 (기본 접힘) --}}
-<div class="card border-0 shadow-sm mb-3 border-start border-4 border-warning" id="barcodeCard" style="display:none;">
+<div class="card section-card mb-3" id="barcodeCard" style="display:none; border-left:4px solid #ffc107 !important;">
     <div class="card-body py-3">
         <div class="d-flex align-items-center gap-2 mb-2">
             <strong><i class="bi bi-upc-scan text-warning fs-5"></i> 바코드 스캔으로 빠른 주문</strong>
@@ -160,7 +160,7 @@
 </div>
 
 {{-- 필터 카드 - Progressive Disclosure --}}
-<div class="card border-0 shadow-sm mb-3">
+<div class="card section-card mb-3">
     <div class="card-body py-3">
         {{-- 1단계: 분류 (항상 표시) --}}
         <div class="d-flex flex-wrap align-items-start mb-2 gap-2">
@@ -252,8 +252,8 @@
 <div class="row g-3">
     {{-- 좌측: 도서 목록 --}}
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-journals"></i> 도서 목록</strong>
                 <span class="small text-muted">{{ $books->count() }}건 표시 (최대 60건)</span>
             </div>
@@ -318,8 +318,8 @@
 
     {{-- 우측: 장바구니 --}}
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm" style="position:sticky;top:1rem">
-            <div class="card-header bg-white">
+        <div class="card section-card" style="position:sticky;top:1rem">
+            <div class="card-header">
                 <strong><i class="bi bi-cart"></i> 장바구니 ({{ $cartLines->count() }})</strong>
             </div>
             <div class="card-body p-0">

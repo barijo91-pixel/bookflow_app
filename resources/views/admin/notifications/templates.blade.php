@@ -23,8 +23,8 @@
 @endphp
 
 @foreach($grouped as $eventCode => $items)
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white">
+    <div class="card section-card mb-3">
+        <div class="card-header">
             <strong>{{ $eventLabels[$eventCode] ?? $eventCode }}</strong>
             <code class="ms-2">{{ $eventCode }}</code>
         </div>

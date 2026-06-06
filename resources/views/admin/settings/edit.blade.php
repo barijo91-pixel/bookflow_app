@@ -26,7 +26,7 @@
 
 <form method="POST" action="{{ route('admin.settings.update', ['group' => $active]) }}">
     @csrf @method('PUT')
-    <div class="card border-0 shadow-sm">
+    <div class="card section-card">
         <div class="card-body">
             @if($items->isEmpty())
                 <div class="text-muted text-center py-4">설정 항목이 없습니다.</div>
@@ -70,14 +70,14 @@
                 @endforeach
             @endif
         </div>
-        <div class="card-footer bg-white text-end">
+        <div class="card-footer text-end">
             <button class="btn btn-primary"><i class="bi bi-save"></i> 저장</button>
         </div>
     </div>
 </form>
 
 @if($active === 'integration')
-    <div class="card border-0 shadow-sm mt-3">
+    <div class="card section-card mt-3">
         <div class="card-body py-3">
             <small class="text-muted">
                 <i class="bi bi-info-circle"></i>

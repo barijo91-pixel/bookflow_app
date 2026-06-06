@@ -22,8 +22,8 @@
 
 <div class="row g-3">
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong>1. 엑셀 파일 업로드</strong>
                 <a href="{{ route('my.classes.students.import.template', $class->id) }}" class="btn btn-sm btn-outline-navy">
                     <i class="bi bi-download"></i> 템플릿 다운로드
@@ -45,7 +45,7 @@
                         </ol>
                     </div>
                 </div>
-                <div class="card-footer bg-white text-end">
+                <div class="card-footer text-end">
                     <button class="btn btn-primary"><i class="bi bi-eye"></i> 미리보기</button>
                 </div>
             </form>
@@ -53,8 +53,8 @@
     </div>
 
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>안내</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>안내</strong></div>
             <div class="card-body small">
                 <p class="mb-2"><strong>필수 컬럼</strong></p>
                 <ul class="mb-2 ps-3">
@@ -79,8 +79,8 @@
 </div>
 
 @if($recentJobs->isNotEmpty())
-    <div class="card border-0 shadow-sm mt-3">
-        <div class="card-header bg-white"><strong>이 학급의 최근 일괄 등록 이력</strong></div>
+    <div class="card section-card mt-3">
+        <div class="card-header"><strong>이 학급의 최근 일괄 등록 이력</strong></div>
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead class="table-light"><tr>

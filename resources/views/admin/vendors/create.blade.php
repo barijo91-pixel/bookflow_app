@@ -17,7 +17,7 @@
     </div>
 @endif
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <form method="POST" action="{{ route('admin.vendors.store') }}">
         @csrf
         <div class="card-body">
@@ -109,7 +109,7 @@
             <h6 class="text-muted mt-4 mb-3"><i class="bi bi-sticky"></i> 메모</h6>
             <textarea name="memo" class="form-control" rows="3">{{ old('memo') }}</textarea>
         </div>
-        <div class="card-footer bg-white d-flex justify-content-between">
+        <div class="card-footer d-flex justify-content-between">
             <small class="text-muted">담당자/영업자 매핑은 등록 후 상세 페이지에서 진행합니다.</small>
             <div>
                 <a href="{{ route('admin.vendors.index') }}" class="btn btn-secondary">취소</a>

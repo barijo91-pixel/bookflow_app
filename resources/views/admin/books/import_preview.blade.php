@@ -31,8 +31,8 @@
 
 <form method="POST" action="{{ route('admin.books.import.run', $jobId) }}">
     @csrf
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <div class="card section-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <strong>데이터</strong>
             <div class="d-flex gap-3">
                 <div class="form-check">
@@ -102,7 +102,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer bg-white d-flex justify-content-between">
+        <div class="card-footer d-flex justify-content-between">
             <small class="text-muted">정상 {{ $okCount }}건만 등록됩니다. 오류 행은 자동 제외.</small>
             <div>
                 <a href="{{ route('admin.books.import.show') }}" class="btn btn-secondary">취소</a>

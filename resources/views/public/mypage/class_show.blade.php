@@ -41,7 +41,7 @@
     <div class="col-lg-6">
         {{-- 학급 정보 --}}
         <div class="card section-card mb-3">
-            <div class="card-header bg-white"><strong><i class="bi bi-info-circle"></i> 학급 정보</strong></div>
+            <div class="card-header"><strong><i class="bi bi-info-circle"></i> 학급 정보</strong></div>
             <form method="POST" action="{{ route('my.classes.update', $class->id) }}">
                 @csrf @method('PUT')
                 <div class="card-body">
@@ -80,7 +80,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-white text-end">
+                <div class="card-footer text-end">
                     <button class="btn btn-sm btn-navy"><i class="bi bi-save"></i> 저장</button>
                 </div>
             </form>
@@ -88,7 +88,7 @@
 
         {{-- 교재 --}}
         <div class="card section-card mb-3">
-            <div class="card-header bg-white"><strong><i class="bi bi-book"></i> 학급 교재 ({{ $books->count() }})</strong></div>
+            <div class="card-header"><strong><i class="bi bi-book"></i> 학급 교재 ({{ $books->count() }})</strong></div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light"><tr>
@@ -146,7 +146,7 @@
     <div class="col-lg-6">
         {{-- 학생 목록 + 추가 --}}
         <div class="card section-card mb-3">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-people"></i> 학생/학부모 ({{ $students->count() }})</strong>
                 <a href="{{ route('my.classes.students.import.show', $class->id) }}" class="btn btn-sm btn-outline-navy">
                     <i class="bi bi-file-earmark-spreadsheet"></i> 엑셀 일괄 등록
@@ -225,7 +225,7 @@
         {{-- 공유링크 이력 --}}
         @if($shareLinks->isNotEmpty())
             <div class="card section-card mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-link"></i> 공유링크 발송 이력</strong></div>
+                <div class="card-header"><strong><i class="bi bi-link"></i> 공유링크 발송 이력</strong></div>
                 <div class="table-responsive">
                     <table class="table table-sm align-middle mb-0">
                         <thead class="table-light"><tr>

@@ -34,8 +34,8 @@
 <div class="row g-3">
     {{-- 좌측: 정보 + 액션 --}}
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong><i class="bi bi-info-circle"></i> 주문 정보</strong></div>
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong><i class="bi bi-info-circle"></i> 주문 정보</strong></div>
             <div class="card-body">
                 <dl class="row small mb-0">
                     <dt class="col-4 text-muted">학원</dt>
@@ -65,8 +65,8 @@
         {{-- 액션 카드 --}}
         @php $isAcademy = $user->role_code === 'academy'; @endphp
         @if($canConfirm || $canAccept || $canShip || $canCancel || $canEdit || $isAcademy)
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-lightning"></i> 처리</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong><i class="bi bi-lightning"></i> 처리</strong></div>
                 <div class="card-body">
                     @if($canEdit)
                         <a href="{{ route('my.orders.edit', $order->id) }}" class="btn btn-outline-primary w-100 mb-2">
@@ -148,8 +148,8 @@
 
         {{-- 출고 정보 --}}
         @if($shipment)
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-truck"></i> 출고/배송</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong><i class="bi bi-truck"></i> 출고/배송</strong></div>
                 <div class="card-body small">
                     <dl class="row mb-0">
                         <dt class="col-4 text-muted">택배사</dt>
@@ -166,8 +166,8 @@
 
     {{-- 우측: 도서 목록 + 상태 로그 --}}
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong><i class="bi bi-book"></i> 도서 목록 ({{ $items->count() }}건)</strong></div>
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong><i class="bi bi-book"></i> 도서 목록 ({{ $items->count() }}건)</strong></div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light">
@@ -195,8 +195,8 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong><i class="bi bi-clock-history"></i> 상태 이력</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong><i class="bi bi-clock-history"></i> 상태 이력</strong></div>
             <div class="card-body">
                 @if($statusLogs->isEmpty())
                     <div class="text-muted small">아직 이력이 없습니다.</div>

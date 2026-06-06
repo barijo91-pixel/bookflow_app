@@ -28,8 +28,8 @@
 
 <div class="row g-3">
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>기본 정보</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>기본 정보</strong></div>
             <form method="POST" action="{{ route('admin.books.update', $book) }}">
                 @csrf @method('PUT')
                 <input type="hidden" name="source" value="{{ $book->source }}">
@@ -169,7 +169,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-white d-flex justify-content-between">
+                <div class="card-footer d-flex justify-content-between">
                     <small class="text-muted">
                         등록: {{ optional($book->created_at)->format('Y-m-d') }} ·
                         소스: <code>{{ $book->source }}</code>
@@ -181,8 +181,8 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong><i class="bi bi-box-seam"></i> 총판별 재고</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong><i class="bi bi-box-seam"></i> 총판별 재고</strong></div>
             <div class="card-body p-0">
                 @if($stocks->isEmpty())
                     <div class="text-muted text-center py-3 small">재고 정보 없음</div>
@@ -207,7 +207,7 @@
                     </table>
                 @endif
             </div>
-            <div class="card-footer bg-white">
+            <div class="card-footer">
                 <small class="text-muted">재고 조정은 추후 "재고 관리" 메뉴에서 진행 예정</small>
             </div>
         </div>

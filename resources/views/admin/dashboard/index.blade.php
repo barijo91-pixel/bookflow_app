@@ -105,8 +105,8 @@
 <div class="row g-3">
     {{-- 최근 주문 --}}
     <div class="col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-receipt"></i> 최근 주문</strong>
                 <a href="{{ route('admin.orders.index') }}" class="small text-decoration-none">전체보기 <i class="bi bi-chevron-right"></i></a>
             </div>
@@ -145,8 +145,8 @@
 
     {{-- 최근 가입 --}}
     <div class="col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-people"></i> 최근 가입</strong>
                 <a href="{{ route('admin.users.index') }}" class="small text-decoration-none">전체보기 <i class="bi bi-chevron-right"></i></a>
             </div>
@@ -181,8 +181,8 @@
 
     {{-- 최근 알림 --}}
     <div class="col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-bell"></i> 최근 알림</strong>
                 <a href="{{ route('admin.notifications.logs') }}" class="small text-decoration-none">전체보기 <i class="bi bi-chevron-right"></i></a>
             </div>
@@ -215,8 +215,8 @@
 
     {{-- 최근 감사 활동 --}}
     <div class="col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-shield-check"></i> 최근 감사 활동</strong>
                 <a href="{{ route('admin.audit-logs.index') }}" class="small text-decoration-none">전체보기 <i class="bi bi-chevron-right"></i></a>
             </div>

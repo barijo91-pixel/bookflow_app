@@ -25,7 +25,7 @@
 {{-- 요약 카드 --}}
 <div class="row g-3 mb-3">
     <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">취급 도서</div>
                 <div class="h4 mb-0 navy">{{ number_format($summary['total_books']) }}</div>
@@ -33,7 +33,7 @@
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">총 재고 수량</div>
                 <div class="h4 mb-0 navy">{{ number_format($summary['total_qty']) }}</div>
@@ -41,7 +41,7 @@
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">안전재고 이하 <i class="bi bi-exclamation-triangle text-warning"></i></div>
                 <div class="h4 mb-0 {{ $summary['low_stock'] > 0 ? 'text-warning' : '' }}">{{ number_format($summary['low_stock']) }}</div>
@@ -49,7 +49,7 @@
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">재고 0건 <i class="bi bi-x-circle text-danger"></i></div>
                 <div class="h4 mb-0 {{ $summary['zero_stock'] > 0 ? 'text-danger' : '' }}">{{ number_format($summary['zero_stock']) }}</div>
@@ -59,7 +59,7 @@
 </div>
 
 {{-- 필터 --}}
-<form method="GET" class="card border-0 shadow-sm mb-3">
+<form method="GET" class="card section-card mb-3">
     <div class="card-body py-2">
         <div class="row g-2 align-items-end">
             <div class="col-md-7">
@@ -79,7 +79,7 @@
     </div>
 </form>
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
@@ -143,7 +143,7 @@
         </table>
     </div>
     @if($stocks->hasPages())
-        <div class="card-footer bg-white">{{ $stocks->links() }}</div>
+        <div class="card-footer">{{ $stocks->links() }}</div>
     @endif
 </div>
 

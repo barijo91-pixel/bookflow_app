@@ -9,7 +9,7 @@
 </div>
 
 @if($vendors->isEmpty())
-    <div class="card border-0 shadow-sm">
+    <div class="card section-card">
         <div class="card-body text-center text-muted py-5">
             <i class="bi bi-building-x" style="font-size:2rem"></i>
             <p class="mb-0 mt-2">담당 학원이 없습니다.</p>
@@ -18,8 +18,8 @@
     </div>
 @else
     @foreach($vendors as $v)
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-building"></i> {{ $v->name }}</strong>
                 <small class="text-muted">활성 학급 {{ count($vendorClasses[$v->id] ?? []) }}개</small>
             </div>

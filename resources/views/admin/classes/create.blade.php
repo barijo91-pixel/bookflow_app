@@ -13,7 +13,7 @@
 
 @if($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <form method="POST" action="{{ route('admin.classes.store') }}">
         @csrf
         <div class="card-body">
@@ -54,7 +54,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer bg-white d-flex justify-content-between">
+        <div class="card-footer d-flex justify-content-between">
             <small class="text-muted">학생/학부모 등록과 교재 매핑은 생성 후 상세 페이지에서 진행합니다.</small>
             <div>
                 <a href="{{ route('admin.classes.index') }}" class="btn btn-secondary">취소</a>

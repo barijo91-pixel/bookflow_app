@@ -13,8 +13,8 @@
 
 <div class="row g-3">
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>기본 정보</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>기본 정보</strong></div>
             <div class="card-body">
                 <dl class="row mb-0 small">
                     <dt class="col-4 text-muted">일시</dt>
@@ -48,8 +48,8 @@
 
     <div class="col-lg-8">
         @if(! empty($diff))
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-arrow-left-right"></i> 변경 사항 ({{ count($diff) }}개 필드)</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong><i class="bi bi-arrow-left-right"></i> 변경 사항 ({{ count($diff) }}개 필드)</strong></div>
                 <div class="table-responsive">
                     <table class="table table-sm mb-0">
                         <thead class="table-light"><tr><th>필드</th><th>이전</th><th>이후</th></tr></thead>
@@ -74,8 +74,8 @@
         @endif
 
         @if($before)
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-white"><strong>before</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong>before</strong></div>
                 <div class="card-body p-3">
                     <pre class="mb-0 small" style="white-space:pre-wrap">{{ json_encode($before, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) }}</pre>
                 </div>
@@ -83,8 +83,8 @@
         @endif
 
         @if($after)
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white"><strong>after</strong></div>
+            <div class="card section-card">
+                <div class="card-header"><strong>after</strong></div>
                 <div class="card-body p-3">
                     <pre class="mb-0 small" style="white-space:pre-wrap">{{ json_encode($after, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) }}</pre>
                 </div>
@@ -92,7 +92,7 @@
         @endif
 
         @if(! $before && ! $after)
-            <div class="card border-0 shadow-sm">
+            <div class="card section-card">
                 <div class="card-body text-muted text-center py-4">
                     저장된 변경 데이터가 없습니다.
                 </div>

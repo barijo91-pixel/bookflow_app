@@ -19,7 +19,7 @@
 {{-- 요약 --}}
 <div class="row g-3 mb-3">
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">전체 행</div>
                 <div class="h4 mb-0 navy">{{ $total }}</div>
@@ -27,7 +27,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">유효 (등록 가능)</div>
                 <div class="h4 mb-0 text-success">{{ $validRows->count() }}</div>
@@ -35,7 +35,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">오류</div>
                 <div class="h4 mb-0 text-danger">{{ $errorRows->count() }}</div>
@@ -57,7 +57,7 @@
 
 {{-- 오류 목록 --}}
 @if($errorRows->isNotEmpty())
-    <div class="card border-0 shadow-sm mb-3">
+    <div class="card section-card mb-3">
         <div class="card-header bg-danger text-white">
             <strong><i class="bi bi-exclamation-triangle"></i> 오류 {{ $errorRows->count() }}건 (등록되지 않음)</strong>
         </div>
@@ -85,8 +85,8 @@
 
 {{-- 유효 목록 --}}
 @if($validRows->isNotEmpty())
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white"><strong>등록 예정 ({{ $validRows->count() }}건)</strong></div>
+    <div class="card section-card">
+        <div class="card-header"><strong>등록 예정 ({{ $validRows->count() }}건)</strong></div>
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead class="table-light"><tr>

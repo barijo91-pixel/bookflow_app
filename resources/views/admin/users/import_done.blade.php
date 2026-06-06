@@ -15,7 +15,7 @@
 
 <div class="row g-3 mb-3">
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">등록 성공</div>
                 <div class="h3 mb-0 text-success">{{ $result['success'] }}건</div>
@@ -23,7 +23,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">실패</div>
                 <div class="h3 mb-0 {{ $result['failed'] > 0 ? 'text-danger' : '' }}">{{ $result['failed'] }}건</div>
@@ -31,7 +31,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
+        <div class="card section-card">
             <div class="card-body py-3">
                 <div class="small text-muted">처리 일시</div>
                 <div class="h6 mb-0 text-muted">{{ now()->format('Y-m-d H:i:s') }}</div>
@@ -41,7 +41,7 @@
 </div>
 
 @if(! empty($result['errors']))
-    <div class="card border-0 shadow-sm mb-3">
+    <div class="card section-card mb-3">
         <div class="card-header bg-danger text-white"><strong>실패 항목</strong></div>
         <div class="table-responsive">
             <table class="table table-sm mb-0">
@@ -57,7 +57,7 @@
 @endif
 
 @if(! empty($createdUsers))
-    <div class="card border-0 shadow-sm">
+    <div class="card section-card">
         <div class="card-header bg-warning d-flex justify-content-between align-items-center">
             <strong><i class="bi bi-key"></i> 등록된 사용자 + 초기 비밀번호 (1회만 표시)</strong>
             <button class="btn btn-sm btn-light" onclick="copyTable()">

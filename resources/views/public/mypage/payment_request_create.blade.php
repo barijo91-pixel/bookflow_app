@@ -25,8 +25,8 @@
         <form method="POST" action="{{ route('my.orders.payment.store', $order->id) }}" id="payReqForm">
             @csrf
 
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-white"><strong>1. 학급 선택</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong>1. 학급 선택</strong></div>
                 <div class="card-body">
                     @if($classes->isEmpty())
                         <div class="alert alert-warning small mb-0">
@@ -44,8 +44,8 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm mb-3" id="studentsCard" style="display:none;">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card section-card mb-3" id="studentsCard" style="display:none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <strong>2. 학생/학부모 선택 + 1인당 금액</strong>
                     <div class="d-flex gap-2 align-items-center">
                         <input type="number" id="bulkAmount" min="0" step="100" class="form-control form-control-sm text-end"
@@ -73,8 +73,8 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-white"><strong>3. 메모 (선택)</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong>3. 메모 (선택)</strong></div>
                 <div class="card-body">
                     <textarea name="memo" rows="2" class="form-control" maxlength="500"
                               placeholder="예: 2학기 영어 교재"></textarea>
@@ -91,8 +91,8 @@
 
     {{-- RIGHT: 주문 도서 + 이미 보낸 이력 --}}
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong>주문 도서</strong></div>
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong>주문 도서</strong></div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0">
                     <thead class="table-light">
@@ -112,8 +112,8 @@
         </div>
 
         @if($existing->isNotEmpty())
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white"><strong>이 주문의 결제 요청 이력 ({{ $existing->count() }})</strong></div>
+            <div class="card section-card">
+                <div class="card-header"><strong>이 주문의 결제 요청 이력 ({{ $existing->count() }})</strong></div>
                 <div class="table-responsive">
                     <table class="table table-sm align-middle mb-0">
                         <thead class="table-light">

@@ -10,7 +10,7 @@
     <p class="text-muted small mb-0">본 총판 산하 영업자 목록과 활동 현황</p>
 </div>
 
-<form method="GET" action="{{ route('my.agents.index') }}" class="card border-0 shadow-sm mb-3">
+<form method="GET" action="{{ route('my.agents.index') }}" class="card section-card mb-3">
     <div class="card-body py-3">
         <div class="row g-2 align-items-end">
             <div class="col-md-3">
@@ -45,7 +45,7 @@
     </div>
 </form>
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">

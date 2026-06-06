@@ -15,7 +15,7 @@
 @endif
 
 <div class="card mb-3">
-    <div class="card-header bg-white"><strong><i class="bi bi-person"></i> 기본 정보</strong></div>
+    <div class="card-header"><strong><i class="bi bi-person"></i> 기본 정보</strong></div>
     <form method="POST" action="{{ route('mypage.profile.update') }}">
         @csrf @method('PUT')
         <div class="card-body">
@@ -64,14 +64,14 @@
                 </div>
             @endif
         </div>
-        <div class="card-footer bg-white text-end">
+        <div class="card-footer text-end">
             <button class="btn btn-navy"><i class="bi bi-save"></i> 저장</button>
         </div>
     </form>
 </div>
 
 <div class="card">
-    <div class="card-header bg-white"><strong><i class="bi bi-key"></i> 비밀번호 변경</strong></div>
+    <div class="card-header"><strong><i class="bi bi-key"></i> 비밀번호 변경</strong></div>
     <form method="POST" action="{{ route('mypage.password.update') }}">
         @csrf @method('PUT')
         <div class="card-body">
@@ -89,7 +89,7 @@
                 <input type="password" name="password_confirmation" class="form-control" minlength="8" required>
             </div>
         </div>
-        <div class="card-footer bg-white text-end">
+        <div class="card-footer text-end">
             <button class="btn btn-navy"><i class="bi bi-key"></i> 비밀번호 변경</button>
         </div>
     </form>

@@ -15,8 +15,8 @@
 <div class="row g-3">
     {{-- LEFT: 학원별 일반 할인율 --}}
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong><i class="bi bi-building"></i> 학원별 일반 할인율</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong><i class="bi bi-building"></i> 학원별 일반 할인율</strong></div>
             @if($vendors->isEmpty())
                 <div class="card-body text-center text-muted py-4">담당 학원이 없습니다.</div>
             @else
@@ -64,8 +64,8 @@
     {{-- RIGHT: 선택된 학원의 도서별 개별 할인율 --}}
     <div class="col-lg-7">
         @if($selectedVendor)
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card section-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <strong><i class="bi bi-book"></i> {{ $selectedVendor->vendor_name }} — 도서별 개별 할인율</strong>
                     <small class="text-muted">일반: {{ rtrim(rtrim($selectedVendor->general_rate, '0'), '.') }}%</small>
                 </div>
@@ -123,7 +123,7 @@
 
                 {{-- 새 도서 개별 할인율 추가 (검색형 combobox) --}}
                 @if($availableBooks->isNotEmpty())
-                    <div class="card-footer bg-white">
+                    <div class="card-footer">
                         <form method="POST" action="{{ route('my.discounts.book.upsert') }}" class="row g-2 align-items-end" id="addBookDiscountForm">
                             @csrf
                             <input type="hidden" name="vendor_id" value="{{ $selectedVendorId }}">
@@ -154,7 +154,7 @@
                 @endif
             </div>
         @else
-            <div class="card border-0 shadow-sm">
+            <div class="card section-card">
                 <div class="card-body text-center text-muted py-5">
                     좌측에서 학원을 선택해주세요.
                 </div>

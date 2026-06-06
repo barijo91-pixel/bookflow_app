@@ -25,8 +25,8 @@
 <div class="row g-3">
     {{-- LEFT: 기본 정보 편집 폼 --}}
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>기본 정보</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>기본 정보</strong></div>
             <form method="POST" action="{{ route('admin.vendors.update', $vendor) }}">
                 @csrf @method('PUT')
                 <div class="card-body">
@@ -127,7 +127,7 @@
                     <h6 class="text-muted mt-4 mb-3"><i class="bi bi-sticky"></i> 메모</h6>
                     <textarea name="memo" class="form-control" rows="3">{{ old('memo', $vendor->memo) }}</textarea>
                 </div>
-                <div class="card-footer bg-white d-flex justify-content-between">
+                <div class="card-footer d-flex justify-content-between">
                     <small class="text-muted">등록: {{ optional($vendor->created_at)->format('Y-m-d H:i') }}</small>
                     <button class="btn btn-primary"><i class="bi bi-save"></i> 저장</button>
                 </div>
@@ -138,8 +138,8 @@
     {{-- RIGHT: 담당자 + 영업자 매핑 + 최근 주문 --}}
     <div class="col-lg-5">
         {{-- 담당자 --}}
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-people"></i> 담당자</strong>
                 <small class="text-muted">{{ $staffs->count() }}명</small>
             </div>
@@ -173,7 +173,7 @@
                     </table>
                 @endif
             </div>
-            <div class="card-footer bg-white">
+            <div class="card-footer">
                 <form method="POST" action="{{ route('admin.vendors.staffs.attach', $vendor) }}">
                     @csrf
                     <div class="row g-2 align-items-end">
@@ -209,8 +209,8 @@
         </div>
 
         {{-- 영업자 매핑 + 할인율 --}}
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card section-card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-person-badge"></i> 영업자 / 할인율</strong>
                 <small class="text-muted">{{ $agentLinks->count() }}명</small>
             </div>
@@ -258,7 +258,7 @@
                     </table>
                 @endif
             </div>
-            <div class="card-footer bg-white">
+            <div class="card-footer">
                 <form method="POST" action="{{ route('admin.vendors.agents.attach', $vendor) }}">
                     @csrf
                     <div class="row g-2 align-items-end">
@@ -284,8 +284,8 @@
         </div>
 
         {{-- 최근 주문 --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong><i class="bi bi-receipt"></i> 최근 주문</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong><i class="bi bi-receipt"></i> 최근 주문</strong></div>
             <div class="card-body p-0">
                 @if($recentOrders->isEmpty())
                     <div class="text-muted text-center py-3 small">주문 이력이 없습니다.</div>

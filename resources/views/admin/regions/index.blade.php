@@ -12,8 +12,8 @@
 <div class="row g-3">
     {{-- LEFT: 시도 목록 --}}
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>시·도</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>시·도</strong></div>
             <div class="list-group list-group-flush" style="max-height:600px; overflow-y:auto;">
                 @foreach($sidos as $sido)
                     <a href="{{ route('admin.regions.index', ['sido' => $sido->id]) }}"
@@ -33,15 +33,15 @@
     {{-- RIGHT: 시군구 목록 --}}
     <div class="col-lg-8">
         @if(! $selectedSido)
-            <div class="card border-0 shadow-sm">
+            <div class="card section-card">
                 <div class="card-body text-center text-muted py-5">
                     <i class="bi bi-geo-alt" style="font-size:2.5rem"></i>
                     <p class="mt-3 mb-0">왼쪽에서 시·도를 선택하면 하위 시·군·구가 표시됩니다.</p>
                 </div>
             </div>
         @else
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card section-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <strong>{{ $selectedSido->name }} ▸ 시·군·구 ({{ $sigungus->count() }}개)</strong>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary"

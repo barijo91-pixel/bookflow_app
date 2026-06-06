@@ -21,8 +21,8 @@
       onsubmit="return confirm('수정 사항을 저장하시겠습니까?\n· 수량 0 또는 삭제 체크된 도서는 주문에서 제거됩니다.')">
     @csrf @method('PUT')
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <div class="card section-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <strong><i class="bi bi-book"></i> 주문 도서 ({{ count($items) }}건)</strong>
             <small class="text-muted">현재 총액 <strong class="navy">{{ number_format($order->total_amount) }}원</strong></small>
         </div>
@@ -81,7 +81,7 @@
             <input type="text" name="reason" class="form-control form-control-sm" maxlength="500"
                    placeholder="예: 학년이 바뀌어 수량 조정">
         </div>
-        <div class="card-footer bg-white text-end">
+        <div class="card-footer text-end">
             <a href="{{ route('my.orders.show', $order->id) }}" class="btn btn-sm btn-link text-muted me-2">취소</a>
             <button class="btn btn-primary"><i class="bi bi-check-lg"></i> 수정 저장</button>
         </div>

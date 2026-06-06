@@ -16,8 +16,8 @@
 
 <div class="row g-3">
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>업로드</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>업로드</strong></div>
             <form method="POST" action="{{ route('admin.books.import.preview') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="card-body">
@@ -31,7 +31,7 @@
                         학년·난이도는 쉼표로 여러 개 입력 가능 (예: <code>초3, 초4</code>). 학교·과목·상태는 코드테이블의 <strong>한글명</strong> 그대로.
                     </div>
                 </div>
-                <div class="card-footer bg-white text-end">
+                <div class="card-footer text-end">
                     <button class="btn btn-primary"><i class="bi bi-upload"></i> 업로드 후 미리보기</button>
                 </div>
             </form>
@@ -39,8 +39,8 @@
     </div>
 
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white"><strong>최근 작업 이력</strong></div>
+        <div class="card section-card">
+            <div class="card-header"><strong>최근 작업 이력</strong></div>
             <div class="card-body p-0">
                 @if($recentJobs->isEmpty())
                     <div class="text-muted text-center py-3 small">작업 이력이 없습니다.</div>

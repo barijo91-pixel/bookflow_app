@@ -17,7 +17,7 @@
     </div>
 @endif
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <form method="POST" action="{{ route('admin.users.store') }}">
         @csrf
         <div class="card-body">
@@ -87,7 +87,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer bg-white d-flex justify-content-between">
+        <div class="card-footer d-flex justify-content-between">
             <small class="text-muted">등록 시 자동으로 active 상태가 됩니다.</small>
             <div>
                 <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">취소</a>

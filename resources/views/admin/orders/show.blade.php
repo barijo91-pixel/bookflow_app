@@ -30,8 +30,8 @@
 <div class="row g-3">
     <div class="col-lg-8">
         {{-- 주문 라인 --}}
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong>주문 라인 ({{ $items->count() }}건)</strong></div>
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong>주문 라인 ({{ $items->count() }}건)</strong></div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light">
@@ -86,8 +86,8 @@
         </div>
 
         {{-- 상태 이력 --}}
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong><i class="bi bi-clock-history"></i> 상태 이력</strong></div>
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong><i class="bi bi-clock-history"></i> 상태 이력</strong></div>
             <div class="card-body p-0">
                 <table class="table table-sm mb-0">
                     <thead class="table-light"><tr><th>변경</th><th>처리자</th><th>일시</th><th>사유</th></tr></thead>
@@ -111,8 +111,8 @@
 
     <div class="col-lg-4">
         {{-- 거래처/영업자/총판 --}}
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong><i class="bi bi-people"></i> 관련 사용자</strong></div>
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong><i class="bi bi-people"></i> 관련 사용자</strong></div>
             <div class="card-body">
                 <dl class="row mb-0 small">
                     <dt class="col-4 text-muted">거래처</dt>
@@ -136,8 +136,8 @@
         </div>
 
         {{-- 배송 --}}
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong><i class="bi bi-truck"></i> 배송 정보</strong></div>
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong><i class="bi bi-truck"></i> 배송 정보</strong></div>
             <div class="card-body">
                 @if($shipment)
                     <dl class="row mb-0 small">
@@ -181,8 +181,8 @@
 
         {{-- 상태 전이 --}}
         @if(! empty($nextStates))
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white"><strong><i class="bi bi-arrow-right-circle"></i> 상태 변경</strong></div>
+            <div class="card section-card">
+                <div class="card-header"><strong><i class="bi bi-arrow-right-circle"></i> 상태 변경</strong></div>
                 <div class="card-body">
                     @foreach($nextStates as $next)
                         @php

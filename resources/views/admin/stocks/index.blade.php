@@ -36,7 +36,7 @@
     </div>
 </div>
 
-<form method="GET" class="card border-0 shadow-sm mb-3">
+<form method="GET" class="card section-card mb-3">
     <div class="card-body py-3">
         <div class="row g-2 align-items-end">
             <div class="col-md-3">
@@ -85,7 +85,7 @@
 
 <form method="POST" action="{{ route('admin.stocks.bulk-update') }}">
     @csrf @method('PUT')
-    <div class="card border-0 shadow-sm">
+    <div class="card section-card">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-row-highlight">
                 <thead class="table-light">
@@ -140,7 +140,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+        <div class="card-footer d-flex justify-content-between align-items-center">
             <div>{{ $stocks->links() }}</div>
             <button class="btn btn-primary"><i class="bi bi-save"></i> 변경사항 일괄 저장</button>
         </div>

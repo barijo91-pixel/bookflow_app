@@ -18,8 +18,8 @@
     @csrf
 
     {{-- 1. 학원 정보 --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white"><strong>1. 학원 정보</strong></div>
+    <div class="card section-card mb-3">
+        <div class="card-header"><strong>1. 학원 정보</strong></div>
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-6">
@@ -79,8 +79,8 @@
     </div>
 
     {{-- 2. 영업자 할인율 --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white"><strong>2. 영업자 할인율 (본인 기준)</strong></div>
+    <div class="card section-card mb-3">
+        <div class="card-header"><strong>2. 영업자 할인율 (본인 기준)</strong></div>
         <div class="card-body">
             <div class="row g-3 align-items-center">
                 <div class="col-md-3">
@@ -102,8 +102,8 @@
     </div>
 
     {{-- 3. 학원 계정 --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <div class="card section-card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <strong>3. 학원 계정 생성 <small class="text-muted ms-2">(선택)</small></strong>
             <div class="form-check form-switch">
                 <input type="checkbox" name="create_account" value="1" id="createAccount" class="form-check-input"
@@ -145,8 +145,8 @@
     </div>
 
     {{-- 4. 결제 구분 --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white"><strong>4. 결제 구분</strong></div>
+    <div class="card section-card mb-3">
+        <div class="card-header"><strong>4. 결제 구분</strong></div>
         <div class="card-body">
             <div class="row g-3 align-items-center">
                 <div class="col-md-4">

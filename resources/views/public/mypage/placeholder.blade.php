@@ -17,7 +17,7 @@
     </p>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <div class="card-body p-5 text-center">
         <i class="bi bi-tools text-muted" style="font-size:3.5rem"></i>
         <h2 class="h5 navy mt-3">기능 준비 중</h2>

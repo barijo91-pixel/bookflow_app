@@ -22,7 +22,7 @@
     <div class="alert alert-danger py-2 small"><ul class="mb-0 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
 @endif
 
-<div class="card border-0 shadow-sm">
+<div class="card section-card">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
