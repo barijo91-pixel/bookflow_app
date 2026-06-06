@@ -264,7 +264,7 @@
                             <th>도서</th>
                             <th class="text-end">정가</th>
                             <th class="text-end">할인가</th>
-                            <th class="text-end" style="width:90px">수량</th>
+                            <th class="text-center" style="width:90px">수량</th>
                             <th style="width:70px"></th>
                         </tr>
                     </thead>
