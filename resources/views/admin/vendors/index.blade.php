@@ -56,7 +56,6 @@
                     <th>구분</th>
                     <th>상태</th>
                     <th>등록일</th>
-                    <th class="text-end" style="width:120px;">조치</th>
                 </tr>
             </thead>
             <tbody>
@@ -64,8 +63,8 @@
                     <tr>
                         <td>{{ $v->id }}</td>
                         <td>
-                            <a href="{{ route('admin.vendors.show', $v) }}" class="text-decoration-none">
-                                {{ $v->name }}
+                            <a href="{{ route('admin.vendors.show', $v) }}" class="text-decoration-none navy fw-bold">
+                                {{ $v->name }} <i class="bi bi-chevron-right small"></i>
                             </a>
                         </td>
                         <td>{{ $v->owner_name }}</td>
@@ -81,14 +80,9 @@
                             @endswitch
                         </td>
                         <td class="text-muted small">{{ optional($v->created_at)->format('Y-m-d') }}</td>
-                        <td class="text-end">
-                            <a href="{{ route('admin.vendors.show', $v) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil-square"></i> 보기
-                            </a>
-                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="9" class="text-center text-muted py-4">데이터가 없습니다.</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted py-4">데이터가 없습니다.</td></tr>
                 @endforelse
             </tbody>
         </table>
