@@ -140,13 +140,19 @@
         {{-- 학생 목록 + 추가 --}}
         <div class="card section-card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <strong><i class="bi bi-people"></i> 학생/학부모 ({{ $students->count() }})</strong>
+                <strong><i class="bi bi-people"></i> 학생/학부모 (<span id="studentCount">{{ $students->count() }}</span>)</strong>
                 <a href="{{ route('my.classes.students.import.show', $class->id) }}" class="btn btn-sm btn-outline-navy">
                     <i class="bi bi-file-earmark-spreadsheet"></i> 엑셀 일괄 등록
                 </a>
             </div>
+            @if($students->isNotEmpty())
+                <div class="px-3 py-2 border-bottom" style="background:#fafbfc;">
+                    <input type="text" id="studentSearch" class="form-control form-control-sm"
+                           placeholder="🔍 학생/학부모 이름으로 검색..." autocomplete="off">
+                </div>
+            @endif
             <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
+                <table class="table table-sm align-middle mb-0" id="studentTable">
                     <thead class="table-light"><tr>
                         <th>학생</th><th>학부모</th><th>연락처</th><th></th>
                     </tr></thead>
@@ -251,4 +257,31 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+// 학생 즉시 검색 (클라이언트 사이드 필터링)
+(function () {
+    const input = document.getElementById('studentSearch');
+    if (!input) return;
+    const tbody = document.querySelector('#studentTable tbody');
+    const countEl = document.getElementById('studentCount');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const total = rows.length;
+
+    input.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        let visible = 0;
+        rows.forEach(tr => {
+            // 학생명·학부모명·전화번호 모두 검색 대상
+            const text = (tr.cells[0]?.textContent + ' ' + tr.cells[1]?.textContent + ' ' + tr.cells[2]?.textContent).toLowerCase();
+            const match = !q || text.includes(q);
+            tr.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+        if (countEl) countEl.textContent = q ? `${visible} / ${total}` : total;
+    });
+})();
+</script>
+@endpush
 @endsection
