@@ -130,21 +130,21 @@
     {{-- RIGHT: 본인 매핑 + 최근 주문 --}}
     <div class="col-lg-5">
         {{-- 본인 매핑 할인율 (참고) --}}
-        <div class="card section-card mb-3 info-banner">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="small text-muted mb-1"><i class="bi bi-percent"></i> 본인 매핑 할인율</div>
-                        <div class="h4 navy mb-0">
-                            {{ rtrim(rtrim($myMapping->discount_rate, '0'), '.') }}%
-                            @if(! $myMapping->is_active)
-                                <span class="badge bg-warning text-dark fs-6 ms-1">중단</span>
-                            @endif
-                        </div>
-                    </div>
-                    <a href="{{ route('my.discounts.index', ['vendor_id' => $vendor->id]) }}" class="btn btn-sm btn-outline-navy">
-                        <i class="bi bi-sliders"></i> 할인율 조정
-                    </a>
+        <div class="card section-card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-percent"></i> 본인 매핑 할인율</strong>
+                <a href="{{ route('my.discounts.index', ['vendor_id' => $vendor->id]) }}" class="btn btn-sm btn-outline-navy">
+                    <i class="bi bi-sliders"></i> 할인율 조정
+                </a>
+            </div>
+            <div class="card-body py-3">
+                <div class="d-flex align-items-baseline gap-2">
+                    <span class="h3 navy mb-0">{{ rtrim(rtrim($myMapping->discount_rate, '0'), '.') }}%</span>
+                    @if(! $myMapping->is_active)
+                        <span class="badge bg-warning text-dark">중단</span>
+                    @else
+                        <span class="text-muted small">거래중</span>
+                    @endif
                 </div>
             </div>
         </div>
