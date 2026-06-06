@@ -264,7 +264,7 @@
                             <th>도서</th>
                             <th class="text-end">정가</th>
                             <th class="text-end">할인가</th>
-                            <th style="width:90px">수량</th>
+                            <th class="text-end" style="width:90px">수량</th>
                             <th style="width:70px"></th>
                         </tr>
                     </thead>
@@ -332,7 +332,10 @@
                     {{-- 컬럼 헤더 — 도서 목록 테이블과 같은 톤 (thead 일치) --}}
                     <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-light border-bottom fw-semibold">
                         <span>도서</span>
-                        <span style="margin-right:70px;">수량</span>
+                        <div class="d-flex align-items-center flex-shrink-0">
+                            <span style="width:60px; text-align:center;">수량</span>
+                            <span style="width:32px;"></span>
+                        </div>
                     </div>
                     <form method="POST" action="{{ route('my.cart.update') }}" id="cartForm">
                         @csrf
