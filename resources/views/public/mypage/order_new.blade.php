@@ -265,7 +265,7 @@
                             <th class="text-end">정가</th>
                             <th class="text-end">할인가</th>
                             <th class="text-center" style="width:90px">수량</th>
-                            <th style="width:70px"></th>
+                            <th class="text-center" style="width:70px">담기</th>
                         </tr>
                     </thead>
                     <tbody>
