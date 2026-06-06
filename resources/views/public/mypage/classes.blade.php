@@ -32,7 +32,6 @@
                     <th>학생 수</th>
                     <th>상태</th>
                     <th>기간</th>
-                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -40,7 +39,7 @@
                     <tr style="cursor:pointer" onclick="location.href='{{ route('my.classes.show', $c->id) }}'">
                         <td>
                             <a href="{{ route('my.classes.show', $c->id) }}" class="text-decoration-none navy fw-bold" onclick="event.stopPropagation()">
-                                {{ $c->name }}
+                                {{ $c->name }} <i class="bi bi-chevron-right small"></i>
                             </a>
                         </td>
                         <td class="small text-muted">
@@ -61,15 +60,10 @@
                             {{ $c->started_at ? \Carbon\Carbon::parse($c->started_at)->format('Y-m-d') : '-' }}
                             @if($c->ended_at) ~ {{ \Carbon\Carbon::parse($c->ended_at)->format('Y-m-d') }} @endif
                         </td>
-                        <td class="text-end">
-                            <a href="{{ route('my.classes.show', $c->id) }}" class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation()">
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-5">
+                        <td colspan="5" class="text-center text-muted py-5">
                             <i class="bi bi-mortarboard" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">아직 학급이 없습니다.</p>
                             <p class="small">우측 상단의 "학급 추가" 버튼으로 시작하세요.</p>

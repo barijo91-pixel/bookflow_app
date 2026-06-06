@@ -98,8 +98,8 @@
                 @forelse($orders as $o)
                     <tr class="order-row" style="cursor:pointer" onclick="location.href='{{ route('my.orders.show', $o->id) }}'">
                         <td>
-                            <a href="{{ route('my.orders.show', $o->id) }}" class="text-decoration-none" onclick="event.stopPropagation()">
-                                <code>{{ $o->order_no }}</code>
+                            <a href="{{ route('my.orders.show', $o->id) }}" class="text-decoration-none navy fw-bold" onclick="event.stopPropagation()">
+                                <code>{{ $o->order_no }}</code> <i class="bi bi-chevron-right small"></i>
                             </a>
                         </td>
                         <td class="small">{{ $o->vendor_name ?? '-' }}</td>
