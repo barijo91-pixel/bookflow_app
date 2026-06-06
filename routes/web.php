@@ -26,7 +26,10 @@ Route::get('/', function () {
 
 // 학부모 공유링크 (공개, 토큰 기반)
 Route::get('/p/{token}', [\App\Http\Controllers\ParentShareController::class, 'show'])->name('parent.share');
-Route::get('/pay/{token}', [\App\Http\Controllers\PaymentRequestController::class, 'publicShow'])->name('public.pay');
+// 학부모 결제 페이지 — 토큰 추측 방어 (분당 30회)
+Route::get('/pay/{token}', [\App\Http\Controllers\PaymentRequestController::class, 'publicShow'])
+    ->middleware('throttle:30,1')
+    ->name('public.pay');
 
 // SEO
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
@@ -34,9 +37,12 @@ Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'ind
 // 공개 회원가입/로그인
 Route::middleware('guest')->group(function () {
     Route::get('login',     [\App\Http\Controllers\PublicAuthController::class, 'showLogin'])->name('public.login');
-    Route::post('login',    [\App\Http\Controllers\PublicAuthController::class, 'login'])->name('public.login.attempt');
+    // 로그인/회원가입 POST — 브루트포스/스팸 방어 (분당 5회)
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('login',    [\App\Http\Controllers\PublicAuthController::class, 'login'])->name('public.login.attempt');
+        Route::post('register', [\App\Http\Controllers\PublicAuthController::class, 'register'])->name('public.register.attempt');
+    });
     Route::get('register',  [\App\Http\Controllers\PublicAuthController::class, 'showRegister'])->name('public.register');
-    Route::post('register', [\App\Http\Controllers\PublicAuthController::class, 'register'])->name('public.register.attempt');
 });
 Route::get('register/done', [\App\Http\Controllers\PublicAuthController::class, 'registerDone'])->name('public.register.done');
 Route::post('logout',       [\App\Http\Controllers\PublicAuthController::class, 'logout'])->name('public.logout');
@@ -46,11 +52,16 @@ Route::middleware('auth')->group(function () {
     Route::get('mypage',          [\App\Http\Controllers\MyPageController::class, 'index'])->name('mypage');
     Route::get('mypage/profile',  [\App\Http\Controllers\MyPageController::class, 'showProfile'])->name('mypage.profile');
     Route::put('mypage/profile',  [\App\Http\Controllers\MyPageController::class, 'updateProfile'])->name('mypage.profile.update');
-    Route::put('mypage/password', [\App\Http\Controllers\MyPageController::class, 'updatePassword'])->name('mypage.password.update');
+    // 비밀번호 변경 — 현재 비번 brute force 방어 (15분에 5회)
+    Route::put('mypage/password', [\App\Http\Controllers\MyPageController::class, 'updatePassword'])
+        ->middleware('throttle:5,15')
+        ->name('mypage.password.update');
 
     // 비밀번호 강제 변경 (첫 로그인/관리자 초기화 후)
     Route::get('mypage/force-password-change',  [\App\Http\Controllers\MyPageController::class, 'showForcePasswordChange'])->name('mypage.force_password_change');
-    Route::put('mypage/force-password-change',  [\App\Http\Controllers\MyPageController::class, 'submitForcePasswordChange'])->name('mypage.force_password_change.submit');
+    Route::put('mypage/force-password-change',  [\App\Http\Controllers\MyPageController::class, 'submitForcePasswordChange'])
+        ->middleware('throttle:5,15')
+        ->name('mypage.force_password_change.submit');
 
     // 역할별 메뉴
     Route::prefix('mypage')->name('my.')->group(function () {
@@ -136,7 +147,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // 로그인 (비인증 접근 허용)
     Route::middleware('guest')->group(function () {
         Route::get('login',  [AuthController::class, 'showLogin'])->name('login');
-        Route::post('login', [AuthController::class, 'login'])->name('login.attempt');
+        // 관리자 로그인 POST — 브루트포스 방어 (분당 5회)
+        Route::post('login', [AuthController::class, 'login'])
+            ->middleware('throttle:5,1')
+            ->name('login.attempt');
     });
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 

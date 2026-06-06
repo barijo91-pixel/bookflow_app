@@ -19,8 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.session.timeout'=> \App\Http\Middleware\AdminSessionTimeout::class,
         ]);
 
-        // 인증된 모든 웹 요청에 대해 비밀번호 강제 변경 체크
+        // 모든 웹 요청에 보안 헤더 + 인증된 요청에 비밀번호 강제 변경 체크
         $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\RequirePasswordChange::class,
         ]);
         $middleware->redirectGuestsTo(function ($request) {
