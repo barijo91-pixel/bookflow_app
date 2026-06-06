@@ -62,13 +62,24 @@
         padding: .7rem 1rem;
     }
     .section-card > .card-footer .form-label { color: #1f3a5f; font-weight: 600; }
-    /* 빈 상태 행 — 무미건조한 한 줄 대신 살짝 강조 */
-    .section-card .empty-row td {
+    /* 빈 상태 행/블록 — 무미건조한 한 줄 대신 살짝 강조 */
+    .section-card .empty-row td,
+    .section-card .empty-state {
         background: #fafbfc !important;
         color: #6c757d;
         padding: 1.5rem 1rem !important;
+        text-align: center;
     }
-    .section-card .empty-row i.bi { font-size: 1.5rem; color: #b0bac5; }
+    .section-card .empty-row i.bi,
+    .section-card .empty-state i.bi {
+        font-size: 1.5rem; color: #b0bac5;
+        display: block; margin-bottom: .25rem;
+    }
+    /* 안내 배너 톤 — 좌측 네이비 액센트로 정보성 강조 */
+    .section-card.info-banner {
+        border-left: 4px solid #1f3a5f !important;
+        background: linear-gradient(to right, #f4f7fb 0%, #fff 30%) !important;
+    }
 
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
     /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */

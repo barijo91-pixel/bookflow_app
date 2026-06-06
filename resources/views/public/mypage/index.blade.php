@@ -26,8 +26,8 @@
 <div class="row g-3">
     {{-- LEFT: 내 정보 --}}
     <div class="col-lg-4">
-        <div class="card mb-3">
-            <div class="card-header bg-white">
+        <div class="card section-card mb-3">
+            <div class="card-header">
                 <strong><i class="bi bi-person-vcard"></i> 내 정보</strong>
             </div>
             <div class="card-body">
@@ -64,7 +64,7 @@
                     @endif
                 </dl>
             </div>
-            <div class="card-footer bg-white">
+            <div class="card-footer">
                 <a href="{{ route('mypage.profile') }}" class="btn btn-sm btn-outline-navy w-100">
                     <i class="bi bi-pencil-square"></i> 정보/비밀번호 수정
                 </a>
@@ -73,8 +73,8 @@
 
         {{-- 역할별 추가 카드 --}}
         @if($user->role_code === 'distributor' && isset($stock_summary))
-            <div class="card mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-box-seam"></i> 내 재고 요약</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong><i class="bi bi-box-seam"></i> 내 재고 요약</strong></div>
                 <div class="card-body">
                     <dl class="row mb-0 small">
                         <dt class="col-7 text-muted">취급 도서</dt>
@@ -92,8 +92,8 @@
 
         {{-- 영업자: 내 총판 --}}
         @if($user->role_code === 'agent' && isset($my_distributors) && $my_distributors->count())
-            <div class="card mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-truck"></i> 내 총판</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong><i class="bi bi-truck"></i> 내 총판</strong></div>
                 <ul class="list-group list-group-flush">
                     @foreach($my_distributors as $d)
                         <li class="list-group-item small">{{ $d->name }}</li>
@@ -104,8 +104,8 @@
 
         {{-- 학원: 내 거래처(학원) --}}
         @if($user->role_code === 'academy' && isset($my_academies) && $my_academies->count())
-            <div class="card mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-building"></i> 내 학원</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong><i class="bi bi-building"></i> 내 학원</strong></div>
                 <ul class="list-group list-group-flush">
                     @foreach($my_academies as $a)
                         <li class="list-group-item small d-flex justify-content-between">
@@ -121,7 +121,7 @@
     {{-- RIGHT: 역할별 메인 영역 --}}
     <div class="col-lg-8">
         @if($user->status_code === 'pending')
-            <div class="card mb-3">
+            <div class="card section-card mb-3">
                 <div class="card-body text-center py-5">
                     <i class="bi bi-hourglass-split text-warning" style="font-size:3rem"></i>
                     <h2 class="h5 navy mt-3">승인 대기 중입니다</h2>
@@ -132,13 +132,16 @@
 
         {{-- 영업자: 내 학원 --}}
         @if($user->role_code === 'agent' && isset($my_vendors))
-            <div class="card mb-3">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card section-card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <strong><i class="bi bi-building"></i> 내 학원 ({{ $my_vendors->count() }})</strong>
                 </div>
                 <div class="card-body p-0">
                     @if($my_vendors->isEmpty())
-                        <div class="text-muted text-center py-3 small">매핑된 학원이 없습니다. 관리자에게 문의해주세요.</div>
+                        <div class="empty-state small">
+                            <i class="bi bi-building-x"></i>
+                            매핑된 학원이 없습니다. 관리자에게 문의해주세요.
+                        </div>
                     @else
                         <table class="table table-sm mb-0">
                             <thead class="table-light"><tr>
@@ -167,11 +170,14 @@
 
         {{-- 학원: 내 담당 영업자 --}}
         @if($user->role_code === 'academy' && isset($my_agents))
-            <div class="card mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-person-badge"></i> 담당 영업자 ({{ $my_agents->count() }})</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong><i class="bi bi-person-badge"></i> 담당 영업자 ({{ $my_agents->count() }})</strong></div>
                 <div class="card-body p-0">
                     @if($my_agents->isEmpty())
-                        <div class="text-muted text-center py-3 small">담당 영업자가 없습니다.</div>
+                        <div class="empty-state small">
+                            <i class="bi bi-person-x"></i>
+                            담당 영업자가 없습니다.
+                        </div>
                     @else
                         <table class="table table-sm mb-0">
                             <thead class="table-light"><tr><th>영업자</th><th>연락처</th><th class="text-end">기본 할인율</th></tr></thead>
@@ -192,11 +198,14 @@
 
         {{-- 총판: 내 영업자 --}}
         @if($user->role_code === 'distributor' && isset($my_agents))
-            <div class="card mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-person-badge"></i> 내 영업자 ({{ $my_agents->count() }})</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong><i class="bi bi-person-badge"></i> 내 영업자 ({{ $my_agents->count() }})</strong></div>
                 <div class="card-body p-0">
                     @if($my_agents->isEmpty())
-                        <div class="text-muted text-center py-3 small">매핑된 영업자가 없습니다.</div>
+                        <div class="empty-state small">
+                            <i class="bi bi-person-x"></i>
+                            매핑된 영업자가 없습니다.
+                        </div>
                     @else
                         <table class="table table-sm mb-0">
                             <thead class="table-light"><tr><th>이름</th><th>이메일</th></tr></thead>
@@ -213,11 +222,14 @@
 
         {{-- 최근 주문 (모든 역할 공통) --}}
         @if(isset($recent_orders))
-            <div class="card mb-3">
-                <div class="card-header bg-white"><strong><i class="bi bi-receipt"></i> 최근 주문 ({{ $recent_orders->count() }})</strong></div>
+            <div class="card section-card mb-3">
+                <div class="card-header"><strong><i class="bi bi-receipt"></i> 최근 주문 ({{ $recent_orders->count() }})</strong></div>
                 <div class="card-body p-0">
                     @if($recent_orders->isEmpty())
-                        <div class="text-muted text-center py-3 small">주문 이력이 없습니다.</div>
+                        <div class="empty-state small">
+                            <i class="bi bi-receipt"></i>
+                            주문 이력이 없습니다.
+                        </div>
                     @else
                         <table class="table table-sm mb-0">
                             <thead class="table-light">
@@ -260,9 +272,9 @@
         @endif
 
         {{-- 모바일 앱 안내 --}}
-        <div class="card border-info">
+        <div class="card section-card info-banner">
             <div class="card-body">
-                <div class="d-flex gap-3">
+                <div class="d-flex gap-3 align-items-center">
                     <i class="bi bi-phone navy" style="font-size:2rem"></i>
                     <div>
                         <h5 class="navy mb-1">모바일 앱이 곧 출시됩니다</h5>
