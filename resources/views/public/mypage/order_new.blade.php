@@ -335,18 +335,24 @@
                                     @php $b = $line['book']; @endphp
                                     <tr>
                                         <td class="small p-2">
-                                            <div class="fw-bold">{{ \Illuminate\Support\Str::limit($b->title, 30) }}</div>
-                                            <div class="text-muted small">
-                                                {{ number_format($line['unit_price']) }}원 × {{ $line['qty'] }} =
-                                                <span class="fw-bold navy">{{ number_format($line['line_total']) }}원</span>
-                                            </div>
-                                            <div class="d-flex gap-1 mt-1 align-items-center">
-                                                <input type="number" name="qty[{{ $b->id }}]" value="{{ $line['qty'] }}" min="0" max="9999"
-                                                       class="form-control form-control-sm text-end" style="width:70px">
-                                                <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-auto"
-                                                        onclick="removeCartItem({{ $b->id }})" title="제거">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                            <div class="d-flex align-items-center gap-2">
+                                                {{-- 좌측: 책 제목 + 가격 --}}
+                                                <div class="flex-grow-1 min-w-0">
+                                                    <div class="fw-bold text-truncate">{{ \Illuminate\Support\Str::limit($b->title, 28) }}</div>
+                                                    <div class="text-muted small">
+                                                        {{ number_format($line['unit_price']) }}원 × {{ $line['qty'] }} =
+                                                        <span class="fw-bold navy">{{ number_format($line['line_total']) }}원</span>
+                                                    </div>
+                                                </div>
+                                                {{-- 우측: 수량 입력 + 삭제 --}}
+                                                <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                                    <input type="number" name="qty[{{ $b->id }}]" value="{{ $line['qty'] }}" min="0" max="9999"
+                                                           class="form-control form-control-sm text-end" style="width:60px">
+                                                    <button type="button" class="btn btn-sm btn-link text-danger p-1"
+                                                            onclick="removeCartItem({{ $b->id }})" title="제거">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
