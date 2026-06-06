@@ -32,7 +32,7 @@
                     <th>학생 수</th>
                     <th>상태</th>
                     <th>기간</th>
-                    <th style="width:80px;" class="text-end">삭제</th>
+                    <th style="width:90px;" class="text-end">삭제</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,7 +66,7 @@
                                   onsubmit="return confirm('「{{ addslashes($c->name) }}」 학급을 삭제할까요?\n학생이 있으면 차단됩니다.')">
                                 @csrf @method('DELETE')
                                 <button class="btn btn-sm btn-outline-danger" title="학급 삭제">
-                                    <i class="bi bi-trash"></i>
+                                    <i class="bi bi-trash"></i> 삭제
                                 </button>
                             </form>
                         </td>
