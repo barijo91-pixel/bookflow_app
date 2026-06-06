@@ -72,7 +72,7 @@
             <thead class="table-light">
                 <tr>
                     <th style="width:60px;">#</th>
-                    <th>표지</th>
+                    <th style="width:60px; white-space:nowrap;">표지</th>
                     <th>제목</th>
                     <th>ISBN</th>
                     <th>출판사</th>
