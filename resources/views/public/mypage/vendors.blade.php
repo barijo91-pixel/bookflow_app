@@ -25,6 +25,26 @@
 @if(session('error'))<div class="alert alert-danger py-2 small">{{ session('error') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger py-2 small"><ul class="mb-0 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
 
+{{-- 검색 --}}
+<form method="GET" class="card section-card filter-card mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-9">
+                <label class="form-label small mb-1">검색 (학원명, 원장명)</label>
+                <input type="text" name="q" value="{{ $q ?? '' }}" class="form-control form-control-sm" placeholder="학원명 또는 원장 이름을 입력하세요">
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-search"></i> 조회</button>
+                    @if(!empty($q))
+                        <a href="{{ route('my.vendors.index') }}" class="btn btn-sm btn-outline-secondary" title="초기화"><i class="bi bi-x-lg"></i></a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
 {{-- 폼들은 테이블 외부에 두고, 안쪽 input/button은 form="..." 속성으로 연결 (HTML5 표준) --}}
 @foreach($vendors as $v)
     <form id="vendor-edit-{{ $v->avd_id }}" method="POST"
@@ -60,12 +80,7 @@
                                 {{ $v->name }}
                             </a>
                             @if($v->owner_name)
-                                <div class="text-muted small">대표: {{ $v->owner_name }}</div>
-                            @endif
-                            @if($v->started_at)
-                                <div class="text-muted small">
-                                    <i class="bi bi-calendar3"></i> {{ \Carbon\Carbon::parse($v->started_at)->format('Y-m-d') }} 시작
-                                </div>
+                                <span class="text-muted small ms-2">{{ $v->owner_name }}</span>
                             @endif
                         </td>
                         <td class="small text-muted">
@@ -124,11 +139,14 @@
                         </td>
                     </tr>
                 @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
-                            <i class="bi bi-building-x" style="font-size:2rem"></i>
-                            <p class="mb-0 mt-2">거래처(학원)이 없습니다.</p>
-                            <p class="small mb-0">관리자에게 매핑 요청을 해주세요.</p>
+                    <tr class="empty-row">
+                        <td colspan="7">
+                            <i class="bi bi-building-x"></i>
+                            @if(!empty($q))
+                                '<strong>{{ $q }}</strong>' 검색 결과가 없습니다.
+                            @else
+                                거래처(학원)이 없습니다. 우측 상단 <strong>새 학원 등록</strong>으로 추가하세요.
+                            @endif
                         </td>
                     </tr>
                 @endforelse

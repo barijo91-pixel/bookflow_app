@@ -790,14 +790,16 @@ class MyPageController extends Controller
     }
 
     /** 담당 학원 (영업자) */
-    public function vendorsIndex()
+    public function vendorsIndex(Request $request)
     {
         $user = Auth::user();
         if ($user->role_code !== 'agent') {
             abort(403, '영업자만 접근 가능합니다.');
         }
 
-        $vendors = DB::table('agent_vendor_discounts as avd')
+        $q = trim((string) $request->query('q'));
+
+        $query = DB::table('agent_vendor_discounts as avd')
             ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
             ->leftJoin('regions as r', 'r.id', '=', 'v.region_id')
             ->leftJoin('regions as p', 'p.id', '=', 'r.parent_id')
@@ -809,7 +811,16 @@ class MyPageController extends Controller
                 'avd.discount_rate', 'avd.is_active as discount_active',
                 'avd.started_at', 'avd.ended_at',
                 'r.name as sigungu_name', 'p.name as sido_name'
-            )
+            );
+
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('v.name', 'like', "%{$q}%")
+                  ->orWhere('v.owner_name', 'like', "%{$q}%");
+            });
+        }
+
+        $vendors = $query
             ->orderByDesc('avd.is_active')
             ->orderBy('v.name')
             ->get();
@@ -817,6 +828,7 @@ class MyPageController extends Controller
         return view('public.mypage.vendors', [
             'user' => $user,
             'vendors' => $vendors,
+            'q' => $q,
         ]);
     }
 
