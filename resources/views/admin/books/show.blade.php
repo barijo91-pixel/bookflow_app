@@ -59,12 +59,12 @@
                                     <input type="text" name="title" class="form-control" value="{{ old('title', $book->title) }}" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label small text-muted">부제목</label>
-                                    <input type="text" name="subtitle" class="form-control" value="{{ old('subtitle', $book->subtitle) }}">
-                                </div>
-                                <div class="col-md-6">
                                     <label class="form-label small text-muted">시리즈명</label>
                                     <input type="text" name="series_name" class="form-control" value="{{ old('series_name', $book->series_name) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">부제목</label>
+                                    <input type="text" name="subtitle" class="form-control" value="{{ old('subtitle', $book->subtitle) }}">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted">출판사</label>
