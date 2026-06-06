@@ -519,8 +519,9 @@ class MyPageController extends Controller
     {
         $user = Auth::user();
         $status   = $request->query('status');
-        $dateFrom = $request->query('date_from'); // YYYY-MM-DD
-        $dateTo   = $request->query('date_to');
+        // 디폴트: 어제 ~ 오늘 (최근 주문 위주로 표시)
+        $dateFrom = $request->query('date_from') ?: now()->subDay()->format('Y-m-d');
+        $dateTo   = $request->query('date_to')   ?: now()->format('Y-m-d');
         $q        = trim((string) $request->query('q'));
 
         $query = DB::table('orders as o')
