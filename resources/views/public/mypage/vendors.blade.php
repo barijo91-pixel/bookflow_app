@@ -56,7 +56,9 @@
                 @forelse($vendors as $v)
                     <tr>
                         <td>
-                            <strong>{{ $v->name }}</strong>
+                            <a href="{{ route('my.vendors.show', $v->id) }}" class="text-decoration-none navy fw-bold">
+                                {{ $v->name }}
+                            </a>
                             @if($v->owner_name)
                                 <div class="text-muted small">대표: {{ $v->owner_name }}</div>
                             @endif

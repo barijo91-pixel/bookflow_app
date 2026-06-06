@@ -184,6 +184,105 @@ class AgentVendorController extends Controller
             "학원 「{$data['vendor_name']}」이(가) 등록되었습니다.");
     }
 
+    /** 학원 상세 — 본인 담당 학원만 (admin show와 동일 구조 / 영업자 권한 내) */
+    public function show($vendorId)
+    {
+        $user = $this->authorizeAgent();
+
+        // 영업자 본인이 매핑된 학원만 접근 허용
+        $myMapping = DB::table('agent_vendor_discounts')
+            ->where('agent_user_id', $user->id)
+            ->where('vendor_id', $vendorId)
+            ->first();
+        if (! $myMapping) {
+            abort(404, '담당 학원이 아닙니다.');
+        }
+
+        $vendor = DB::table('vendors')->where('id', $vendorId)->whereNull('deleted_at')->first();
+        if (! $vendor) abort(404);
+
+        // 지역
+        $sidos    = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get();
+        $sigungus = collect();
+        $currentSidoId = null;
+        if ($vendor->region_id) {
+            $sigungu = DB::table('regions')->where('id', $vendor->region_id)->first();
+            if ($sigungu) {
+                $currentSidoId = $sigungu->parent_id;
+                $sigungus = DB::table('regions')->where('parent_id', $sigungu->parent_id)->orderBy('sort_order')->get();
+            }
+        }
+
+        // 본인이 한 최근 주문 (이 학원에 대한)
+        $recentOrders = DB::table('orders as o')
+            ->where('o.vendor_id', $vendorId)
+            ->where('o.agent_user_id', $user->id)
+            ->whereNull('o.deleted_at')
+            ->orderByDesc('o.id')
+            ->limit(10)
+            ->select('o.id', 'o.order_no', 'o.status_code', 'o.total_amount', 'o.created_at')
+            ->get();
+
+        return view('public.mypage.vendor_show', compact(
+            'user', 'vendor', 'sidos', 'sigungus', 'currentSidoId',
+            'myMapping', 'recentOrders'
+        ));
+    }
+
+    /** 학원 정보 수정 — 본인 담당 학원만 */
+    public function update(Request $request, $vendorId)
+    {
+        $user = $this->authorizeAgent();
+
+        // 권한 체크
+        $hasMapping = DB::table('agent_vendor_discounts')
+            ->where('agent_user_id', $user->id)
+            ->where('vendor_id', $vendorId)
+            ->exists();
+        if (! $hasMapping) abort(403);
+
+        $data = $request->validate([
+            'name'           => ['required', 'string', 'max:150'],
+            'owner_name'     => ['nullable', 'string', 'max:100'],
+            'business_no'    => ['nullable', 'string', 'max:20'],
+            'mobile'         => ['nullable', 'string', 'max:20'],
+            'tel'            => ['nullable', 'string', 'max:20'],
+            'region_id'      => ['nullable', 'integer', 'exists:regions,id'],
+            'address'        => ['nullable', 'string', 'max:255'],
+            'address_detail' => ['nullable', 'string', 'max:255'],
+            'payment_type'   => ['nullable', 'in:cash,credit'],
+            'credit_limit'   => ['nullable', 'integer', 'min:0', 'max:999999999'],
+            'memo'           => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $mobile = ! empty($data['mobile']) ? preg_replace('/[^0-9]/', '', $data['mobile']) : null;
+        $tel    = ! empty($data['tel'])    ? preg_replace('/[^0-9]/', '', $data['tel'])    : null;
+        $paymentType = ($data['payment_type'] ?? 'cash') === 'credit' ? 'credit' : 'cash';
+        $creditLimit = $paymentType === 'credit' ? (int) ($data['credit_limit'] ?? 0) : 0;
+
+        DB::table('vendors')->where('id', $vendorId)->update([
+            'name'           => $data['name'],
+            'owner_name'     => $data['owner_name'] ?? null,
+            'business_no'    => $data['business_no'] ?? null,
+            'mobile'         => $mobile,
+            'tel'            => $tel,
+            'region_id'      => $data['region_id'] ?? null,
+            'address'        => $data['address'] ?? null,
+            'address_detail' => $data['address_detail'] ?? null,
+            'payment_type'   => $paymentType,
+            'credit_limit'   => $creditLimit,
+            'memo'           => $data['memo'] ?? null,
+            'updated_at'     => now(),
+        ]);
+
+        AuditLog::log('vendors', $vendorId, 'agent_update', null, [
+            'agent_user_id' => $user->id,
+            'vendor_name'   => $data['name'],
+        ]);
+
+        return redirect()->route('my.vendors.show', $vendorId)->with('success', '학원 정보가 저장되었습니다.');
+    }
+
     /** 자동 비번 생성 (혼동 문자 제외) */
     private function genPassword(int $length = 8): string
     {
