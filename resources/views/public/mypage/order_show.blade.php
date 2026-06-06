@@ -39,26 +39,35 @@
             <div class="card-body">
                 <dl class="row small mb-0">
                     <dt class="col-4 text-muted">학원</dt>
-                    <dd class="col-8">{{ $vendor->name ?? '-' }}</dd>
+                    <dd class="col-8 fw-bold">{{ $vendor->name ?? '-' }}</dd>
                     <dt class="col-4 text-muted">영업자</dt>
                     <dd class="col-8">{{ $agent->name ?? '-' }}</dd>
                     <dt class="col-4 text-muted">총판</dt>
                     <dd class="col-8">{{ $dist->name ?? '(미배정)' }}</dd>
                     <dt class="col-4 text-muted">배송 방식</dt>
-                    <dd class="col-8">
+                    <dd class="col-8 mb-0">
                         @if(($order->delivery_type ?? 'parcel') === 'direct')
                             <span class="badge bg-warning text-dark">직접 배송</span>
                         @else
                             <span class="badge bg-light text-dark">택배</span>
                         @endif
                     </dd>
-                    <dt class="col-4 text-muted">소계</dt>
-                    <dd class="col-8 text-end">{{ number_format($order->subtotal_amount) }}원</dd>
-                    <dt class="col-4 text-muted">배송비</dt>
-                    <dd class="col-8 text-end">{{ number_format($order->shipping_fee) }}원</dd>
-                    <dt class="col-4 text-muted fw-bold">총액</dt>
-                    <dd class="col-8 text-end fw-bold navy">{{ number_format($order->total_amount) }}원</dd>
                 </dl>
+            </div>
+            {{-- 금액 — 시각적으로 분리된 강조 영역 --}}
+            <div class="card-footer">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                    <span>소계</span>
+                    <span>{{ number_format($order->subtotal_amount) }}원</span>
+                </div>
+                <div class="d-flex justify-content-between small text-muted mb-2">
+                    <span>배송비</span>
+                    <span>{{ number_format($order->shipping_fee) }}원</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-baseline pt-2 border-top">
+                    <span class="fw-bold navy">총액</span>
+                    <span class="h4 navy mb-0">{{ number_format($order->total_amount) }}원</span>
+                </div>
             </div>
         </div>
 
@@ -129,18 +138,21 @@
                     @endif
 
                     @if($canCancel)
-                        <form method="POST" action="{{ route('my.orders.transition', $order->id) }}"
-                              onsubmit="return confirm('주문을 취소하시겠습니까? 되돌릴 수 없습니다.')">
-                            @csrf
-                            <input type="hidden" name="to_status" value="canceled">
-                            <div class="mb-2">
-                                <label class="form-label small text-muted mb-1">취소 사유 (선택)</label>
-                                <input type="text" name="reason" class="form-control form-control-sm" maxlength="500">
-                            </div>
-                            <button class="btn btn-outline-danger btn-sm w-100">
-                                <i class="bi bi-x-lg"></i> 주문 취소
-                            </button>
-                        </form>
+                        {{-- 위험 액션 — 다른 버튼과 시각적 분리 --}}
+                        <div class="mt-3 pt-3 border-top">
+                            <form method="POST" action="{{ route('my.orders.transition', $order->id) }}"
+                                  onsubmit="return confirm('주문을 취소하시겠습니까? 되돌릴 수 없습니다.')">
+                                @csrf
+                                <input type="hidden" name="to_status" value="canceled">
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted mb-1">취소 사유 (선택)</label>
+                                    <input type="text" name="reason" class="form-control form-control-sm" maxlength="500" placeholder="고객 요청, 재고 부족 등">
+                                </div>
+                                <button class="btn btn-danger w-100">
+                                    <i class="bi bi-x-circle"></i> 주문 취소
+                                </button>
+                            </form>
+                        </div>
                     @endif
                 </div>
             </div>
@@ -199,15 +211,36 @@
             <div class="card-header"><strong><i class="bi bi-clock-history"></i> 상태 이력</strong></div>
             <div class="card-body">
                 @if($statusLogs->isEmpty())
-                    <div class="text-muted small">아직 이력이 없습니다.</div>
+                    <div class="empty-state small">
+                        <i class="bi bi-clock"></i>
+                        아직 이력이 없습니다.
+                    </div>
                 @else
-                    <ul class="list-unstyled mb-0 small">
+                    @php
+                        $statusLabel = [
+                            'requested'  => '접수',         'confirmed' => '영업자 확정',
+                            'accepted'   => '총판 접수',    'shipped'   => '출고',
+                            'in_transit' => '배송중',       'completed' => '완료',
+                            'canceled'   => '취소',         'returned'  => '반품',
+                        ];
+                    @endphp
+                    <ul class="timeline-list mb-0">
                         @foreach($statusLogs as $log)
-                            <li class="mb-2">
-                                <strong>{{ $log->from_status }}</strong> → <strong>{{ $log->to_status }}</strong>
-                                <span class="text-muted">by {{ $log->changed_by_name ?? '시스템' }}</span>
-                                <span class="text-muted">· {{ \Carbon\Carbon::parse($log->created_at)->format('m-d H:i') }}</span>
-                                @if($log->reason)<div class="text-muted small">{{ $log->reason }}</div>@endif
+                            @php
+                                $from = $statusLabel[$log->from_status] ?? $log->from_status;
+                                $to   = $statusLabel[$log->to_status]   ?? $log->to_status;
+                            @endphp
+                            <li class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content small">
+                                    <strong class="navy">{{ $to }}</strong>
+                                    <span class="text-muted ms-1">← {{ $from }}</span>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-person"></i> {{ $log->changed_by_name ?? '시스템' }}
+                                        · {{ \Carbon\Carbon::parse($log->created_at)->format('m-d H:i') }}
+                                    </div>
+                                    @if($log->reason)<div class="text-muted small fst-italic mt-1">"{{ $log->reason }}"</div>@endif
+                                </div>
                             </li>
                         @endforeach
                     </ul>

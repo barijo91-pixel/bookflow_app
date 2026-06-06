@@ -83,6 +83,25 @@
         background: linear-gradient(to right, #f4f7fb 0%, #fff 30%) !important;
     }
 
+    /* 타임라인 (상태 이력 등) — 점 + 세로선 */
+    .timeline-list { list-style: none; padding: 0; margin: 0; position: relative; }
+    .timeline-list::before {
+        content: ''; position: absolute;
+        left: 6px; top: 8px; bottom: 8px; width: 2px;
+        background: #e9ecef;
+    }
+    .timeline-item {
+        position: relative; padding-left: 1.5rem; padding-bottom: 1rem;
+    }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-dot {
+        position: absolute; left: 0; top: 4px;
+        width: 14px; height: 14px; border-radius: 50%;
+        background: #1f3a5f; border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #1f3a5f;
+    }
+    .timeline-item:last-child .timeline-dot { background: #fff; }
+
     /* 표지 썸네일 (도서 상세) — 비어있을 때도 작고 안정감 있게 */
     .cover-thumb {
         width: 120px;
