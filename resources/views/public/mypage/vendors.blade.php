@@ -60,9 +60,6 @@
                             @if($v->owner_name)
                                 <div class="text-muted small">대표: {{ $v->owner_name }}</div>
                             @endif
-                            @if($v->business_no)
-                                <div class="text-muted small"><code>{{ $v->business_no }}</code></div>
-                            @endif
                             @if($v->started_at)
                                 <div class="text-muted small">
                                     <i class="bi bi-calendar3"></i> {{ \Carbon\Carbon::parse($v->started_at)->format('Y-m-d') }} 시작
