@@ -145,8 +145,8 @@
                                 @csrf
                                 <input type="hidden" name="to_status" value="canceled">
                                 <div class="mb-2">
-                                    <label class="form-label small text-muted mb-1">취소 사유 (선택)</label>
-                                    <input type="text" name="reason" class="form-control form-control-sm" maxlength="500" placeholder="고객 요청, 재고 부족 등">
+                                    <label class="form-label small fw-bold navy mb-1">취소 사유 (선택)</label>
+                                    <textarea name="reason" class="form-control" rows="2" maxlength="500" placeholder="예: 고객 요청, 재고 부족, 학원 측 변경 요청 등"></textarea>
                                 </div>
                                 <button class="btn btn-danger w-100">
                                     <i class="bi bi-x-circle"></i> 주문 취소

@@ -50,8 +50,8 @@
     }
     .section-card > .card-header {
         /* !important 없이 — bg-danger/bg-warning 등은 Bootstrap이 우선 적용 (!important 사용) */
-        background: #f4f7fb;
-        border-bottom: 1px solid #dde5ee !important;
+        background: #e3ebf5;  /* 약간 진한 네이비 톤 — 헤더 영역 명확 */
+        border-bottom: 1px solid #c9d4e2 !important;
         padding: .7rem 1rem;
         font-size: .95rem;
         color: #1f3a5f;  /* strong/i가 상속 — bg-danger.text-white 헤더는 .text-white(!important)가 우선 */
