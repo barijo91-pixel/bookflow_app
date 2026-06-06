@@ -83,6 +83,33 @@
         background: linear-gradient(to right, #f4f7fb 0%, #fff 30%) !important;
     }
 
+    /* 표지 썸네일 (도서 상세) — 비어있을 때도 작고 안정감 있게 */
+    .cover-thumb {
+        width: 120px;
+        height: 160px;
+        background: #fafbfc;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+        margin: 0 auto;
+    }
+    .cover-thumb img {
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 4px;
+        object-fit: contain;
+    }
+    .cover-thumb .bi {
+        font-size: 2.5rem;
+        color: #b0bac5;
+    }
+
+    /* form-label과 input 사이 기본 간격 — 라벨이 input에 너무 붙는 것 방지 */
+    .form-label.small { margin-bottom: .25rem; }
+
     /* 폼 안 서브섹션 구분 — hr 대신 라벨 + 가는 선 */
     .section-divider {
         position: relative;

@@ -36,15 +36,15 @@
                 <div class="card-body">
                     {{-- 표지 + 기본 메타 --}}
                     <div class="row g-3 align-items-start">
-                        <div class="col-md-2">
-                            <label class="form-label small text-muted d-block text-center">표지</label>
-                            <div class="text-center p-2 rounded" style="background:#fafbfc; border:1px solid #e9ecef;">
+                        <div class="col-md-2 d-flex flex-column align-items-center">
+                            <label class="form-label small text-muted">표지</label>
+                            <div class="cover-thumb">
                                 @if($book->cover_path)
                                     <img id="cover_preview"
                                          src="{{ str_starts_with($book->cover_path, 'http') ? $book->cover_path : asset('storage/'.$book->cover_path) }}"
-                                         style="max-width:100%; max-height:180px; border-radius:4px">
+                                         alt="표지">
                                 @else
-                                    <div class="text-muted py-4"><i class="bi bi-book" style="font-size:3rem"></i></div>
+                                    <i class="bi bi-book"></i>
                                 @endif
                             </div>
                         </div>
