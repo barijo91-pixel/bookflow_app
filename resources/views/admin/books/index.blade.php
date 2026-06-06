@@ -94,9 +94,8 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('admin.books.show', $b) }}" class="text-decoration-none">{{ $b->title }}</a>
-                            @if($b->subtitle)<div class="text-muted small">{{ $b->subtitle }}</div>@endif
-                            @if($b->series_name)<div class="text-muted small">시리즈: {{ $b->series_name }}</div>@endif
+                            <a href="{{ route('admin.books.show', $b) }}" class="text-decoration-none fw-bold">{{ $b->title }}</a>
+                            @if($b->subtitle)<span class="text-muted small ms-1">— {{ $b->subtitle }}</span>@endif
                         </td>
                         <td class="text-muted small"><code>{{ $b->isbn }}</code></td>
                         <td>{{ optional($b->publisher)->name }}</td>
