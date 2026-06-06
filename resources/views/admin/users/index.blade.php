@@ -87,8 +87,8 @@
                     <tr>
                         <td>{{ $u->id }}</td>
                         <td>
-                            <a href="{{ route('admin.users.show', $u) }}" class="text-decoration-none">
-                                {{ $u->name }}
+                            <a href="{{ route('admin.users.show', $u) }}" class="text-decoration-none navy fw-bold">
+                                {{ $u->name }} <i class="bi bi-chevron-right small"></i>
                             </a>
                             @if($u->isSuperAdmin())<span class="badge bg-danger ms-1">SUPER</span>@endif
                             @if($isSelf)<span class="badge bg-primary ms-1">나</span>@endif
@@ -127,9 +127,6 @@
                         </td>
                         <td class="text-muted small">{{ optional($u->created_at)->format('Y-m-d') }}</td>
                         <td class="text-end">
-                            <a href="{{ route('admin.users.show', $u) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil-square"></i> 보기
-                            </a>
                             @if($u->status_code === 'pending' && $canSuspend)
                                 <form method="POST" action="{{ route('admin.users.approve', $u) }}" class="d-inline">
                                     @csrf

@@ -112,7 +112,7 @@
                     <tr>
                         <td>{{ $o->id }}</td>
                         <td>
-                            <a href="{{ route('admin.orders.show', $o->id) }}" class="text-decoration-none"><code>{{ $o->order_no }}</code></a>
+                            <a href="{{ route('admin.orders.show', $o->id) }}" class="text-decoration-none navy fw-bold"><code>{{ $o->order_no }}</code> <i class="bi bi-chevron-right small"></i></a>
                         </td>
                         <td>{{ $o->vendor_name }}</td>
                         <td class="small">{{ $o->agent_name }}</td>

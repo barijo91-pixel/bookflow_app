@@ -59,7 +59,7 @@
                     <tr>
                         <td>{{ $c->id }}</td>
                         <td>{{ $c->vendor_name }}</td>
-                        <td><a href="{{ route('admin.classes.show', $c->id) }}" class="text-decoration-none">{{ $c->name }}</a></td>
+                        <td><a href="{{ route('admin.classes.show', $c->id) }}" class="text-decoration-none navy fw-bold">{{ $c->name }} <i class="bi bi-chevron-right small"></i></a></td>
                         <td><span class="badge bg-light text-dark">{{ $c->grade_code }}</span></td>
                         <td class="text-end">{{ number_format($c->student_count) }}</td>
                         <td class="text-muted small">

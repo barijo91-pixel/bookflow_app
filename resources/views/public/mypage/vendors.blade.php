@@ -77,7 +77,7 @@
                     <tr>
                         <td>
                             <a href="{{ route('my.vendors.show', $v->id) }}" class="text-decoration-none navy fw-bold">
-                                {{ $v->name }}
+                                {{ $v->name }} <i class="bi bi-chevron-right small"></i>
                             </a>
                             @if($v->owner_name)
                                 <span class="text-muted small ms-2">{{ $v->owner_name }}</span>
