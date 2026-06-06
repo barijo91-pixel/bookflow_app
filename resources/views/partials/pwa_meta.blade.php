@@ -14,7 +14,7 @@
 <style>
     /* ===== 입력 폼 가독성 (공통) — 보더 강화 + focus 액센트 ===== */
     .form-control, .form-select {
-        border-color: #cbd5e1 !important;
+        border-color: #b6c0cd !important;  /* 진한 회색 — 폼 경계 명확 */
         background-color: #fbfcfd !important;
     }
     .form-control:focus, .form-select:focus {
@@ -81,6 +81,48 @@
     .section-card.info-banner {
         border-left: 4px solid #1f3a5f !important;
         background: linear-gradient(to right, #f4f7fb 0%, #fff 30%) !important;
+    }
+
+    /* 폼 안 서브섹션 구분 — hr 대신 라벨 + 가는 선 */
+    .section-divider {
+        position: relative;
+        border-top: 1px solid #e9ecef;
+        padding-top: .5rem;
+    }
+    .section-divider small {
+        color: #1f3a5f !important;
+        letter-spacing: .03em;
+        font-size: .72rem;
+    }
+
+    /* 체크박스 알약(pill) 그룹 — 학년/학기/난이도 등 다중 선택 */
+    .check-pill-group {
+        display: flex; flex-wrap: wrap; gap: .35rem;
+        padding: .5rem; background: #fafbfc;
+        border: 1px solid #e9ecef; border-radius: 6px;
+    }
+    .check-pill {
+        display: inline-flex; align-items: center; gap: .25rem;
+        padding: .3rem .7rem;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        font-size: .82rem;
+        cursor: pointer;
+        transition: all .12s;
+        user-select: none;
+    }
+    .check-pill:hover { border-color: #1f3a5f; background: #f4f7fb; }
+    .check-pill input[type=checkbox] {
+        margin: 0;
+        accent-color: #1f3a5f;
+    }
+    .check-pill input[type=checkbox]:checked + span {
+        color: #1f3a5f; font-weight: 600;
+    }
+    .check-pill:has(input:checked) {
+        background: #d4e0ee;
+        border-color: #1f3a5f;
     }
 
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */

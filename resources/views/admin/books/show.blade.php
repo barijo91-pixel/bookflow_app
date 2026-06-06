@@ -34,15 +34,19 @@
                 @csrf @method('PUT')
                 <input type="hidden" name="source" value="{{ $book->source }}">
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-2 text-center">
-                            @if($book->cover_path)
-                                <img id="cover_preview"
-                                     src="{{ str_starts_with($book->cover_path, 'http') ? $book->cover_path : asset('storage/'.$book->cover_path) }}"
-                                     style="max-width:100%; max-height:200px; border-radius:6px">
-                            @else
-                                <div class="text-muted py-4"><i class="bi bi-book" style="font-size:3rem"></i></div>
-                            @endif
+                    {{-- 표지 + 기본 메타 --}}
+                    <div class="row g-3 align-items-start">
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted d-block text-center">표지</label>
+                            <div class="text-center p-2 rounded" style="background:#fafbfc; border:1px solid #e9ecef;">
+                                @if($book->cover_path)
+                                    <img id="cover_preview"
+                                         src="{{ str_starts_with($book->cover_path, 'http') ? $book->cover_path : asset('storage/'.$book->cover_path) }}"
+                                         style="max-width:100%; max-height:180px; border-radius:4px">
+                                @else
+                                    <div class="text-muted py-4"><i class="bi bi-book" style="font-size:3rem"></i></div>
+                                @endif
+                            </div>
                         </div>
                         <div class="col-md-10">
                             <div class="row g-3">
@@ -83,7 +87,10 @@
                         </div>
                     </div>
 
-                    <hr>
+                    {{-- 분류 / 가격 섹션 --}}
+                    <div class="section-divider mt-4 mb-2">
+                        <small class="text-muted fw-bold text-uppercase">분류 · 가격</small>
+                    </div>
                     <div class="row g-3">
                         <div class="col-md-2">
                             <label class="form-label small text-muted">학교</label>
@@ -119,53 +126,67 @@
                                 @endforeach
                             </select>
                         </div>
+                    </div>
+
+                    {{-- 학년 · 학기 · 난이도 (체크박스) --}}
+                    <div class="section-divider mt-4 mb-2">
+                        <small class="text-muted fw-bold text-uppercase">학년 · 학기 · 난이도</small>
+                    </div>
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small text-muted">학년 (복수)</label>
-                            <div>
+                            <div class="check-pill-group">
                                 @foreach($gradeOptions as $g)
-                                    <label class="me-2 small">
+                                    <label class="check-pill">
                                         <input type="checkbox" name="grade_codes[]" value="{{ $g->code }}"
                                                @checked(in_array($g->code, $gradeCodes, true))>
-                                        {{ $g->name }}
+                                        <span>{{ $g->name }}</span>
                                     </label>
                                 @endforeach
                             </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small text-muted">학기 (복수)</label>
-                            <div>
+                            <div class="check-pill-group">
                                 @foreach($semesterOptions as $sem)
-                                    <label class="me-2 small">
+                                    <label class="check-pill">
                                         <input type="checkbox" name="semester_codes[]" value="{{ $sem->code }}"
                                                @checked(in_array($sem->code, $semesterCodes ?? [], true))>
-                                        {{ $sem->name }}
+                                        <span>{{ $sem->name }}</span>
                                     </label>
                                 @endforeach
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label small text-muted">난이도 (복수)</label>
-                            <div>
+                            <div class="check-pill-group">
                                 @foreach($levelOptions as $l)
-                                    <label class="me-2 small">
+                                    <label class="check-pill">
                                         <input type="checkbox" name="level_codes[]" value="{{ $l->code }}"
                                                @checked(in_array($l->code, $levelCodes, true))>
-                                        {{ $l->name }}
+                                        <span>{{ $l->name }}</span>
                                     </label>
                                 @endforeach
                             </div>
                         </div>
-                        <div class="col-md-4">
+                    </div>
+
+                    {{-- 기타 메타 --}}
+                    <div class="section-divider mt-4 mb-2">
+                        <small class="text-muted fw-bold text-uppercase">기타</small>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-3">
                             <label class="form-label small text-muted">규격</label>
-                            <input type="text" name="spec" class="form-control" value="{{ old('spec', $book->spec) }}">
+                            <input type="text" name="spec" class="form-control" value="{{ old('spec', $book->spec) }}" placeholder="예: 188×257">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small text-muted">판/쇄</label>
-                            <input type="text" name="edition" class="form-control" value="{{ old('edition', $book->edition) }}">
+                            <input type="text" name="edition" class="form-control" value="{{ old('edition', $book->edition) }}" placeholder="예: 3판 5쇄">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label small text-muted">표지 URL/경로</label>
-                            <input type="text" name="cover_path" class="form-control" value="{{ old('cover_path', $book->cover_path) }}">
+                            <input type="text" name="cover_path" class="form-control" value="{{ old('cover_path', $book->cover_path) }}" placeholder="https://... 또는 portfolio/cover.jpg">
                         </div>
                     </div>
                 </div>
