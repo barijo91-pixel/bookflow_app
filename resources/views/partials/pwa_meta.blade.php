@@ -189,6 +189,7 @@
         color: #1f3a5f !important;
         border-bottom: 1px solid #d8e0eb;
         font-weight: 600;
+        font-size: .875rem;  /* '학생 등록' 등 small 라벨과 동일 사이즈 */
     }
 
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
