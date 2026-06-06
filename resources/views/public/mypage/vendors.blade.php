@@ -117,9 +117,9 @@
                             </button>
                             @if($v->discount_active)
                                 <button type="submit" form="vendor-del-{{ $v->avd_id }}"
-                                        class="btn btn-sm btn-link text-danger p-0 ms-1"
+                                        class="btn btn-sm btn-outline-danger ms-1"
                                         title="거래 일시 중단">
-                                    <i class="bi bi-x-circle"></i> 삭제
+                                    <i class="bi bi-trash"></i> 삭제
                                 </button>
                             @endif
                         </td>
@@ -139,11 +139,12 @@
 </div>
 
 <div class="alert alert-light border mt-3 small text-muted mb-0">
-    <i class="bi bi-info-circle"></i>
-    <strong>안내</strong>:
-    할인율은 0.5% 단위로 조정할 수 있어요.
-    <strong>삭제</strong>를 누르면 거래가 일시 중단되며, 다시 시작하려면 관리자에게 문의해주세요.
-    도서마다 다른 할인율을 주려면 <a href="{{ route('my.discounts.index') }}" class="text-decoration-none">할인율 관리</a> 페이지에서 설정하세요.
+    <div class="mb-2"><i class="bi bi-info-circle navy"></i> <strong class="navy">안내</strong></div>
+    <ul class="mb-0 ps-3">
+        <li>할인율은 <strong>0.5% 단위</strong>로 조정할 수 있어요.</li>
+        <li><strong>삭제</strong>를 누르면 거래가 일시 중단되며, 다시 시작하려면 관리자에게 문의해주세요.</li>
+        <li>도서마다 다른 할인율을 주려면 <a href="{{ route('my.discounts.index') }}" class="text-decoration-none">할인율 관리</a> 페이지에서 설정하세요.</li>
+    </ul>
 </div>
 
 @push('scripts')
