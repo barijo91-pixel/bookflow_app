@@ -113,7 +113,7 @@
                 </table>
             </div>
             <div class="card-footer">
-                <div class="small mb-2 navy fw-bold py-1 px-2 rounded d-inline-block" style="background:#eef2f8;">
+                <div class="small mb-2 navy fw-bold py-1 px-2 rounded d-inline-block" style="background:#d4e0ee; border-left:3px solid #1f3a5f;">
                     <i class="bi bi-plus-circle"></i> 교재 추가
                 </div>
                 <form method="POST" action="{{ route('my.classes.books.attach', $class->id) }}" class="row g-2">
@@ -202,7 +202,7 @@
                 </table>
             </div>
             <div class="card-footer">
-                <div class="small mb-2 navy fw-bold py-1 px-2 rounded d-inline-block" style="background:#eef2f8;">
+                <div class="small mb-2 navy fw-bold py-1 px-2 rounded d-inline-block" style="background:#d4e0ee; border-left:3px solid #1f3a5f;">
                     <i class="bi bi-person-plus"></i> 학생 등록
                 </div>
                 <form method="POST" action="{{ route('my.classes.students.attach', $class->id) }}" class="row g-2">
