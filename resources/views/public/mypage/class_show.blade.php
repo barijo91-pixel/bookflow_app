@@ -113,7 +113,9 @@
                 </table>
             </div>
             <div class="card-footer">
-                <div class="small mb-2 navy"><i class="bi bi-plus-circle"></i> <strong>교재 추가</strong></div>
+                <div class="small mb-2 navy fw-bold py-1 px-2 rounded d-inline-block" style="background:#eef2f8;">
+                    <i class="bi bi-plus-circle"></i> 교재 추가
+                </div>
                 <form method="POST" action="{{ route('my.classes.books.attach', $class->id) }}" class="row g-2">
                     @csrf
                     <div class="col-7">
@@ -200,7 +202,9 @@
                 </table>
             </div>
             <div class="card-footer">
-                <div class="small mb-2 navy"><i class="bi bi-person-plus"></i> <strong>학생 등록</strong></div>
+                <div class="small mb-2 navy fw-bold py-1 px-2 rounded d-inline-block" style="background:#eef2f8;">
+                    <i class="bi bi-person-plus"></i> 학생 등록
+                </div>
                 <form method="POST" action="{{ route('my.classes.students.attach', $class->id) }}" class="row g-2">
                     @csrf
                     <div class="col-md-3">
