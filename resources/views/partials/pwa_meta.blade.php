@@ -38,6 +38,38 @@
         font-weight: 600;
     }
 
+    /* ===== 섹션 카드 (공통) — 영역 구분 명확 + 가독성 ===== */
+    /* 사용법: <div class="card section-card"> ... </div> */
+    /* card-header / card-body / card-footer 구조 자동 스타일링 */
+    .section-card {
+        border: 0 !important;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(31, 58, 95, 0.07), 0 1px 3px rgba(31, 58, 95, 0.04) !important;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .section-card > .card-header {
+        background: #f4f7fb !important;
+        border-bottom: 1px solid #dde5ee !important;
+        padding: .7rem 1rem;
+        font-size: .95rem;
+    }
+    .section-card > .card-header strong { color: #1f3a5f; font-weight: 700; }
+    .section-card > .card-header i.bi   { color: #1f3a5f; margin-right: .15rem; }
+    .section-card > .card-footer {
+        background: #fbfcfd !important;
+        border-top: 1px dashed #d4dbe4 !important;
+        padding: .7rem 1rem;
+    }
+    .section-card > .card-footer .form-label { color: #1f3a5f; font-weight: 600; }
+    /* 빈 상태 행 — 무미건조한 한 줄 대신 살짝 강조 */
+    .section-card .empty-row td {
+        background: #fafbfc !important;
+        color: #6c757d;
+        padding: 1.5rem 1rem !important;
+    }
+    .section-card .empty-row i.bi { font-size: 1.5rem; color: #b0bac5; }
+
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
     /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */
     .table-row-highlight tbody tr > * {

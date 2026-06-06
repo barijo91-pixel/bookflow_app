@@ -40,7 +40,7 @@
     {{-- LEFT: 학급 정보 + 교재 --}}
     <div class="col-lg-6">
         {{-- 학급 정보 --}}
-        <div class="card border-0 shadow-sm mb-3">
+        <div class="card section-card mb-3">
             <div class="card-header bg-white"><strong><i class="bi bi-info-circle"></i> 학급 정보</strong></div>
             <form method="POST" action="{{ route('my.classes.update', $class->id) }}">
                 @csrf @method('PUT')
@@ -87,7 +87,7 @@
         </div>
 
         {{-- 교재 --}}
-        <div class="card border-0 shadow-sm mb-3">
+        <div class="card section-card mb-3">
             <div class="card-header bg-white"><strong><i class="bi bi-book"></i> 학급 교재 ({{ $books->count() }})</strong></div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
@@ -111,12 +111,16 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" class="text-center text-muted py-3 small">교재가 없습니다.</td></tr>
+                            <tr class="empty-row"><td colspan="3" class="text-center small">
+                                <i class="bi bi-book d-block mb-1"></i>
+                                등록된 교재가 없습니다. 아래에서 선택해 추가하세요.
+                            </td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer bg-white">
+            <div class="card-footer">
+                <div class="small mb-2"><i class="bi bi-plus-circle"></i> <strong>교재 추가</strong></div>
                 <form method="POST" action="{{ route('my.classes.books.attach', $class->id) }}" class="row g-2">
                     @csrf
                     <div class="col-7">
@@ -141,7 +145,7 @@
     {{-- RIGHT: 학생 + 학부모 + 공유링크 --}}
     <div class="col-lg-6">
         {{-- 학생 목록 + 추가 --}}
-        <div class="card border-0 shadow-sm mb-3">
+        <div class="card section-card mb-3">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-people"></i> 학생/학부모 ({{ $students->count() }})</strong>
                 <a href="{{ route('my.classes.students.import.show', $class->id) }}" class="btn btn-sm btn-outline-navy">
@@ -182,12 +186,16 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="text-center text-muted py-3 small">아직 학생이 없습니다.</td></tr>
+                            <tr class="empty-row"><td colspan="4" class="text-center small">
+                                <i class="bi bi-people d-block mb-1"></i>
+                                등록된 학생이 없습니다. 아래에서 추가하거나 엑셀로 일괄 등록하세요.
+                            </td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer bg-white">
+            <div class="card-footer">
+                <div class="small mb-2"><i class="bi bi-person-plus"></i> <strong>학생 직접 추가</strong></div>
                 <form method="POST" action="{{ route('my.classes.students.attach', $class->id) }}" class="row g-2">
                     @csrf
                     <div class="col-md-3">
@@ -216,7 +224,7 @@
 
         {{-- 공유링크 이력 --}}
         @if($shareLinks->isNotEmpty())
-            <div class="card border-0 shadow-sm mb-3">
+            <div class="card section-card mb-3">
                 <div class="card-header bg-white"><strong><i class="bi bi-link"></i> 공유링크 발송 이력</strong></div>
                 <div class="table-responsive">
                     <table class="table table-sm align-middle mb-0">
