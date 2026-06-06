@@ -171,6 +171,18 @@
         border-color: #1f3a5f;
     }
 
+    /* 테이블 헤더(thead.table-light) — 카드 헤더와 동일 톤으로 통일 */
+    /* Bootstrap .table-light 기본 톤(#f8f9fa) override */
+    .table > thead.table-light th,
+    .table > thead.table-light td {
+        --bs-table-bg: #e3ebf5;
+        --bs-table-color: #1f3a5f;
+        background-color: #e3ebf5 !important;
+        color: #1f3a5f !important;
+        border-bottom: 1px solid #c9d4e2;
+        font-weight: 600;
+    }
+
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
     /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */
     .table-row-highlight tbody tr > * {
