@@ -7,19 +7,12 @@
     <a href="{{ route('my.classes.index') }}" class="text-muted small text-decoration-none">
         <i class="bi bi-arrow-left"></i> 학급 목록으로
     </a>
-    <div class="d-flex justify-content-between align-items-start mt-1">
-        <h1 class="h4 navy mb-0">
-            <i class="bi bi-mortarboard"></i> {{ $class->name }}
-            @if($class->status === 'closed')
-                <span class="badge bg-secondary fs-6 ms-1">종료</span>
-            @endif
-        </h1>
-        <form method="POST" action="{{ route('my.classes.destroy', $class->id) }}"
-              onsubmit="return confirm('학급을 삭제할까요? (학생이 있으면 차단됩니다)')">
-            @csrf @method('DELETE')
-            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> 학급 삭제</button>
-        </form>
-    </div>
+    <h1 class="h4 navy mb-0 mt-1">
+        <i class="bi bi-mortarboard"></i> {{ $class->name }}
+        @if($class->status === 'closed')
+            <span class="badge bg-secondary fs-6 ms-1">종료</span>
+        @endif
+    </h1>
 </div>
 
 @if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif

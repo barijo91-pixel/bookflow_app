@@ -32,6 +32,7 @@
                     <th>학생 수</th>
                     <th>상태</th>
                     <th>기간</th>
+                    <th style="width:80px;" class="text-end">삭제</th>
                 </tr>
             </thead>
             <tbody>
@@ -60,10 +61,19 @@
                             {{ $c->started_at ? \Carbon\Carbon::parse($c->started_at)->format('Y-m-d') : '-' }}
                             @if($c->ended_at) ~ {{ \Carbon\Carbon::parse($c->ended_at)->format('Y-m-d') }} @endif
                         </td>
+                        <td class="text-end" onclick="event.stopPropagation()">
+                            <form method="POST" action="{{ route('my.classes.destroy', $c->id) }}" class="d-inline"
+                                  onsubmit="return confirm('「{{ addslashes($c->name) }}」 학급을 삭제할까요?\n학생이 있으면 차단됩니다.')">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-sm btn-outline-danger" title="학급 삭제">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-5">
+                        <td colspan="6" class="text-center text-muted py-5">
                             <i class="bi bi-mortarboard" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">아직 학급이 없습니다.</p>
                             <p class="small">우측 상단의 "학급 추가" 버튼으로 시작하세요.</p>
