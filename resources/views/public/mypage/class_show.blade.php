@@ -163,19 +163,25 @@
                                 <td class="small">{{ $s->parent_name ?? '-' }}</td>
                                 <td class="small text-muted">{{ $s->parent_phone ? format_phone($s->parent_phone) : '-' }}</td>
                                 <td class="text-end">
-                                    {{-- 공유링크 발송 --}}
-                                    <form method="POST" action="{{ route('my.classes.share', $class->id) }}"
-                                          onsubmit="return confirm('이 학부모에게 공유링크를 발송할까요?')" class="d-inline">
-                                        @csrf
-                                        <input type="hidden" name="student_id" value="{{ $s->id }}">
-                                        <button class="btn btn-sm btn-link p-0" title="공유링크 발송"><i class="bi bi-send"></i></button>
-                                    </form>
-                                    {{-- 삭제 --}}
-                                    <form method="POST" action="{{ route('my.classes.students.detach', [$class->id, $s->id]) }}"
-                                          onsubmit="return confirm('이 학생을 제거할까요?')" class="d-inline ms-2">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-link text-danger p-0" title="학생 제거"><i class="bi bi-trash"></i></button>
-                                    </form>
+                                    <div class="d-inline-flex gap-1">
+                                        {{-- 1. 공유링크 발송 --}}
+                                        <form method="POST" action="{{ route('my.classes.share', $class->id) }}"
+                                              onsubmit="return confirm('「{{ $s->parent_name ?? '학부모' }}」님에게 결제/안내 공유링크를 발송할까요?')" class="d-inline">
+                                            @csrf
+                                            <input type="hidden" name="student_id" value="{{ $s->id }}">
+                                            <button class="btn btn-sm btn-outline-navy" title="학부모에게 공유링크 발송">
+                                                <i class="bi bi-send"></i> 링크
+                                            </button>
+                                        </form>
+                                        {{-- 2. 학생 삭제 --}}
+                                        <form method="POST" action="{{ route('my.classes.students.detach', [$class->id, $s->id]) }}"
+                                              onsubmit="return confirm('「{{ $s->name }}」 학생을 이 학급에서 제거할까요?')" class="d-inline">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger" title="학생 삭제">
+                                                <i class="bi bi-trash"></i> 삭제
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
