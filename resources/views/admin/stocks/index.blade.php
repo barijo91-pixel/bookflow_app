@@ -112,8 +112,8 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('admin.books.show', $s->book_id) }}" class="text-decoration-none">{{ $s->title }}</a>
-                                @if($s->subtitle)<div class="text-muted small">{{ $s->subtitle }}</div>@endif
+                                <a href="{{ route('admin.books.show', $s->book_id) }}" class="text-decoration-none fw-bold">{{ $s->title }}</a>
+                                @if($s->subtitle)<span class="text-muted small ms-1">— {{ $s->subtitle }}</span>@endif
                             </td>
                             <td><code class="small">{{ $s->isbn }}</code></td>
                             <td class="small">{{ $s->publisher_name }}</td>
