@@ -171,15 +171,15 @@
         border-color: #1f3a5f;
     }
 
-    /* 테이블 헤더(thead.table-light) — 카드 헤더와 동일 톤으로 통일 */
-    /* Bootstrap .table-light 기본 톤(#f8f9fa) override */
+    /* 테이블 헤더(thead.table-light) — 카드 헤더와 본문 사이 중간 톤 */
+    /* 카드 헤더 #e3ebf5 (진) → thead #eef2f8 (중간) → 본문 #fff (밝음) 자연 계조 */
     .table > thead.table-light th,
     .table > thead.table-light td {
-        --bs-table-bg: #e3ebf5;
+        --bs-table-bg: #eef2f8;
         --bs-table-color: #1f3a5f;
-        background-color: #e3ebf5 !important;
+        background-color: #eef2f8 !important;
         color: #1f3a5f !important;
-        border-bottom: 1px solid #c9d4e2;
+        border-bottom: 1px solid #d8e0eb;
         font-weight: 600;
     }
 
