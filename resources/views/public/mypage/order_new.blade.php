@@ -324,8 +324,16 @@
             </div>
             <div class="card-body p-0">
                 @if($cartLines->isEmpty())
-                    <div class="text-muted text-center py-4 small">담은 도서가 없습니다.</div>
+                    <div class="empty-state small">
+                        <i class="bi bi-cart-x"></i>
+                        담은 도서가 없습니다.
+                    </div>
                 @else
+                    {{-- 컬럼 헤더 — 도서 목록 테이블과 같은 톤 --}}
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-light small text-muted border-bottom">
+                        <span>도서</span>
+                        <span style="margin-right:70px;">수량</span>
+                    </div>
                     <form method="POST" action="{{ route('my.cart.update') }}" id="cartForm">
                         @csrf
                         <input type="hidden" name="cart_key" value="{{ $cartKey }}">
