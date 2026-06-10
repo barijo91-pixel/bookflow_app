@@ -42,7 +42,11 @@ class BookController extends Controller
         $statusOptions    = DB::table('codes')->where('group_code', 'book_status')->orderBy('sort_order')->get();
         $subjectOptions   = DB::table('codes')->where('group_code', 'subject')->orderBy('sort_order')->get();
         $schoolOptions    = DB::table('codes')->where('group_code', 'school')->orderBy('sort_order')->get();
-        $publisherOptions = Publisher::orderBy('sort_order')->get(['id','name']);
+        // 출판사 드롭다운 — 실제 books 테이블에 도서가 등록된 출판사만 표시
+        $publisherOptions = Publisher::whereIn('id', function ($sq) {
+            $sq->select('publisher_id')->from('books')
+               ->whereNotNull('publisher_id')->whereNull('deleted_at');
+        })->orderBy('sort_order')->orderBy('name')->get(['id','name']);
 
         return view('admin.books.index', compact(
             'books','statusOptions','subjectOptions','schoolOptions','publisherOptions',
