@@ -54,11 +54,7 @@
                             <label class="form-label small text-muted">제목 *</label>
                             <input type="text" name="title" id="title_input" class="form-control" value="{{ old('title') }}" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">부제목</label>
-                            <input type="text" name="subtitle" id="subtitle_input" class="form-control" value="{{ old('subtitle') }}">
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-md-8">
                             <label class="form-label small text-muted">시리즈명</label>
                             <input type="text" name="series_name" class="form-control" value="{{ old('series_name') }}">
                         </div>
@@ -71,14 +67,10 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted">저자</label>
-                            <input type="text" name="author" id="author_input" class="form-control" value="{{ old('author') }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted">출간일</label>
-                            <input type="date" name="pub_date" id="pub_date_input" class="form-control" value="{{ old('pub_date') }}">
-                        </div>
+                        {{-- 부제목/저자/출간일 — 화면 노출 X, 알라딘 자동 채움 시 hidden으로 저장 --}}
+                        <input type="hidden" name="subtitle" id="subtitle_input" value="{{ old('subtitle') }}">
+                        <input type="hidden" name="author"   id="author_input"   value="{{ old('author') }}">
+                        <input type="hidden" name="pub_date" id="pub_date_input" value="{{ old('pub_date') }}">
                     </div>
                 </div>
             </div>

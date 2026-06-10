@@ -58,13 +58,9 @@
                                     <label class="form-label small text-muted">시리즈명</label>
                                     <input type="text" name="series_name" class="form-control" value="{{ old('series_name', $book->series_name) }}">
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-8">
                                     <label class="form-label small text-muted">제목 *</label>
                                     <input type="text" name="title" class="form-control" value="{{ old('title', $book->title) }}" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small text-muted">부제목</label>
-                                    <input type="text" name="subtitle" class="form-control" value="{{ old('subtitle', $book->subtitle) }}">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted">출판사</label>
@@ -75,14 +71,10 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small text-muted">저자</label>
-                                    <input type="text" name="author" class="form-control" value="{{ old('author', $book->author) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small text-muted">출간일</label>
-                                    <input type="date" name="pub_date" class="form-control" value="{{ old('pub_date', optional($book->pub_date)->format('Y-m-d')) }}">
-                                </div>
+                                {{-- 저자/출간일/부제목 — 화면에서 제외, DB 값은 hidden으로 보존 (수정 시 손실 방지) --}}
+                                <input type="hidden" name="subtitle" value="{{ $book->subtitle }}">
+                                <input type="hidden" name="author"   value="{{ $book->author }}">
+                                <input type="hidden" name="pub_date" value="{{ optional($book->pub_date)->format('Y-m-d') }}">
                             </div>
                         </div>
                     </div>
