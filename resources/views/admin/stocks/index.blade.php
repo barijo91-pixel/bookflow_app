@@ -96,13 +96,13 @@
                 <thead class="table-light">
                     <tr>
                         <th style="width:50px;">표지</th>
-                        <th>도서</th>
-                        <th>ISBN</th>
-                        <th>출판사</th>
-                        <th>총판</th>
-                        <th class="text-end" style="width:120px;">재고</th>
-                        <th class="text-end" style="width:90px;">예약</th>
-                        <th class="text-end" style="width:120px;">안전재고</th>
+                        <th><x-sort-link field="title" label="도서" :sort="$sort" :dir="$dir" /></th>
+                        <th><x-sort-link field="isbn" label="ISBN" :sort="$sort" :dir="$dir" /></th>
+                        <th><x-sort-link field="publisher_name" label="출판사" :sort="$sort" :dir="$dir" /></th>
+                        <th><x-sort-link field="distributor_name" label="총판" :sort="$sort" :dir="$dir" /></th>
+                        <th class="text-end" style="width:120px;"><x-sort-link field="qty" label="재고" :sort="$sort" :dir="$dir" /></th>
+                        <th class="text-end" style="width:90px;"><x-sort-link field="reserved_qty" label="예약" :sort="$sort" :dir="$dir" /></th>
+                        <th class="text-end" style="width:120px;"><x-sort-link field="low_stock_threshold" label="안전재고" :sort="$sort" :dir="$dir" /></th>
                         <th class="text-center" style="width:60px;">삭제</th>
                     </tr>
                 </thead>

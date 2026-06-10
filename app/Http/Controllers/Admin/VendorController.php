@@ -18,7 +18,14 @@ class VendorController extends Controller
         $status = $request->query('status');
         $q = trim((string) $request->query('q'));
 
-        $query = Vendor::query()->orderByDesc('id');
+        $allowedSorts = ['id', 'name', 'owner_name', 'business_no', 'mobile', 'type_code', 'status_code', 'created_at'];
+        $sort = $request->query('sort', 'id');
+        $dir  = $request->query('dir', 'desc');
+        if (! in_array($sort, $allowedSorts, true)) $sort = 'id';
+        if (! in_array($dir, ['asc', 'desc'], true)) $dir = 'desc';
+
+        $query = Vendor::query()->orderBy($sort, $dir);
+        if ($sort !== 'id') $query->orderByDesc('id');
 
         if ($type)   { $query->where('type_code', $type); }
         if ($status) { $query->where('status_code', $status); }
@@ -35,7 +42,7 @@ class VendorController extends Controller
         $typeOptions   = DB::table('codes')->where('group_code', 'vendor_type')->orderBy('sort_order')->get();
         $statusOptions = DB::table('codes')->where('group_code', 'vendor_status')->orderBy('sort_order')->get();
 
-        return view('admin.vendors.index', compact('vendors', 'typeOptions', 'statusOptions', 'type', 'status', 'q'));
+        return view('admin.vendors.index', compact('vendors', 'typeOptions', 'statusOptions', 'type', 'status', 'q', 'sort', 'dir'));
     }
 
     // -------------------- CREATE --------------------

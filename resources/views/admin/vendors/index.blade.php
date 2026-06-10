@@ -49,13 +49,13 @@
             <thead class="table-light">
                 <tr>
                     <th style="width:60px;">#</th>
-                    <th>거래처명</th>
-                    <th>대표자</th>
-                    <th>사업자번호</th>
-                    <th>연락처</th>
-                    <th>구분</th>
-                    <th>상태</th>
-                    <th>등록일</th>
+                    <th><x-sort-link field="name" label="거래처명" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="owner_name" label="대표자" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="business_no" label="사업자번호" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="mobile" label="연락처" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="type_code" label="구분" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="status_code" label="상태" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="created_at" label="등록일" :sort="$sort" :dir="$dir" /></th>
                 </tr>
             </thead>
             <tbody>

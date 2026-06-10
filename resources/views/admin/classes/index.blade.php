@@ -45,13 +45,13 @@
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
-                    <th>#</th>
-                    <th>학원</th>
-                    <th>학급명</th>
-                    <th>학년</th>
+                    <th><x-sort-link field="id" label="#" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="vendor_name" label="학원" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="name" label="학급명" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="grade_code" label="학년" :sort="$sort" :dir="$dir" /></th>
                     <th class="text-end">학생수</th>
-                    <th>기간</th>
-                    <th>상태</th>
+                    <th><x-sort-link field="started_at" label="기간" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="status" label="상태" :sort="$sort" :dir="$dir" /></th>
                 </tr>
             </thead>
             <tbody>

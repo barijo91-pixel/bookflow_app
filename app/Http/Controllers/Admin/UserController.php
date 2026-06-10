@@ -23,7 +23,15 @@ class UserController extends Controller
         $q           = trim((string) $request->query('q'));
         $distributor = (int) $request->query('distributor');
 
-        $query = User::query()->orderByDesc('id');
+        // 정렬
+        $allowedSorts = ['id', 'name', 'login_id', 'phone', 'role_code', 'status_code', 'created_at'];
+        $sort = $request->query('sort', 'id');
+        $dir  = $request->query('dir', 'desc');
+        if (! in_array($sort, $allowedSorts, true)) $sort = 'id';
+        if (! in_array($dir, ['asc', 'desc'], true)) $dir = 'desc';
+
+        $query = User::query()->orderBy($sort, $dir);
+        if ($sort !== 'id') $query->orderByDesc('id');
 
         if ($role)   { $query->where('role_code', $role); }
         if ($status) { $query->where('status_code', $status); }
@@ -71,7 +79,7 @@ class UserController extends Controller
 
         return view('admin.users.index', compact(
             'users', 'roleOptions', 'statusOptions', 'role', 'status', 'q',
-            'affiliations', 'distributorOptions', 'distributor'
+            'affiliations', 'distributorOptions', 'distributor', 'sort', 'dir'
         ));
     }
 

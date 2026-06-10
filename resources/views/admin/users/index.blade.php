@@ -66,14 +66,14 @@
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
-                    <th style="width:60px;">#</th>
-                    <th>이름</th>
-                    <th>아이디</th>
-                    <th>연락처</th>
-                    <th>역할</th>
+                    <th style="width:60px;"><x-sort-link field="id" label="#" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="name" label="이름" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="login_id" label="아이디" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="phone" label="연락처" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="role_code" label="역할" :sort="$sort" :dir="$dir" /></th>
                     <th>소속</th>
-                    <th>상태</th>
-                    <th>가입일</th>
+                    <th><x-sort-link field="status_code" label="상태" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="created_at" label="가입일" :sort="$sort" :dir="$dir" /></th>
                     <th class="text-end" style="width:240px;">조치</th>
                 </tr>
             </thead>

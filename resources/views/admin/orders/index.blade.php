@@ -97,14 +97,14 @@
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
-                    <th>#</th>
-                    <th>주문번호</th>
-                    <th>거래처</th>
-                    <th>영업자</th>
-                    <th>총판</th>
-                    <th class="text-end">금액</th>
-                    <th>상태</th>
-                    <th>접수일시</th>
+                    <th><x-sort-link field="id" label="#" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="order_no" label="주문번호" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="vendor_name" label="거래처" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="agent_name" label="영업자" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="dist_name" label="총판" :sort="$sort" :dir="$dir" /></th>
+                    <th class="text-end"><x-sort-link field="total_amount" label="금액" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="status_code" label="상태" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="created_at" label="접수일시" :sort="$sort" :dir="$dir" /></th>
                 </tr>
             </thead>
             <tbody>

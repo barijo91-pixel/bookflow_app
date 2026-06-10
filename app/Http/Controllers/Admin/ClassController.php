@@ -18,6 +18,19 @@ class ClassController extends Controller
         $status = $request->query('status');
         $q = trim((string) $request->query('q'));
 
+        $allowedSorts = [
+            'id'           => 'c.id',
+            'name'         => 'c.name',
+            'vendor_name'  => 'v.name',
+            'grade_code'   => 'c.grade_code',
+            'status'       => 'c.status',
+            'started_at'   => 'c.started_at',
+        ];
+        $sort = $request->query('sort', 'id');
+        $dir  = $request->query('dir', 'desc');
+        if (! array_key_exists($sort, $allowedSorts)) $sort = 'id';
+        if (! in_array($dir, ['asc', 'desc'], true)) $dir = 'desc';
+
         $query = DB::table('academy_classes as c')
             ->leftJoin('vendors as v', 'v.id', '=', 'c.vendor_id')
             ->leftJoin('users as t', 't.id', '=', 'c.teacher_user_id')
@@ -26,7 +39,8 @@ class ClassController extends Controller
                 'v.id as vendor_id', 'v.name as vendor_name',
                 't.name as teacher_name'
             )
-            ->orderByDesc('c.id');
+            ->orderBy($allowedSorts[$sort], $dir);
+        if ($sort !== 'id') $query->orderByDesc('c.id');
 
         if ($vendor) $query->where('c.vendor_id', $vendor);
         if ($status) $query->where('c.status', $status);
@@ -52,7 +66,7 @@ class ClassController extends Controller
 
         $vendors = DB::table('vendors')->whereNull('deleted_at')->orderBy('name')->get(['id', 'name']);
 
-        return view('admin.classes.index', compact('classes', 'vendors', 'vendor', 'status', 'q'));
+        return view('admin.classes.index', compact('classes', 'vendors', 'vendor', 'status', 'q', 'sort', 'dir'));
     }
 
     public function create()

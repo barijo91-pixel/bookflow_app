@@ -17,6 +17,22 @@ class StockController extends Controller
         $low         = $request->boolean('low');
         $q           = trim((string) $request->query('q'));
 
+        // 정렬
+        $allowedSorts = [
+            'title'              => 'b.title',
+            'isbn'               => 'b.isbn',
+            'price'              => 'b.price',
+            'publisher_name'     => 'p.name',
+            'distributor_name'   => 'u.name',
+            'qty'                => 's.qty',
+            'low_stock_threshold'=> 's.low_stock_threshold',
+            'reserved_qty'       => 's.reserved_qty',
+        ];
+        $sort = $request->query('sort', 'distributor_name');
+        $dir  = $request->query('dir', 'asc');
+        if (! array_key_exists($sort, $allowedSorts)) $sort = 'distributor_name';
+        if (! in_array($dir, ['asc', 'desc'], true)) $dir = 'asc';
+
         $query = DB::table('book_stocks as s')
             ->join('books as b', 'b.id', '=', 's.book_id')
             ->leftJoin('publishers as p', 'p.id', '=', 'b.publisher_id')
@@ -30,7 +46,7 @@ class StockController extends Controller
                 'u.id as distributor_id', 'u.name as distributor_name'
             )
             ->whereNull('b.deleted_at')
-            ->orderBy('u.name')
+            ->orderBy($allowedSorts[$sort], $dir)
             ->orderBy('b.title');
 
         if ($distributor) $query->where('s.distributor_user_id', $distributor);
@@ -63,7 +79,7 @@ class StockController extends Controller
 
         return view('admin.stocks.index', compact(
             'stocks', 'distributors', 'schoolOptions', 'subjectOptions',
-            'distributor', 'school', 'subject', 'low', 'q', 'summary'
+            'distributor', 'school', 'subject', 'low', 'q', 'summary', 'sort', 'dir'
         ));
     }
 

@@ -35,6 +35,23 @@ class OrderController extends Controller
         $dateFrom = $request->query('date_from') ?: now()->subDay()->format('Y-m-d');
         $dateTo   = $request->query('date_to')   ?: now()->format('Y-m-d');
 
+        // 정렬
+        $allowedSorts = [
+            'id'           => 'o.id',
+            'order_no'     => 'o.order_no',
+            'vendor_name'  => 'v.name',
+            'agent_name'   => 'ag.name',
+            'dist_name'    => 'dt.name',
+            'total_amount' => 'o.total_amount',
+            'status_code'  => 'o.status_code',
+            'created_at'   => 'o.created_at',
+            'requested_at' => 'o.requested_at',
+        ];
+        $sort = $request->query('sort', 'id');
+        $dir  = $request->query('dir', 'desc');
+        if (! array_key_exists($sort, $allowedSorts)) $sort = 'id';
+        if (! in_array($dir, ['asc', 'desc'], true)) $dir = 'desc';
+
         $query = DB::table('orders as o')
             ->leftJoin('vendors as v', 'v.id', '=', 'o.vendor_id')
             ->leftJoin('users as ag', 'ag.id', '=', 'o.agent_user_id')
@@ -47,7 +64,8 @@ class OrderController extends Controller
                 'dt.name as dist_name'
             )
             ->whereNull('o.deleted_at')
-            ->orderByDesc('o.id');
+            ->orderBy($allowedSorts[$sort], $dir);
+        if ($sort !== 'id') $query->orderByDesc('o.id');
 
         if ($status)   $query->where('o.status_code', $status);
         if ($vendor)   $query->where('o.vendor_id', $vendor);
@@ -78,7 +96,7 @@ class OrderController extends Controller
 
         return view('admin.orders.index', compact(
             'orders', 'statusOptions', 'vendors', 'agents', 'distributors',
-            'status', 'vendor', 'agent', 'dist', 'q', 'dateFrom', 'dateTo', 'summary'
+            'status', 'vendor', 'agent', 'dist', 'q', 'dateFrom', 'dateTo', 'summary', 'sort', 'dir'
         ));
     }
 
