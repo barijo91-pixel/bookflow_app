@@ -74,15 +74,28 @@
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
-                    <th style="width:60px;">#</th>
+                    @php
+                        // 정렬 헤더 링크 헬퍼 — 정렬 아이콘 + 클릭 시 toggle
+                        $sortLink = function ($field, $label, $alignEnd = false) use ($sort, $dir) {
+                            $nextDir = ($sort === $field && $dir === 'asc') ? 'desc' : 'asc';
+                            $active  = $sort === $field;
+                            $icon    = $active
+                                ? '<i class="bi bi-caret-' . ($dir === 'asc' ? 'up' : 'down') . '-fill small ms-1"></i>'
+                                : '<i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i>';
+                            $url     = request()->fullUrlWithQuery(['sort' => $field, 'dir' => $nextDir, 'page' => 1]);
+                            $cls     = 'text-decoration-none ' . ($active ? 'navy fw-bold' : 'text-dark');
+                            return '<a href="' . $url . '" class="' . $cls . '">' . $label . $icon . '</a>';
+                        };
+                    @endphp
+                    <th style="width:60px;">{!! $sortLink('id', '#') !!}</th>
                     <th style="width:60px; white-space:nowrap;">표지</th>
-                    <th>제목</th>
-                    <th>ISBN</th>
-                    <th>출판사 코드</th>
-                    <th>출판사</th>
-                    <th>학교/과목</th>
-                    <th class="text-end">정가</th>
-                    <th>상태</th>
+                    <th>{!! $sortLink('title', '제목') !!}</th>
+                    <th>{!! $sortLink('isbn', 'ISBN') !!}</th>
+                    <th>{!! $sortLink('publisher_code', '출판사 코드') !!}</th>
+                    <th>{!! $sortLink('publisher_id', '출판사') !!}</th>
+                    <th>{!! $sortLink('school_code', '학교/과목') !!}</th>
+                    <th class="text-end">{!! $sortLink('price', '정가') !!}</th>
+                    <th>{!! $sortLink('status_code', '상태') !!}</th>
                 </tr>
             </thead>
             <tbody>

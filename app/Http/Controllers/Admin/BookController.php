@@ -23,7 +23,16 @@ class BookController extends Controller
         $publisher= $request->query('publisher');
         $q = trim((string) $request->query('q'));
 
-        $query = Book::query()->with('publisher')->orderByDesc('id');
+        // 정렬 — 허용 컬럼만 (SQL Injection 방어)
+        $allowedSorts = ['id', 'title', 'isbn', 'publisher_code', 'publisher_id', 'price', 'status_code', 'school_code', 'subject_code', 'created_at'];
+        $sort = $request->query('sort', 'id');
+        $dir  = $request->query('dir', 'desc');
+        if (! in_array($sort, $allowedSorts, true)) $sort = 'id';
+        if (! in_array($dir, ['asc', 'desc'], true)) $dir = 'desc';
+
+        $query = Book::query()->with('publisher')->orderBy($sort, $dir);
+        // 보조 정렬 (동일 값일 때 안정적인 순서 유지)
+        if ($sort !== 'id') $query->orderByDesc('id');
         if ($status)   $query->where('status_code', $status);
         if ($subject)  $query->where('subject_code', $subject);
         if ($school)   $query->where('school_code', $school);
@@ -50,7 +59,7 @@ class BookController extends Controller
 
         return view('admin.books.index', compact(
             'books','statusOptions','subjectOptions','schoolOptions','publisherOptions',
-            'status','subject','school','publisher','q'
+            'status','subject','school','publisher','q','sort','dir'
         ));
     }
 
