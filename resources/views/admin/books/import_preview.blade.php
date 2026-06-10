@@ -125,12 +125,18 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer d-flex justify-content-between">
-            <small class="text-muted">정상 {{ $okCount }}건만 등록됩니다. 오류 행은 자동 제외.</small>
-            <div>
+        <div class="card-footer">
+            @if($okCount > 0)
+                <div class="alert alert-success py-2 small mb-3">
+                    <i class="bi bi-check-circle"></i>
+                    <strong>{{ number_format($okCount) }}건이 등록 대기 중입니다.</strong>
+                    아래 <strong class="navy">[ ⬆️ 등록 실행 ]</strong> 버튼을 클릭해야 실제 DB에 저장됩니다.
+                </div>
+            @endif
+            <div class="d-flex justify-content-between align-items-center">
                 <a href="{{ route('admin.books.import.show') }}" class="btn btn-secondary">취소</a>
-                <button class="btn btn-primary" {{ $okCount === 0 ? 'disabled' : '' }}>
-                    <i class="bi bi-cloud-upload"></i> 등록 실행
+                <button class="btn btn-primary btn-lg px-4" {{ $okCount === 0 ? 'disabled' : '' }}>
+                    <i class="bi bi-cloud-upload"></i> 등록 실행 ({{ number_format($okCount) }}건)
                 </button>
             </div>
         </div>
