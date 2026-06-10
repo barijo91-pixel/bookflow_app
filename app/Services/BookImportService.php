@@ -107,8 +107,18 @@ class BookImportService
             $row['isbn'] = $isbn;
 
             if (empty($row['title'])) $rowErrors[] = '제목 없음';
-            if (! isset($row['price']) || ! is_numeric($row['price'])) {
-                $rowErrors[] = '정가가 숫자가 아님';
+            // 정가 정규화 — '54,000' '12000원' 등 숫자 외 문자 제거 후 int 변환
+            if (isset($row['price'])) {
+                $priceClean = preg_replace('/[^\d.]/', '', (string) $row['price']);
+                if ($priceClean === '' || ! is_numeric($priceClean)) {
+                    $rowErrors[] = '정가가 숫자가 아님';
+                    $row['price'] = 0;
+                } else {
+                    $row['price'] = (int) $priceClean;
+                }
+            } else {
+                $rowErrors[] = '정가 없음';
+                $row['price'] = 0;
             }
 
             // 코드 매핑: 한글명 → code

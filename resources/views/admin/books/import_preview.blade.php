@@ -105,7 +105,7 @@
                             </td>
                             <td class="small">{{ $r['title'] ?? '' }}</td>
                             <td class="small">{{ $r['publisher_name'] ?? '' }}</td>
-                            <td class="text-end small">{{ isset($r['price']) ? number_format($r['price']) : '' }}</td>
+                            <td class="text-end small">{{ isset($r['price']) ? number_format((int) $r['price']) : '' }}</td>
                             <td class="small">
                                 @if(! empty($r['school_code'])) <span class="badge bg-light text-dark">{{ $r['school_code'] }}</span> @endif
                                 @if(! empty($r['subject_code'])) <span class="badge bg-light text-dark">{{ $r['subject_code'] }}</span> @endif
