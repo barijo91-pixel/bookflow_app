@@ -192,28 +192,31 @@
         font-size: .875rem;  /* '학생 등록' 등 small 라벨과 동일 사이즈 */
     }
 
-    /* 페이지네이션 가운데 정렬 (전 페이지) */
-    /* Laravel Bootstrap5 paginator는 nav > [텍스트] [페이지번호] 좌우 분배 → 모두 가운데로 강제 */
-    .card-footer nav[role="navigation"],
-    .card-footer > nav {
+    /* ===== 페이지네이션 — 깔끔한 가운데 정렬 (전 페이지 공통) ===== */
+    /* Laravel Bootstrap5 paginator는 모바일/데스크탑 듀얼 모드 + showing 텍스트 포함
+       → 모바일 모드와 텍스트 숨기고 페이지 번호만 가운데 표시 */
+
+    /* 모바일용 Previous/Next 큰 박스 (sm 미만 표시) 숨김 */
+    nav[role="navigation"] .d-flex.justify-content-between.d-sm-none,
+    nav[role="navigation"] > .d-flex.d-sm-none {
+        display: none !important;
+    }
+    /* Showing N to M of T results 텍스트 숨김 */
+    nav[role="navigation"] p,
+    nav[role="navigation"] .small {
+        display: none !important;
+    }
+    /* 페이지 번호 ul만 남기고 가운데 정렬 */
+    nav[role="navigation"] {
         display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
         justify-content: center !important;
         margin: 0 !important;
-        padding: 0 !important;
     }
-    .card-footer nav > div {
+    nav[role="navigation"] > div {
         display: flex !important;
         justify-content: center !important;
-        align-items: center !important;
-        width: auto !important;
-        max-width: 100% !important;
-    }
-    .card-footer nav p,
-    .card-footer nav .small {
-        text-align: center !important;
-        margin: 0 0 .35rem 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
     }
     .pagination {
         justify-content: center !important;
