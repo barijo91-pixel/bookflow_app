@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\BookImportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -68,8 +67,9 @@ class BookImportController extends Controller
             'updated_at'    => now(),
         ]);
 
-        // 미리보기 데이터를 캐시에 보관 (2시간) — session(database, TEXT 64KB) 한계 회피
-        Cache::put("import.book.{$jobId}", $result['rows'], now()->addHours(2));
+        // 미리보기 데이터를 파일에 저장 — session(64KB)/cache 한계 회피
+        $previewPath = "imports/preview/book_{$jobId}.json";
+        Storage::disk('local')->put($previewPath, json_encode($result['rows'], JSON_UNESCAPED_UNICODE));
 
         return view('admin.books.import_preview', [
             'jobId'  => $jobId,
@@ -86,9 +86,14 @@ class BookImportController extends Controller
         $job = DB::table('bulk_import_jobs')->where('id', $jobId)->where('kind', 'book')->first();
         abort_if(! $job, 404);
 
-        $rows = Cache::get("import.book.{$jobId}");
-        if (! $rows) {
-            return back()->with('error', '미리보기 데이터가 만료되었습니다. 파일을 다시 업로드하세요.');
+        // 파일에서 미리보기 데이터 로드
+        $previewPath = "imports/preview/book_{$jobId}.json";
+        if (! Storage::disk('local')->exists($previewPath)) {
+            return back()->with('error', '미리보기 데이터를 찾을 수 없습니다. 파일을 다시 업로드하세요.');
+        }
+        $rows = json_decode(Storage::disk('local')->get($previewPath), true);
+        if (! is_array($rows) || empty($rows)) {
+            return back()->with('error', '미리보기 데이터가 손상되었습니다. 다시 업로드하세요.');
         }
 
         $mode = $request->input('mode', 'skip_existing'); // skip_existing | update_existing
@@ -110,7 +115,8 @@ class BookImportController extends Controller
             'updated_at'    => now(),
         ]);
 
-        Cache::forget("import.book.{$jobId}");
+        // 미리보기 임시 파일 정리
+        Storage::disk('local')->delete($previewPath);
 
         return redirect()->route('admin.books.index')->with('success',
             "도서 일괄 등록 완료 — 신규 {$result['success']}건, 수정 {$result['updated']}건, 실패 {$result['failed']}건"
