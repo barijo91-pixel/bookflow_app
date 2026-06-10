@@ -39,6 +39,28 @@ class BookImportService
         '학교', '과목', '학년', '난이도', '상태', '표지URL', '규격', '판쇄',
     ];
 
+    /**
+     * 위치 기반 매핑 — 우리 템플릿 컬럼 순서 (헤더 이름 무관)
+     * 헤더 매칭 실패 시 fallback으로 사용
+     * 사용자가 우리 템플릿 그대로 사용하면 헤더가 뭐든 자동 인식
+     */
+    public const POSITION_MAP = [
+        0  => 'isbn',            // A
+        1  => 'publisher_code',  // B
+        2  => 'title',           // C
+        3  => 'series_name',     // D
+        4  => 'publisher_name',  // E
+        5  => 'price',           // F
+        6  => 'school_code',     // G
+        7  => 'subject_code',    // H
+        8  => 'grade_codes',     // I
+        9  => 'level_codes',     // J
+        10 => 'status_code',     // K
+        11 => 'cover_path',      // L
+        12 => 'spec',            // M
+        13 => 'edition',         // N
+    ];
+
     /** 학교/과목/학년/난이도/상태 코드 매핑 (한글명 → code) */
     private array $codeMaps = [];
 
@@ -67,7 +89,7 @@ class BookImportService
 
         $header = array_map(fn ($h) => trim((string) $h), array_shift($data));
         $colIdx = [];
-        // 대소문자 + 공백 무시 매칭 — 헤더 표기 차이(isbn/ISBN/Isbn 등) 모두 인식
+        // 1차: 대소문자 + 공백 무시 헤더 매칭 (정규화)
         $normalizedMap = [];
         foreach (self::COLUMN_MAP as $key => $field) {
             $normKey = mb_strtolower(preg_replace('/\s+/', '', $key));
@@ -80,9 +102,18 @@ class BookImportService
             }
         }
 
+        // 2차: 위치 기반 fallback — 헤더 매칭에 실패한 필드는 컬럼 위치로 보완
+        // 사용자가 우리 템플릿 순서로 채우면 헤더 이름이 뭐든(또는 빈칸이어도) 동작
+        foreach (self::POSITION_MAP as $pos => $field) {
+            if (! isset($colIdx[$field]) && $pos < count($header)) {
+                $colIdx[$field] = $pos;
+            }
+        }
+
+        // 필수 필드 — 위치 기반으로도 보완됐으니 헤더 진짜 짧은 경우만 에러
         if (! isset($colIdx['isbn']) || ! isset($colIdx['title']) || ! isset($colIdx['price'])) {
             return ['rows' => [], 'errors' => [
-                ['row' => 1, 'msg' => '필수 헤더 누락: ISBN13, 제목, 정가가 필요합니다. 헤더: '.implode('|', $header)]
+                ['row' => 1, 'msg' => '엑셀 컬럼이 부족합니다. 최소 ISBN/제목/정가 컬럼 필요. 헤더: '.implode('|', $header)]
             ], 'total' => 0];
         }
 

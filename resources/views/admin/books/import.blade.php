@@ -26,9 +26,10 @@
                         <input type="file" name="file" accept=".xlsx,.xls" class="form-control" required>
                     </div>
                     <div class="alert alert-info small mb-0">
-                        <strong>형식</strong> — 첫 행은 헤더. 필수 컬럼: <code>ISBN13</code>, <code>제목</code>, <code>정가</code>.<br>
-                        선택 컬럼: <code>출판사코드 / 시리즈명 / 출판사 / 학교 / 과목 / 학년 / 난이도 / 상태 / 표지URL / 규격 / 판쇄</code>.<br>
-                        <span class="text-muted">※ 출판사코드는 '품목코드', '도서코드'로 적어도 인식됩니다 (총판이 출판사에 주문할 때 사용).</span><br>
+                        <strong>컬럼 순서 (A → N):</strong>
+                        <code>ISBN | 출판사코드 | 제목 | 시리즈명 | 출판사 | 정가 | 학교 | 과목 | 학년 | 난이도 | 상태 | 표지URL | 규격 | 판쇄</code><br>
+                        <span class="text-muted">※ 헤더 이름은 무관 — 컬럼 위치(A~N)로 인식합니다. 우리 템플릿 그대로 채워서 올리세요.</span><br>
+                        <strong>필수:</strong> ISBN(A) · 제목(C) · 정가(F)<br>
                         학년·난이도는 쉼표로 여러 개 입력 가능 (예: <code>초3, 초4</code>). 학교·과목·상태는 코드테이블의 <strong>한글명</strong> 그대로.
                         <hr class="my-2">
                         <strong class="text-warning"><i class="bi bi-pencil-square"></i> 기존 데이터 일부만 업데이트하기</strong><br>
