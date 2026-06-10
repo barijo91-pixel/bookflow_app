@@ -4,9 +4,14 @@
 @section('content')
 <div class="page-header">
     <h1 class="h4 mb-0">재고 관리 <small class="text-muted fs-6">총판별 도서 재고</small></h1>
-    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#stockAddModal">
-        <i class="bi bi-plus-lg"></i> 재고 추가
-    </button>
+    <div class="d-flex gap-2">
+        <a href="{{ route('admin.stocks.import.show') }}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-file-earmark-excel"></i> 엑셀 일괄 등록
+        </a>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#stockAddModal">
+            <i class="bi bi-plus-lg"></i> 재고 추가
+        </button>
+    </div>
 </div>
 
 <div class="row g-2 mb-3">

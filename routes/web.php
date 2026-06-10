@@ -220,6 +220,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('stocks',                    [StockController::class, 'index'])->name('stocks.index');
         Route::post('stocks',                   [StockController::class, 'store'])->name('stocks.store');
         Route::put('stocks/bulk',               [StockController::class, 'bulkUpdate'])->name('stocks.bulk-update');
+        // 재고 엑셀 일괄 등록 (다중 총판)
+        Route::get('stocks/import',             [\App\Http\Controllers\Admin\StockBulkImportController::class, 'show'])->name('stocks.import.show');
+        Route::get('stocks/import/template',    [\App\Http\Controllers\Admin\StockBulkImportController::class, 'template'])->name('stocks.import.template');
+        Route::post('stocks/import/preview',    [\App\Http\Controllers\Admin\StockBulkImportController::class, 'preview'])->name('stocks.import.preview');
+        Route::post('stocks/import/{jobId}/run',[\App\Http\Controllers\Admin\StockBulkImportController::class, 'run'])->name('stocks.import.run');
         Route::put('stocks/{stockId}',          [StockController::class, 'update'])->name('stocks.update');
         Route::delete('stocks/{stockId}',       [StockController::class, 'destroy'])->name('stocks.destroy');
 
