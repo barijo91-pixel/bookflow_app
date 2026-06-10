@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\BookImportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -67,8 +68,8 @@ class BookImportController extends Controller
             'updated_at'    => now(),
         ]);
 
-        // 미리보기 데이터를 세션에 보관
-        $request->session()->put("import.book.{$jobId}", $result['rows']);
+        // 미리보기 데이터를 캐시에 보관 (2시간) — session(database, TEXT 64KB) 한계 회피
+        Cache::put("import.book.{$jobId}", $result['rows'], now()->addHours(2));
 
         return view('admin.books.import_preview', [
             'jobId'  => $jobId,
@@ -85,9 +86,9 @@ class BookImportController extends Controller
         $job = DB::table('bulk_import_jobs')->where('id', $jobId)->where('kind', 'book')->first();
         abort_if(! $job, 404);
 
-        $rows = $request->session()->get("import.book.{$jobId}");
+        $rows = Cache::get("import.book.{$jobId}");
         if (! $rows) {
-            return back()->with('error', '미리보기 세션이 만료되었습니다. 파일을 다시 업로드하세요.');
+            return back()->with('error', '미리보기 데이터가 만료되었습니다. 파일을 다시 업로드하세요.');
         }
 
         $mode = $request->input('mode', 'skip_existing'); // skip_existing | update_existing
@@ -109,7 +110,7 @@ class BookImportController extends Controller
             'updated_at'    => now(),
         ]);
 
-        $request->session()->forget("import.book.{$jobId}");
+        Cache::forget("import.book.{$jobId}");
 
         return redirect()->route('admin.books.index')->with('success',
             "도서 일괄 등록 완료 — 신규 {$result['success']}건, 수정 {$result['updated']}건, 실패 {$result['failed']}건"
