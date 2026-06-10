@@ -51,9 +51,9 @@
                     <tr>
                         <th>#</th>
                         <th>ISBN13</th>
+                        <th>출판사 코드</th>
                         <th>제목</th>
                         <th>출판사</th>
-                        <th>저자</th>
                         <th class="text-end">정가</th>
                         <th>학교/과목</th>
                         <th>학년</th>
@@ -77,11 +77,14 @@
                             </td>
                             <td><code class="small">{{ $r['isbn'] ?? '' }}</code></td>
                             <td class="small">
-                                {{ $r['title'] ?? '' }}
-                                @if(! empty($r['subtitle']))<div class="text-muted">{{ $r['subtitle'] }}</div>@endif
+                                @if(! empty($r['publisher_code']))
+                                    <code>{{ $r['publisher_code'] }}</code>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
                             </td>
+                            <td class="small">{{ $r['title'] ?? '' }}</td>
                             <td class="small">{{ $r['publisher_name'] ?? '' }}</td>
-                            <td class="small">{{ $r['author'] ?? '' }}</td>
                             <td class="text-end small">{{ isset($r['price']) ? number_format($r['price']) : '' }}</td>
                             <td class="small">
                                 @if(! empty($r['school_code'])) <span class="badge bg-light text-dark">{{ $r['school_code'] }}</span> @endif

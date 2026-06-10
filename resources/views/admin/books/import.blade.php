@@ -26,8 +26,9 @@
                         <input type="file" name="file" accept=".xlsx,.xls" class="form-control" required>
                     </div>
                     <div class="alert alert-info small mb-0">
-                        <strong>형식</strong> — 첫 행은 헤더. 필수 컬럼: <code>ISBN13</code>, <code>제목</code>, <code>정가</code>.
-                        선택 컬럼: <code>부제목 / 시리즈명 / 출판사 / 저자 / 출간일 / 학교 / 과목 / 학년 / 난이도 / 상태 / 표지URL / 규격 / 판쇄</code>.<br>
+                        <strong>형식</strong> — 첫 행은 헤더. 필수 컬럼: <code>ISBN13</code>, <code>제목</code>, <code>정가</code>.<br>
+                        선택 컬럼: <code>출판사코드 / 시리즈명 / 출판사 / 학교 / 과목 / 학년 / 난이도 / 상태 / 표지URL / 규격 / 판쇄</code>.<br>
+                        <span class="text-muted">※ 출판사코드는 '품목코드', '도서코드'로 적어도 인식됩니다 (총판이 출판사에 주문할 때 사용).</span><br>
                         학년·난이도는 쉼표로 여러 개 입력 가능 (예: <code>초3, 초4</code>). 학교·과목·상태는 코드테이블의 <strong>한글명</strong> 그대로.
                     </div>
                 </div>

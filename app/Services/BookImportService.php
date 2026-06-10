@@ -14,14 +14,15 @@ class BookImportService
     public const COLUMN_MAP = [
         'ISBN13'        => 'isbn',
         'ISBN'          => 'isbn',
+        '출판사코드'      => 'publisher_code',
+        '출판사 코드'     => 'publisher_code',
+        '품목코드'        => 'publisher_code',
+        '도서코드'        => 'publisher_code',
         '제목'           => 'title',
-        '부제목'          => 'subtitle',
         '시리즈'          => 'series_name',
         '시리즈명'         => 'series_name',
         '출판사'          => 'publisher_name',
-        '저자'           => 'author',
         '정가'           => 'price',
-        '출간일'          => 'pub_date',
         '학교'           => 'school_code',
         '과목'           => 'subject_code',
         '학년'           => 'grade_codes',     // 쉼표 구분
@@ -34,7 +35,7 @@ class BookImportService
     ];
 
     public const TEMPLATE_HEADERS = [
-        'ISBN13', '제목', '부제목', '시리즈명', '출판사', '저자', '정가', '출간일',
+        'ISBN13', '출판사코드', '제목', '시리즈명', '출판사', '정가',
         '학교', '과목', '학년', '난이도', '상태', '표지URL', '규격', '판쇄',
     ];
 
@@ -121,9 +122,9 @@ class BookImportService
             $row['grade_codes'] = $this->mapList($row['grade_codes'] ?? null, 'grade', $rowErrors, '학년');
             $row['level_codes'] = $this->mapList($row['level_codes'] ?? null, 'level', $rowErrors, '난이도');
 
-            // 출간일
-            if (! empty($row['pub_date'])) {
-                $row['pub_date'] = $this->normalizeDate($row['pub_date']);
+            // 출판사 코드 정리 (공백 제거 + 50자 cap)
+            if (! empty($row['publisher_code'])) {
+                $row['publisher_code'] = mb_substr(trim((string) $row['publisher_code']), 0, 50);
             }
 
             $row['_row'] = $rowNumber;
@@ -161,20 +162,18 @@ class BookImportService
                 }
 
                 $payload = [
-                    'title'        => $row['title'] ?? '',
-                    'subtitle'     => $row['subtitle'] ?? null,
-                    'series_name'  => $row['series_name'] ?? null,
-                    'publisher_id' => $publisherId,
-                    'author'       => $row['author'] ?? null,
-                    'price'        => (int) ($row['price'] ?? 0),
-                    'pub_date'     => $row['pub_date'] ?? null,
-                    'school_code'  => $row['school_code'] ?? null,
-                    'subject_code' => $row['subject_code'] ?? null,
-                    'status_code'  => $row['status_code'] ?? 'selling',
-                    'cover_path'   => $row['cover_path'] ?? null,
-                    'spec'         => $row['spec'] ?? null,
-                    'edition'      => $row['edition'] ?? null,
-                    'source'       => 'excel',
+                    'title'          => $row['title'] ?? '',
+                    'series_name'    => $row['series_name'] ?? null,
+                    'publisher_id'   => $publisherId,
+                    'publisher_code' => $row['publisher_code'] ?? null,
+                    'price'          => (int) ($row['price'] ?? 0),
+                    'school_code'    => $row['school_code'] ?? null,
+                    'subject_code'   => $row['subject_code'] ?? null,
+                    'status_code'    => $row['status_code'] ?? 'selling',
+                    'cover_path'     => $row['cover_path'] ?? null,
+                    'spec'           => $row['spec'] ?? null,
+                    'edition'        => $row['edition'] ?? null,
+                    'source'         => 'excel',
                 ];
 
                 $book = Book::where('isbn', $row['isbn'])->first();
@@ -255,26 +254,25 @@ class BookImportService
             $col = chr(ord('A') + $i);
             $sheet->setCellValue($col.'1', $h);
         }
-        // 예시 1행
+        // 예시 1행 — 헤더: ISBN13, 출판사코드, 제목, 시리즈명, 출판사, 정가,
+        //                  학교, 과목, 학년, 난이도, 상태, 표지URL, 규격, 판쇄
         $sheet->setCellValue('A2', '9788901234001');
-        $sheet->setCellValue('B2', 'Bricks Phonics 1');
-        $sheet->setCellValue('C2', 'Student Book');
+        $sheet->setCellValue('B2', 'B00150000003');     // 출판사 자체 도서코드 (총판 주문용)
+        $sheet->setCellValue('C2', 'Bricks Phonics 1');
         $sheet->setCellValue('D2', 'Bricks Phonics');
         $sheet->setCellValue('E2', '브릭스');
-        $sheet->setCellValue('F2', 'David Charlton');
-        $sheet->setCellValue('G2', 12000);
-        $sheet->setCellValue('H2', '2025-03-01');
-        $sheet->setCellValue('I2', '초등');
-        $sheet->setCellValue('J2', '영어');
-        $sheet->setCellValue('K2', '예비초, 초1');
-        $sheet->setCellValue('L2', '입문');
-        $sheet->setCellValue('M2', '판매중');
+        $sheet->setCellValue('F2', 12000);
+        $sheet->setCellValue('G2', '초등');
+        $sheet->setCellValue('H2', '영어');
+        $sheet->setCellValue('I2', '예비초, 초1');
+        $sheet->setCellValue('J2', '입문');
+        $sheet->setCellValue('K2', '판매중');
 
-        // 헤더 스타일
-        $sheet->getStyle('A1:P1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:P1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('EAF0FA');
+        // 헤더 스타일 — 컬럼 수 = 14개 (A~N)
+        $sheet->getStyle('A1:N1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:N1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('EAF0FA');
 
-        foreach (range('A', 'P') as $col) {
+        foreach (range('A', 'N') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
