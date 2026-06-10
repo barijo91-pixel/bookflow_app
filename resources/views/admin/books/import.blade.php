@@ -30,6 +30,11 @@
                         선택 컬럼: <code>출판사코드 / 시리즈명 / 출판사 / 학교 / 과목 / 학년 / 난이도 / 상태 / 표지URL / 규격 / 판쇄</code>.<br>
                         <span class="text-muted">※ 출판사코드는 '품목코드', '도서코드'로 적어도 인식됩니다 (총판이 출판사에 주문할 때 사용).</span><br>
                         학년·난이도는 쉼표로 여러 개 입력 가능 (예: <code>초3, 초4</code>). 학교·과목·상태는 코드테이블의 <strong>한글명</strong> 그대로.
+                        <hr class="my-2">
+                        <strong class="text-warning"><i class="bi bi-pencil-square"></i> 기존 데이터 일부만 업데이트하기</strong><br>
+                        ISBN과 변경하려는 컬럼만 채워서 업로드 → 미리보기에서 <strong>'기존 데이터 업데이트'</strong> 선택.
+                        엑셀에 없는 컬럼은 DB 값 그대로 보존됩니다.
+                        <br><span class="text-muted">예) ISBN + 정가 두 컬럼만 → 가격 일괄 변경 / ISBN + 출판사코드 → 코드만 일괄 입력</span>
                     </div>
                 </div>
                 <div class="card-footer text-end">

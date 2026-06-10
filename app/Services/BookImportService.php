@@ -152,37 +152,43 @@ class BookImportService
             if (! empty($row['_errors'])) { $failed++; continue; }
 
             try {
-                $publisherId = null;
+                // 부분 업데이트 지원 — 엑셀 헤더에 있는 컬럼만 payload에 포함.
+                // 헤더가 없는 컬럼은 row 자체에 키가 없어 isset()이 false → DB 값 보존.
+                $payload = [];
+                if (array_key_exists('title', $row))          $payload['title']          = $row['title'] ?? '';
+                if (array_key_exists('series_name', $row))    $payload['series_name']    = $row['series_name'];
+                if (array_key_exists('publisher_code', $row)) $payload['publisher_code'] = $row['publisher_code'];
+                if (array_key_exists('price', $row))          $payload['price']          = (int) $row['price'];
+                if (array_key_exists('school_code', $row))    $payload['school_code']    = $row['school_code'];
+                if (array_key_exists('subject_code', $row))   $payload['subject_code']   = $row['subject_code'];
+                if (array_key_exists('status_code', $row))    $payload['status_code']    = $row['status_code'];
+                if (array_key_exists('cover_path', $row))     $payload['cover_path']     = $row['cover_path'];
+                if (array_key_exists('spec', $row))           $payload['spec']           = $row['spec'];
+                if (array_key_exists('edition', $row))        $payload['edition']        = $row['edition'];
+
+                // 출판사명 → publisher_id (Publisher 없으면 자동 생성)
                 if (! empty($row['publisher_name'])) {
                     $pub = Publisher::firstOrCreate(
                         ['name' => $row['publisher_name']],
                         ['sort_order' => 999, 'is_active' => true]
                     );
-                    $publisherId = $pub->id;
+                    $payload['publisher_id'] = $pub->id;
                 }
-
-                $payload = [
-                    'title'          => $row['title'] ?? '',
-                    'series_name'    => $row['series_name'] ?? null,
-                    'publisher_id'   => $publisherId,
-                    'publisher_code' => $row['publisher_code'] ?? null,
-                    'price'          => (int) ($row['price'] ?? 0),
-                    'school_code'    => $row['school_code'] ?? null,
-                    'subject_code'   => $row['subject_code'] ?? null,
-                    'status_code'    => $row['status_code'] ?? 'selling',
-                    'cover_path'     => $row['cover_path'] ?? null,
-                    'spec'           => $row['spec'] ?? null,
-                    'edition'        => $row['edition'] ?? null,
-                    'source'         => 'excel',
-                ];
 
                 $book = Book::where('isbn', $row['isbn'])->first();
                 if ($book) {
                     if ($mode === 'skip_existing') { continue; }
+                    // 업데이트 — payload에 있는 컬럼만 갱신 (엑셀에 없는 컬럼은 DB 값 보존)
                     $book->update($payload);
                     $updated++;
                 } else {
-                    $book = Book::create(array_merge($payload, ['isbn' => $row['isbn']]));
+                    // 신규 생성 — 필수 기본값 + ISBN + source 추가
+                    $createPayload = $payload + [
+                        'isbn'        => $row['isbn'],
+                        'status_code' => 'selling',
+                        'source'      => 'excel',
+                    ];
+                    $book = Book::create($createPayload);
                     $success++;
                 }
 

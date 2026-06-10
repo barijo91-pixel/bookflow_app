@@ -32,17 +32,28 @@
 <form method="POST" action="{{ route('admin.books.import.run', $jobId) }}">
     @csrf
     <div class="card section-card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>데이터</strong>
-            <div class="d-flex gap-3">
-                <div class="form-check">
-                    <input type="radio" name="mode" id="mode_skip" value="skip_existing" class="form-check-input" checked>
-                    <label for="mode_skip" class="form-check-label small">중복 ISBN 건너뛰기</label>
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong>데이터</strong>
+                <div class="d-flex gap-3">
+                    <div class="form-check">
+                        <input type="radio" name="mode" id="mode_skip" value="skip_existing" class="form-check-input" checked>
+                        <label for="mode_skip" class="form-check-label small">
+                            <strong>신규만 등록</strong> <span class="text-muted">(중복 ISBN은 건너뛰기)</span>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input type="radio" name="mode" id="mode_update" value="update_existing" class="form-check-input">
+                        <label for="mode_update" class="form-check-label small">
+                            <strong class="text-warning">기존 데이터 업데이트</strong> <span class="text-muted">(중복 ISBN은 부분 수정)</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="form-check">
-                    <input type="radio" name="mode" id="mode_update" value="update_existing" class="form-check-input">
-                    <label for="mode_update" class="form-check-label small">중복 ISBN 수정(덮어쓰기)</label>
-                </div>
+            </div>
+            <div class="small text-muted">
+                <i class="bi bi-info-circle"></i>
+                <strong>부분 업데이트:</strong> 엑셀에 포함된 컬럼만 갱신됩니다.
+                예) ISBN + 정가만 채워서 올리면 가격만 일괄 변경, 나머지 필드(시리즈명·학년 등)는 그대로 유지.
             </div>
         </div>
         <div class="table-responsive">
