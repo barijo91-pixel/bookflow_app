@@ -19,6 +19,15 @@ mkdir -p /var/www/html/storage/app/public
 chown -R www-data:www-data /var/www/html/storage/app 2>/dev/null || true
 chmod -R 775 /var/www/html/storage/app 2>/dev/null || true
 
+# 2-2. nginx client_body 임시 디렉토리 — 파일 업로드 받을 때 nginx가 임시 저장
+#      Permission denied로 업로드 실패하는 케이스 영구 차단
+mkdir -p /var/lib/nginx/tmp/client_body
+mkdir -p /var/lib/nginx/tmp/proxy
+mkdir -p /var/lib/nginx/tmp/fastcgi
+mkdir -p /var/lib/nginx/tmp/uwsgi
+mkdir -p /var/lib/nginx/tmp/scgi
+chmod -R 777 /var/lib/nginx/tmp 2>/dev/null || true
+
 # 3. 캐시 워밍 (route, config, view) — 첫 부팅 시
 if [ "${RUN_CACHE_OPTIMIZE:-1}" = "1" ]; then
     echo "[entrypoint] optimize caches"
