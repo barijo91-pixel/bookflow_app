@@ -7,13 +7,19 @@
     $newCount = collect($rows)->filter(fn ($r) => empty($r['_errors']) && empty($r['_exists']))->count();
     $existCount = collect($rows)->filter(fn ($r) => empty($r['_errors']) && ! empty($r['_exists']))->count();
 @endphp
-<div class="page-header">
+<div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-2">
     <div>
         <a href="{{ route('admin.books.import.show') }}" class="text-muted small text-decoration-none">
             <i class="bi bi-arrow-left"></i> 업로드로 돌아가기
         </a>
         <h1 class="h4 mb-0 mt-1">미리보기 · <small class="text-muted">{{ $file }}</small></h1>
     </div>
+    {{-- 상단에도 등록 실행 버튼 — 페이지 끝까지 안 내려도 클릭 가능 --}}
+    @if($okCount > 0)
+        <button type="submit" form="importRunForm" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-cloud-upload"></i> 등록 실행 ({{ number_format($okCount) }}건)
+        </button>
+    @endif
 </div>
 
 <div class="row g-2 mb-3">
@@ -38,7 +44,7 @@
     </div>
 @endif
 
-<form method="POST" action="{{ route('admin.books.import.run', $jobId) }}">
+<form method="POST" action="{{ route('admin.books.import.run', $jobId) }}" id="importRunForm">
     @csrf
     <div class="card section-card">
         <div class="card-header">
