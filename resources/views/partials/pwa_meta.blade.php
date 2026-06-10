@@ -192,6 +192,14 @@
         font-size: .875rem;  /* '학생 등록' 등 small 라벨과 동일 사이즈 */
     }
 
+    /* 페이지네이션 가운데 정렬 (전 페이지) */
+    .pagination {
+        justify-content: center !important;
+        margin: 0 auto !important;
+    }
+    /* card-footer 안에서 'Showing N to M' 텍스트와 함께 있을 때도 가운데 */
+    .card-footer nav { display: flex; justify-content: center; }
+
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
     /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */
     .table-row-highlight tbody tr > * {
