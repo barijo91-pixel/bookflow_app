@@ -101,6 +101,10 @@ class BookImportService
             // 검증
             $rowErrors = [];
             $isbn = preg_replace('/[^0-9Xx]/', '', (string) ($row['isbn'] ?? ''));
+            // ISBN10 → ISBN13 자동 변환 (978 prefix + 체크섬 재계산)
+            if (strlen($isbn) === 10) {
+                $isbn = $this->convertIsbn10To13($isbn);
+            }
             if (! $isbn || strlen($isbn) !== 13) {
                 $rowErrors[] = 'ISBN13이 올바르지 않음';
             }
@@ -247,6 +251,21 @@ class BookImportService
             // (도서는 정상 등록되며, 필요 시 관리자가 코드테이블 추가 후 개별 수정)
         }
         return array_unique($codes);
+    }
+
+    /** ISBN10 → ISBN13 표준 변환 (978 prefix + EAN-13 체크섬 계산) */
+    private function convertIsbn10To13(string $isbn10): string
+    {
+        // 첫 9자리 + '978' prefix
+        $body = '978' . substr($isbn10, 0, 9);
+        if (strlen($body) !== 12 || ! ctype_digit($body)) return $isbn10;
+        // EAN-13 체크섬: 짝수 자리 ×1, 홀수 자리 ×3 (1-indexed)
+        $sum = 0;
+        for ($i = 0; $i < 12; $i++) {
+            $sum += ((int) $body[$i]) * (($i % 2 === 0) ? 1 : 3);
+        }
+        $check = (10 - ($sum % 10)) % 10;
+        return $body . $check;
     }
 
     private function normalizeDate($value): ?string
