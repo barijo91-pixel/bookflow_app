@@ -32,11 +32,15 @@ class BookImportService
         '표지'           => 'cover_path',
         '규격'           => 'spec',
         '판쇄'           => 'edition',
+        '표지파일명'      => 'cover_file_name',
+        '표지파일'        => 'cover_file_name',
+        '이미지파일'      => 'cover_file_name',
+        '이미지파일명'    => 'cover_file_name',
     ];
 
     public const TEMPLATE_HEADERS = [
         'ISBN13', '출판사코드', '제목', '시리즈명', '출판사', '정가',
-        '학교', '과목', '학년', '난이도', '상태', '표지URL', '규격', '판쇄',
+        '학교', '과목', '학년', '난이도', '상태', '표지URL', '규격', '판쇄', '표지파일명',
     ];
 
     /**
@@ -59,6 +63,7 @@ class BookImportService
         11 => 'cover_path',      // L
         12 => 'spec',            // M
         13 => 'edition',         // N
+        14 => 'cover_file_name', // O — 표지 이미지 파일명 (ZIP 매칭용)
     ];
 
     /** 학교/과목/학년/난이도/상태 코드 매핑 (한글명 → code) */
@@ -223,6 +228,7 @@ class BookImportService
                 if (array_key_exists('subject_code', $row))   $payload['subject_code']   = $row['subject_code'];
                 if (array_key_exists('status_code', $row))    $payload['status_code']    = $row['status_code'];
                 if (array_key_exists('cover_path', $row))     $payload['cover_path']     = $row['cover_path'];
+                if (array_key_exists('cover_file_name', $row))$payload['cover_file_name']= $row['cover_file_name'];
                 if (array_key_exists('spec', $row))           $payload['spec']           = $row['spec'];
                 if (array_key_exists('edition', $row))        $payload['edition']        = $row['edition'];
 

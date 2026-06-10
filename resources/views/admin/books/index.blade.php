@@ -5,6 +5,9 @@
 <div class="page-header">
     <h1 class="h4 mb-0">도서 마스터 <small class="text-muted fs-6">전체 {{ number_format($books->total()) }}권</small></h1>
     <div class="d-flex gap-2">
+        <a href="{{ route('admin.books.covers.show') }}" class="btn btn-sm btn-outline-navy">
+            <i class="bi bi-images"></i> 표지 일괄 업로드
+        </a>
         <a href="{{ route('admin.books.import.show') }}" class="btn btn-sm btn-outline-success">
             <i class="bi bi-file-earmark-excel"></i> 엑셀 일괄 등록
         </a>

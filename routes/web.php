@@ -234,6 +234,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('books/import/template',     [BookImportController::class, 'template'])->name('books.import.template');
         Route::post('books/import/preview',     [BookImportController::class, 'preview'])->name('books.import.preview');
         Route::post('books/import/{jobId}/run', [BookImportController::class, 'run'])->name('books.import.run');
+        // 표지 이미지 ZIP 일괄 업로드
+        Route::get('books/covers',              [\App\Http\Controllers\Admin\CoverImportController::class, 'show'])->name('books.covers.show');
+        Route::post('books/covers/upload',      [\App\Http\Controllers\Admin\CoverImportController::class, 'upload'])->name('books.covers.upload');
         Route::get('books/{book}',              [BookController::class, 'show'])->name('books.show');
         Route::put('books/{book}',              [BookController::class, 'update'])->name('books.update');
         Route::delete('books/{book}',           [BookController::class, 'destroy'])->name('books.destroy');
