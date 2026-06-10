@@ -105,8 +105,16 @@ class BookImportService
             if (strlen($isbn) === 10) {
                 $isbn = $this->convertIsbn10To13($isbn);
             }
+            // ISBN 없거나 잘못된 경우 — 출판사코드로 임시 식별자 생성
             if (! $isbn || strlen($isbn) !== 13) {
-                $rowErrors[] = 'ISBN13이 올바르지 않음';
+                $pubCode = trim((string) ($row['publisher_code'] ?? ''));
+                if ($pubCode !== '') {
+                    // 영문자/숫자만 추출 (최대 12자) → NOISBN-XXXXXXXX 형태
+                    $cleanCode = substr(preg_replace('/[^a-zA-Z0-9]/', '', $pubCode), 0, 12);
+                    $isbn = 'NOISBN-' . $cleanCode;
+                } else {
+                    $rowErrors[] = 'ISBN13/출판사코드 모두 없음';
+                }
             }
             $row['isbn'] = $isbn;
 
