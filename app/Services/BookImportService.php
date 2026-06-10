@@ -242,9 +242,9 @@ class BookImportService
                 $codes[] = $this->codeMaps[$group][$v];
             } elseif (in_array($v, $this->codeMaps[$group], true)) {
                 $codes[] = $v;
-            } else {
-                $errors[] = "{$label} '{$v}' 매칭 안됨";
             }
+            // 매칭 안 되는 값은 무시 — 행 에러로 처리하지 않고 그 항목만 분류에서 제외
+            // (도서는 정상 등록되며, 필요 시 관리자가 코드테이블 추가 후 개별 수정)
         }
         return array_unique($codes);
     }
