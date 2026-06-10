@@ -54,7 +54,7 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label small text-muted mb-1">검색 (제목/ISBN/저자/시리즈)</label>
+                <label class="form-label small text-muted mb-1">검색 (제목/ISBN/저자/시리즈/출판사코드)</label>
                 <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm">
             </div>
             <div class="col-md-1 d-grid">
@@ -75,6 +75,7 @@
                     <th style="width:60px; white-space:nowrap;">표지</th>
                     <th>제목</th>
                     <th>ISBN</th>
+                    <th>출판사 코드</th>
                     <th>출판사</th>
                     <th>학교/과목</th>
                     <th class="text-end">정가</th>
@@ -98,6 +99,13 @@
                             @if($b->subtitle)<span class="text-muted small ms-1">— {{ $b->subtitle }}</span>@endif
                         </td>
                         <td class="text-muted small"><code>{{ $b->isbn }}</code></td>
+                        <td class="text-muted small">
+                            @if($b->publisher_code)
+                                <code>{{ $b->publisher_code }}</code>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
                         <td>{{ optional($b->publisher)->name }}</td>
                         <td>
                             <span class="badge bg-light text-dark">{{ $b->school_code }}</span>

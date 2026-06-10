@@ -50,13 +50,9 @@
                             <label class="form-label small text-muted">ISBN13 *</label>
                             <input type="text" name="isbn" id="isbn_input" class="form-control" value="{{ old('isbn') }}" required>
                         </div>
-                        <div class="col-md-8">
-                            <label class="form-label small text-muted">제목 *</label>
-                            <input type="text" name="title" id="title_input" class="form-control" value="{{ old('title') }}" required>
-                        </div>
-                        <div class="col-md-8">
-                            <label class="form-label small text-muted">시리즈명</label>
-                            <input type="text" name="series_name" class="form-control" value="{{ old('series_name') }}">
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted" title="출판사 자체 도서코드 (총판 주문용)">출판사 코드</label>
+                            <input type="text" name="publisher_code" class="form-control" value="{{ old('publisher_code') }}" placeholder="예: B00150000003" maxlength="50">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small text-muted">출판사</label>
@@ -66,6 +62,14 @@
                                     <option value="{{ $p->id }}" @selected(old('publisher_id') == $p->id)>{{ $p->name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">시리즈명</label>
+                            <input type="text" name="series_name" class="form-control" value="{{ old('series_name') }}">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label small text-muted">제목 *</label>
+                            <input type="text" name="title" id="title_input" class="form-control" value="{{ old('title') }}" required>
                         </div>
                         {{-- 부제목/저자/출간일 — 화면 노출 X, 알라딘 자동 채움 시 hidden으로 저장 --}}
                         <input type="hidden" name="subtitle" id="subtitle_input" value="{{ old('subtitle') }}">

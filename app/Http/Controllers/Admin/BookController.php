@@ -33,7 +33,8 @@ class BookController extends Controller
                 $w->where('title', 'like', "%{$q}%")
                   ->orWhere('isbn', 'like', "%{$q}%")
                   ->orWhere('author', 'like', "%{$q}%")
-                  ->orWhere('series_name', 'like', "%{$q}%");
+                  ->orWhere('series_name', 'like', "%{$q}%")
+                  ->orWhere('publisher_code', 'like', "%{$q}%");
             });
         }
         $books = $query->paginate(20)->withQueryString();
@@ -171,6 +172,7 @@ class BookController extends Controller
         return $request->validate([
             'isbn'         => ['required', 'string', 'max:20',
                 Rule::unique('books', 'isbn')->ignore($bookId)],
+            'publisher_code' => ['nullable', 'string', 'max:50'],
             'title'        => ['required', 'string', 'max:255'],
             'subtitle'     => ['nullable', 'string', 'max:255'],
             'series_name'  => ['nullable', 'string', 'max:150'],
