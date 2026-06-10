@@ -193,11 +193,11 @@
     }
 
     /* ===== 페이지네이션 (전 페이지 공통) ===== */
-    /* 커스텀 template(resources/views/vendor/pagination/bootstrap-5.blade.php)이 단순화된 nav 출력 */
     .pagination {
-        justify-content: center;
-        margin: 0;
+        justify-content: center !important;
+        margin: 0 auto !important;
     }
+    .card-footer nav { display: flex; justify-content: center; }
 
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
     /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */
