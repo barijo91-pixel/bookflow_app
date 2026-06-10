@@ -25,7 +25,16 @@
 
 @if(count($errors) > 0)
     <div class="alert alert-warning">
-        <strong>{{ count($errors) }}개 행에 문제가 있습니다.</strong> 오류 행은 import 시 자동 건너뜁니다.
+        <strong><i class="bi bi-exclamation-triangle"></i> {{ count($errors) }}개 행에 문제가 있습니다.</strong>
+        오류 행은 import 시 자동 건너뜁니다.
+        <ul class="mb-0 mt-2 small">
+            @foreach(array_slice($errors, 0, 15) as $err)
+                <li><strong>행 {{ $err['row'] ?? '?' }}:</strong> {{ $err['msg'] ?? '' }}</li>
+            @endforeach
+            @if(count($errors) > 15)
+                <li class="text-muted">... 외 {{ count($errors) - 15 }}개</li>
+            @endif
+        </ul>
     </div>
 @endif
 
