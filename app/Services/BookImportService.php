@@ -67,9 +67,16 @@ class BookImportService
 
         $header = array_map(fn ($h) => trim((string) $h), array_shift($data));
         $colIdx = [];
+        // 대소문자 + 공백 무시 매칭 — 헤더 표기 차이(isbn/ISBN/Isbn 등) 모두 인식
+        $normalizedMap = [];
+        foreach (self::COLUMN_MAP as $key => $field) {
+            $normKey = mb_strtolower(preg_replace('/\s+/', '', $key));
+            $normalizedMap[$normKey] = $field;
+        }
         foreach ($header as $i => $h) {
-            if (isset(self::COLUMN_MAP[$h])) {
-                $colIdx[self::COLUMN_MAP[$h]] = $i;
+            $normH = mb_strtolower(preg_replace('/\s+/', '', $h));
+            if (isset($normalizedMap[$normH])) {
+                $colIdx[$normalizedMap[$normH]] = $i;
             }
         }
 
