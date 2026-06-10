@@ -193,20 +193,32 @@
     }
 
     /* 페이지네이션 가운데 정렬 (전 페이지) */
-    .pagination {
-        justify-content: center !important;
-        margin: 0 auto !important;
-    }
-    /* card-footer 안의 nav (Laravel paginator wrapper)도 강제로 가운데 */
-    .card-footer > nav,
-    .card-footer nav[role="navigation"] {
+    /* Laravel Bootstrap5 paginator는 nav > [텍스트] [페이지번호] 좌우 분배 → 모두 가운데로 강제 */
+    .card-footer nav[role="navigation"],
+    .card-footer > nav {
         display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
         justify-content: center !important;
         margin: 0 !important;
         padding: 0 !important;
     }
-    /* paginator의 'Showing N to M' 텍스트는 가운데 + 작게 */
-    .card-footer nav p { text-align: center; margin: 0 0 .5rem 0 !important; }
+    .card-footer nav > div {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: auto !important;
+        max-width: 100% !important;
+    }
+    .card-footer nav p,
+    .card-footer nav .small {
+        text-align: center !important;
+        margin: 0 0 .35rem 0 !important;
+    }
+    .pagination {
+        justify-content: center !important;
+        margin: 0 !important;
+    }
 
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
     /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */
