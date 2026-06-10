@@ -145,9 +145,14 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer d-flex justify-content-between align-items-center">
-            <div>{{ $stocks->links() }}</div>
-            <button class="btn btn-primary"><i class="bi bi-save"></i> 변경사항 일괄 저장</button>
+        <div class="card-footer">
+            <div class="row align-items-center g-2">
+                <div class="col-md-4"></div>
+                <div class="col-md-4 d-flex justify-content-center">{{ $stocks->links() }}</div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-primary"><i class="bi bi-save"></i> 변경사항 일괄 저장</button>
+                </div>
+            </div>
         </div>
     </div>
 </form>

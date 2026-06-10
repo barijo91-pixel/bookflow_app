@@ -197,8 +197,16 @@
         justify-content: center !important;
         margin: 0 auto !important;
     }
-    /* card-footer 안에서 'Showing N to M' 텍스트와 함께 있을 때도 가운데 */
-    .card-footer nav { display: flex; justify-content: center; }
+    /* card-footer 안의 nav (Laravel paginator wrapper)도 강제로 가운데 */
+    .card-footer > nav,
+    .card-footer nav[role="navigation"] {
+        display: flex !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    /* paginator의 'Showing N to M' 텍스트는 가운데 + 작게 */
+    .card-footer nav p { text-align: center; margin: 0 0 .5rem 0 !important; }
 
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
     /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */
