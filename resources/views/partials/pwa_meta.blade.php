@@ -192,12 +192,28 @@
         font-size: .875rem;  /* '학생 등록' 등 small 라벨과 동일 사이즈 */
     }
 
-    /* ===== 페이지네이션 (전 페이지 공통) ===== */
+    /* ===== 페이지네이션 (전 페이지 공통) — 가운데 정렬 + Showing 텍스트 숨김 ===== */
+    /* Laravel Bootstrap5 paginator는 nav 안에 좌우 분배 wrapper(.d-sm-flex.justify-content-between) 사용
+       → 그 wrapper의 justify-content를 center로 override + Showing 텍스트 숨김 */
+    .card-footer nav .justify-content-between {
+        justify-content: center !important;
+    }
+    /* Showing N to M of T results 텍스트(p) 숨김 */
+    .card-footer nav p {
+        display: none !important;
+    }
+    /* 모바일용 Previous/Next 큰 박스 (sm 미만 표시) — 데스크탑에서 보일 가능성 차단 */
+    @media (min-width: 576px) {
+        .card-footer nav > .d-sm-none,
+        .card-footer nav .d-flex.d-sm-none {
+            display: none !important;
+        }
+    }
+    /* 페이지네이션 ul 가운데 */
     .pagination {
         justify-content: center !important;
-        margin: 0 auto !important;
+        margin: 0 !important;
     }
-    .card-footer nav { display: flex; justify-content: center; }
 
     /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
     /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */
