@@ -48,6 +48,58 @@ class MyPageController extends Controller
                     ->where('r.relation_type', 'distributor_agent')
                     ->where('r.status', 'active')
                     ->select('u.id', 'u.name')->get();
+
+                // 사입자 온보딩 체크리스트 (계획서 8장)
+                $hasBusinessType = ($user->business_type ?? 'none') !== 'none';
+                $hasBankAccount  = ! empty($user->bank_account);
+                $hasVendor       = $vendorIds->count() > 0;
+                $hasOrder        = DB::table('orders')->where('agent_user_id', $user->id)->whereNull('deleted_at')->exists();
+                $hasSettlement   = DB::table('settlement_records')->where('agent_user_id', $user->id)->exists();
+
+                $context['onboarding'] = [
+                    [
+                        'key'       => 'business_type',
+                        'label'     => '사업자 유형 등록',
+                        'desc'      => '비사업자/간이/일반/법인 — 세무 적용 기준',
+                        'done'      => $hasBusinessType,
+                        'href'      => route('mypage.profile') . '#business',
+                        'icon'      => 'receipt-cutoff',
+                    ],
+                    [
+                        'key'       => 'bank_account',
+                        'label'     => '정산 계좌 등록',
+                        'desc'      => '수수료 지급받을 은행 계좌',
+                        'done'      => $hasBankAccount,
+                        'href'      => route('mypage.profile') . '#bank',
+                        'icon'      => 'bank',
+                    ],
+                    [
+                        'key'       => 'first_vendor',
+                        'label'     => '첫 거래처(학원) 등록',
+                        'desc'      => '담당할 학원 등록 — 도매 영업의 시작',
+                        'done'      => $hasVendor,
+                        'href'      => route('my.vendors.create'),
+                        'icon'      => 'building-add',
+                    ],
+                    [
+                        'key'       => 'first_order',
+                        'label'     => '첫 주문 접수',
+                        'desc'      => '학원에서 도서 주문 받기',
+                        'done'      => $hasOrder,
+                        'href'      => route('my.orders.index'),
+                        'icon'      => 'receipt',
+                    ],
+                    [
+                        'key'       => 'first_settlement',
+                        'label'     => '첫 정산 수령',
+                        'desc'      => '학부모 결제 완료 시 자동 정산',
+                        'done'      => $hasSettlement,
+                        'href'      => route('mypage.settlements'),
+                        'icon'      => 'cash-stack',
+                    ],
+                ];
+                $context['onboarding_done']  = count(array_filter($context['onboarding'], fn($s) => $s['done']));
+                $context['onboarding_total'] = count($context['onboarding']);
                 break;
 
             case 'academy':

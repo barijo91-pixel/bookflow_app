@@ -90,6 +90,55 @@
             </div>
         @endif
 
+        {{-- 영업자: 온보딩 체크리스트 (계획서 8장) --}}
+        @if($user->role_code === 'agent' && isset($onboarding))
+            @php
+                $percent = $onboarding_total > 0 ? round($onboarding_done / $onboarding_total * 100) : 0;
+                $allDone = $onboarding_done === $onboarding_total;
+            @endphp
+            @if(! $allDone)
+                <div class="card section-card mb-3 border-warning">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <strong><i class="bi bi-rocket-takeoff text-warning"></i> 시작 가이드 ({{ $onboarding_done }}/{{ $onboarding_total }})</strong>
+                        <span class="badge bg-warning text-dark">{{ $percent }}% 완료</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress mb-3" style="height:6px;">
+                            <div class="progress-bar bg-success" style="width: {{ $percent }}%"></div>
+                        </div>
+                        <ul class="list-unstyled mb-0">
+                            @foreach($onboarding as $step)
+                                <li class="d-flex align-items-start py-2 {{ ! $loop->last ? 'border-bottom' : '' }}">
+                                    <div class="me-3" style="font-size:1.4rem;">
+                                        @if($step['done'])
+                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                        @else
+                                            <i class="bi bi-{{ $step['icon'] }} text-muted"></i>
+                                        @endif
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="{{ $step['done'] ? 'text-muted text-decoration-line-through' : 'fw-bold' }}">
+                                            {{ $step['label'] }}
+                                        </div>
+                                        <div class="small text-muted">{{ $step['desc'] }}</div>
+                                    </div>
+                                    @if(! $step['done'])
+                                        <a href="{{ $step['href'] }}" class="btn btn-sm btn-outline-primary">바로 가기</a>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @else
+                <div class="alert alert-success mb-3">
+                    <i class="bi bi-trophy-fill"></i>
+                    <strong>온보딩 완료!</strong>
+                    이제 영업자 활동에 필요한 모든 설정이 완료되었습니다.
+                </div>
+            @endif
+        @endif
+
         {{-- 영업자: 내 총판 --}}
         @if($user->role_code === 'agent' && isset($my_distributors) && $my_distributors->count())
             <div class="card section-card mb-3">
