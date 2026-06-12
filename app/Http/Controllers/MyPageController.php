@@ -182,6 +182,53 @@ class MyPageController extends Controller
         ]);
     }
 
+    /**
+     * 사입자 정산 내역 (본인 정산 레코드 + 누적 통계)
+     * 총판은 본인 수금 정산 모두 표시
+     */
+    public function settlements(Request $request)
+    {
+        $user = Auth::user();
+        if (! in_array($user->role_code, ['agent', 'distributor'])) {
+            abort(403, '영업자/총판만 접근 가능합니다.');
+        }
+
+        $q = \App\Models\SettlementRecord::with(['vendor', 'paymentRequest'])
+            ->orderByDesc('id');
+
+        if ($user->role_code === 'agent') {
+            $q->where('agent_user_id', $user->id);
+        } else { // distributor
+            $q->where('distributor_user_id', $user->id);
+        }
+
+        if ($status = $request->input('status')) {
+            $q->where('status', $status);
+        }
+
+        $records = $q->paginate(20)->withQueryString();
+
+        // 누적 통계 (필터 무관 — 전체)
+        $base = \App\Models\SettlementRecord::query();
+        if ($user->role_code === 'agent') {
+            $base->where('agent_user_id', $user->id);
+        } else {
+            $base->where('distributor_user_id', $user->id);
+        }
+
+        $stats = (clone $base)->selectRaw('
+            COUNT(*) as cnt,
+            COALESCE(SUM(parent_paid),0) as parent_paid_total,
+            COALESCE(SUM(agent_net),0) as agent_net_total,
+            COALESCE(SUM(agent_payout),0) as agent_payout_total,
+            COALESCE(SUM(dist_net),0) as dist_net_total,
+            COALESCE(SUM(CASE WHEN status="paid_out" THEN agent_payout ELSE 0 END),0) as paid_out_total,
+            COALESCE(SUM(CASE WHEN status="computed" THEN agent_payout ELSE 0 END),0) as pending_total
+        ')->first();
+
+        return view('public.mypage.settlements', compact('records', 'stats', 'user', 'status'));
+    }
+
     public function updatePassword(Request $request)
     {
         $user = Auth::user();

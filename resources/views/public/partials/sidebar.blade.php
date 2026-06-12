@@ -49,6 +49,9 @@
                 <a href="{{ route('my.agents.index') }}" class="nav-item {{ $startsWith('my.agents') }}">
                     <i class="bi bi-person-badge"></i> 소속 영업자
                 </a>
+                <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
+                    <i class="bi bi-cash-stack"></i> 정산 내역
+                </a>
                 @break
 
             @case('agent')
@@ -71,6 +74,9 @@
                 </a>
                 <a href="{{ route('mypage.tax') }}" class="nav-item {{ $is('mypage.tax') }}">
                     <i class="bi bi-receipt-cutoff"></i> 세무 정보
+                </a>
+                <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
+                    <i class="bi bi-cash-stack"></i> 정산 내역
                 </a>
                 @break
 

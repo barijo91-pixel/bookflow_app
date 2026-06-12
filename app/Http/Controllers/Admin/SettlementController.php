@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Order;
+use App\Models\SettlementRecord;
+use App\Models\User;
 use App\Services\SettlementService;
 use App\Services\TaxService;
 use App\Services\DeliveryService;
@@ -125,5 +127,73 @@ class SettlementController extends Controller
             'businessType' => $businessType,
             'splitRatio' => $splitRatio,
         ]);
+    }
+
+    /**
+     * 정산 레코드 목록 (관리자 — 전체 조회)
+     */
+    public function records(Request $request)
+    {
+        $status      = $request->input('status');
+        $agentId     = $request->input('agent_id');
+        $vendorId    = $request->input('vendor_id');
+        $from        = $request->input('from');
+        $to          = $request->input('to');
+
+        $q = SettlementRecord::with(['vendor', 'agent', 'distributor', 'paymentRequest'])
+            ->orderByDesc('id');
+
+        if ($status)   $q->where('status', $status);
+        if ($agentId)  $q->where('agent_user_id', $agentId);
+        if ($vendorId) $q->where('vendor_id', $vendorId);
+        if ($from)     $q->where('computed_at', '>=', $from . ' 00:00:00');
+        if ($to)       $q->where('computed_at', '<=', $to . ' 23:59:59');
+
+        $records = $q->paginate(20)->withQueryString();
+
+        // 합계
+        $totals = SettlementRecord::query()
+            ->when($status, fn($q) => $q->where('status', $status))
+            ->when($agentId, fn($q) => $q->where('agent_user_id', $agentId))
+            ->when($vendorId, fn($q) => $q->where('vendor_id', $vendorId))
+            ->when($from, fn($q) => $q->where('computed_at', '>=', $from . ' 00:00:00'))
+            ->when($to, fn($q) => $q->where('computed_at', '<=', $to . ' 23:59:59'))
+            ->selectRaw('
+                COALESCE(SUM(parent_paid),0) as parent_paid,
+                COALESCE(SUM(agent_net),0) as agent_net,
+                COALESCE(SUM(agent_payout),0) as agent_payout,
+                COALESCE(SUM(dist_net),0) as dist_net,
+                COALESCE(SUM(pg_fee),0) as pg_fee,
+                COALESCE(SUM(booksys_fee),0) as booksys_fee
+            ')->first();
+
+        $agents = User::where('role_code', 'agent')->orderBy('name')->get(['id', 'name']);
+
+        return view('admin.settlement.records', compact('records', 'totals', 'agents', 'status', 'from', 'to'));
+    }
+
+    /**
+     * 정산 레코드 상세 + 지급 처리
+     */
+    public function recordShow(int $id)
+    {
+        $record = SettlementRecord::with(['vendor', 'agent', 'distributor', 'order.items.book', 'paymentRequest'])
+            ->findOrFail($id);
+        return view('admin.settlement.record_show', compact('record'));
+    }
+
+    public function recordMarkPaid(Request $request, int $id)
+    {
+        $record = SettlementRecord::findOrFail($id);
+        if ($record->status === 'paid_out') {
+            return back()->with('info', '이미 지급 처리된 정산입니다.');
+        }
+        $record->update([
+            'status'      => 'paid_out',
+            'paid_out_at' => now(),
+            'paid_out_by' => auth()->id(),
+            'memo'        => trim(($record->memo ?? '') . "\n[지급] " . now()->format('Y-m-d H:i') . ' by ' . auth()->user()?->name),
+        ]);
+        return back()->with('success', '사입자 지급 처리 완료');
     }
 }

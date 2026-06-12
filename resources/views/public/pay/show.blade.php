@@ -42,6 +42,13 @@
     </div>
     <div class="pay-card">
 
+        @if(session('success'))
+            <div class="alert alert-success small text-center mb-3">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger small text-center mb-3">{{ session('error') }}</div>
+        @endif
+
         @if($pr->status === 'paid')
             <div class="text-center mb-3">
                 <span class="status-badge status-paid">
@@ -89,8 +96,22 @@
         @endif
 
         @if(in_array($pr->status, ['sent', 'viewed']))
+            {{-- PG 카드 결제 (테스트 모드) — C-3에서 실 PG로 교체 --}}
             <div class="pay-section">
-                <h6>입금 계좌 안내</h6>
+                <h6><i class="bi bi-credit-card-2-front"></i> 카드로 간편하게 결제</h6>
+                <form method="POST" action="{{ route('public.pay.mock', $pr->token) }}">
+                    @csrf
+                    <button type="submit" class="btn w-100 py-3" style="background:var(--navy); color:#fff; font-weight:700; font-size:1.05rem; border-radius:10px;">
+                        <i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원
+                    </button>
+                </form>
+                <p class="small text-center text-warning mt-2 mb-0" style="font-size:.75rem;">
+                    <i class="bi bi-info-circle"></i> 현재 <strong>테스트 모드</strong>입니다. 실제 PG는 곧 연동됩니다.
+                </p>
+            </div>
+
+            <div class="pay-section">
+                <h6>또는 계좌 입금</h6>
                 @if($distributor && $distributor->bank_account)
                     <div class="bank-info">
                         <div class="bank-row"><span class="label">은행</span><strong>{{ $bankName ?? $distributor->bank_code }}</strong></div>

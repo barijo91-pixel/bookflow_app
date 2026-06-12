@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\PaymentRequest;
 use App\Services\NotificationService;
+use App\Services\SettlementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -226,5 +228,52 @@ class PaymentRequestController extends Controller
         $items = json_decode($pr->items_snapshot ?? '[]', true) ?: [];
 
         return view('public.pay.show', compact('pr', 'vendor', 'distributor', 'bankName', 'items'));
+    }
+
+    /**
+     * Mock PG 결제 처리 — 실 PG 연동(C-3) 전 테스트용
+     * POST /pay/{token}/mock-pay
+     *
+     * 처리:
+     *  1. payment_request.status = 'paid'
+     *  2. SettlementService::createFromPaymentRequest()로 정산 레코드 자동 생성
+     *  3. 결제 완료 화면으로 리다이렉트
+     */
+    public function mockPay(Request $request, string $token)
+    {
+        $pr = PaymentRequest::where('token', $token)->first();
+        abort_if(! $pr, 404, '결제 요청을 찾을 수 없습니다.');
+
+        if ($pr->status === 'paid') {
+            return redirect()->route('public.pay', $token)->with('info', '이미 결제 완료된 요청입니다.');
+        }
+
+        if (in_array($pr->status, ['expired', 'canceled'])) {
+            return redirect()->route('public.pay', $token)
+                ->with('error', '결제가 불가능한 상태입니다. (' . $pr->status . ')');
+        }
+
+        DB::transaction(function () use ($pr) {
+            // 결제 상태 업데이트
+            $pr->update([
+                'status'  => 'paid',
+                'paid_at' => now(),
+            ]);
+
+            // 정산 레코드 자동 생성
+            $mockTxId = 'MOCK-' . strtoupper(Str::random(10));
+            $settlement = SettlementService::createFromPaymentRequest($pr, $mockTxId);
+
+            AuditLog::log('payment_requests', $pr->id, 'mock_paid', null, [
+                'pg_transaction_id' => $mockTxId,
+                'settlement_id'     => $settlement->id,
+                'parent_paid'       => $pr->amount,
+                'agent_payout'      => $settlement->agent_payout,
+                'dist_net'          => $settlement->dist_net,
+            ]);
+        });
+
+        return redirect()->route('public.pay', $token)
+            ->with('success', '결제가 완료되었습니다. (테스트 모드)');
     }
 }

@@ -26,7 +26,10 @@
         <a href="{{ route('admin.vendors.index') }}" class="nav-item {{ $is('admin.vendors') }}">
             <i class="bi bi-building"></i> 거래처(학원)
         </a>
-        <a href="{{ route('admin.settlement.simulator') }}" class="nav-item {{ $is('admin.settlement') }}">
+        <a href="{{ route('admin.settlement.records') }}" class="nav-item {{ $is('admin.settlement.records') . $is('admin.settlement.record_show') }}">
+            <i class="bi bi-cash-stack"></i> 정산 레코드
+        </a>
+        <a href="{{ route('admin.settlement.simulator') }}" class="nav-item {{ $is('admin.settlement.simulator') . $is('admin.settlement.order_preview') }}">
             <i class="bi bi-calculator"></i> 정산 시뮬레이터
         </a>
         <div class="nav-section">회원</div>

@@ -153,4 +153,105 @@ class SettlementService
     {
         return TaxService::calc($businessType, $grossCommission);
     }
+
+    /**
+     * 학부모 결제 완료 → 정산 레코드 자동 생성
+     * (PG 콜백 또는 mock 결제 처리에서 호출)
+     *
+     * @param \App\Models\PaymentRequest $pr  결제 요청
+     * @param string $pgTransactionId         PG 거래 ID (mock 시 'MOCK-XXX')
+     * @param string $splitRatio              분배 비율 (기본 6:4)
+     * @return \App\Models\SettlementRecord
+     */
+    public static function createFromPaymentRequest(
+        \App\Models\PaymentRequest $pr,
+        string $pgTransactionId = '',
+        string $splitRatio = '6:4'
+    ): \App\Models\SettlementRecord {
+        // 주문 정보
+        $order = \App\Models\Order::with('items.book')->find($pr->order_id);
+
+        // 항목 합계 → 도서 단위 분배 계산
+        $totalGross = 0;
+        $totalRetail = 0;
+        $totalPublisherCost = 0;
+        $totalAgentMargin = 0;
+        $totalAgentNet = 0;
+        $totalAcademyBonus = 0;
+        $totalShippingFee = 0;
+        $breakdown = [];
+
+        $shippingFee = 0;
+        if ($order) {
+            $itemCount = $order->items->sum('qty');
+            $parcelInfo = \App\Services\DeliveryService::calcParcelFee($itemCount, true); // 클래스 묶음 = 무료
+            $shippingFee = $parcelInfo['fee'];
+
+            foreach ($order->items as $item) {
+                $bookPrice = (int) ($item->book?->price ?? $item->unit_price);
+                $b2c = self::calcB2C($bookPrice, (int) $item->qty, 0, $splitRatio);
+                $breakdown[] = [
+                    'book_id'   => $item->book_id,
+                    'title'     => $item->title_snapshot ?? $item->book?->title,
+                    'qty'       => (int) $item->qty,
+                    'gross'     => $b2c['gross'],
+                    'retail'    => $b2c['retail_sale'],
+                    'agent_net' => $b2c['agent_net'],
+                ];
+                $totalGross += $b2c['gross'];
+                $totalRetail += $b2c['retail_sale'];
+                $totalPublisherCost += $b2c['publisher_cost'];
+                $totalAgentMargin += $b2c['agent_margin'];
+                $totalAgentNet += $b2c['agent_net'];
+                $totalAcademyBonus += $b2c['academy_bonus'];
+            }
+            $totalShippingFee = $shippingFee;
+        }
+
+        // 학부모 실제 결제 금액 (배송비 포함)
+        $parentPaid = (int) $pr->amount;
+        $pgFee = (int) round($parentPaid * self::PG_FEE_RATE);
+        $bookSysFee = (int) round($totalRetail * self::BOOKSYS_FEE_RATE_B2C);
+        $distNet = $parentPaid - $totalPublisherCost - $pgFee - $bookSysFee - $totalAgentMargin - $totalShippingFee;
+
+        // 사입자 정보 + 세무
+        $agent = $order ? \App\Models\User::find($order->agent_user_id) : null;
+        $businessType = $agent?->business_type ?? 'none';
+        $tax = TaxService::calc($businessType, max(0, $totalAgentNet));
+
+        // 총판 정보 (운영 v1: 첫 번째 distributor)
+        $distributor = \App\Models\User::where('role_code', 'distributor')->first();
+
+        return \App\Models\SettlementRecord::create([
+            'payment_request_id'   => $pr->id,
+            'order_id'             => $pr->order_id,
+            'vendor_id'            => $pr->vendor_id,
+            'agent_user_id'        => $order?->agent_user_id,
+            'distributor_user_id'  => $distributor?->id,
+
+            'gross_amount'         => $totalGross,
+            'parent_paid'          => $parentPaid,
+            'publisher_cost'       => $totalPublisherCost,
+            'pg_fee'               => $pgFee,
+            'booksys_fee'          => $bookSysFee,
+            'shipping_fee'         => $totalShippingFee,
+
+            'agent_margin'         => $totalAgentMargin,
+            'agent_net'            => $totalAgentNet,
+            'academy_bonus'        => $totalAcademyBonus,
+            'dist_net'             => $distNet,
+
+            'agent_business_type'  => $businessType,
+            'agent_withholding_tax'=> (int) $tax['withholding_tax'],
+            'agent_vat'            => (int) $tax['vat'],
+            'agent_payout'         => (int) $tax['net'],
+
+            'split_ratio'          => $splitRatio,
+            'settle_type'          => 'b2c',
+            'status'               => 'computed',
+            'computed_at'          => now(),
+            'pg_transaction_id'    => $pgTransactionId,
+            'breakdown_json'       => json_encode($breakdown, JSON_UNESCAPED_UNICODE),
+        ]);
+    }
 }

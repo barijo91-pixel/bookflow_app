@@ -30,6 +30,10 @@ Route::get('/p/{token}', [\App\Http\Controllers\ParentShareController::class, 's
 Route::get('/pay/{token}', [\App\Http\Controllers\PaymentRequestController::class, 'publicShow'])
     ->middleware('throttle:30,1')
     ->name('public.pay');
+// Mock PG 결제 처리 (C-3에서 실 PG로 교체) — 분당 10회 제한
+Route::post('/pay/{token}/mock-pay', [\App\Http\Controllers\PaymentRequestController::class, 'mockPay'])
+    ->middleware('throttle:10,1')
+    ->name('public.pay.mock');
 
 // SEO
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
@@ -53,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::get('mypage/profile',  [\App\Http\Controllers\MyPageController::class, 'showProfile'])->name('mypage.profile');
     Route::put('mypage/profile',  [\App\Http\Controllers\MyPageController::class, 'updateProfile'])->name('mypage.profile.update');
     Route::get('mypage/tax',      [\App\Http\Controllers\MyPageController::class, 'taxInfo'])->name('mypage.tax');
+    Route::get('mypage/settlements', [\App\Http\Controllers\MyPageController::class, 'settlements'])->name('mypage.settlements');
     // 비밀번호 변경 — 현재 비번 brute force 방어 (15분에 5회)
     Route::put('mypage/password', [\App\Http\Controllers\MyPageController::class, 'updatePassword'])
         ->middleware('throttle:5,15')
@@ -278,5 +283,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // 정산 시뮬레이션 (계획서 7장 — PG 실연동 전 계산 검증용)
         Route::get('settlement/simulator',     [\App\Http\Controllers\Admin\SettlementController::class, 'simulator'])->name('settlement.simulator');
         Route::get('settlement/order/{order}', [\App\Http\Controllers\Admin\SettlementController::class, 'orderPreview'])->name('settlement.order_preview');
+        // 정산 레코드 (PG 결제 완료 후 자동 생성)
+        Route::get('settlement/records',                  [\App\Http\Controllers\Admin\SettlementController::class, 'records'])->name('settlement.records');
+        Route::get('settlement/records/{id}',             [\App\Http\Controllers\Admin\SettlementController::class, 'recordShow'])->name('settlement.record_show');
+        Route::post('settlement/records/{id}/mark-paid',  [\App\Http\Controllers\Admin\SettlementController::class, 'recordMarkPaid'])->name('settlement.record_mark_paid');
     });
 });
