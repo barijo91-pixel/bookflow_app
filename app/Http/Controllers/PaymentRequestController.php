@@ -216,9 +216,24 @@ class PaymentRequestController extends Controller
         }
 
         $vendor = DB::table('vendors')->find($pr->vendor_id);
-        $distributor = DB::table('users')->where('role_code', 'distributor')
-            ->select('name', 'bank_code', 'bank_account', 'bank_holder', 'phone')
-            ->first(); // 운영 v1: 첫 distributor의 계좌 사용
+
+        // 총판 결정: 주문에 라우팅된 총판 우선 (다중 총판 지원)
+        // fallback: 영업자의 첫 총판 → 첫 distributor
+        $order = DB::table('orders')->find($pr->order_id);
+        $distributorId = $order?->distributor_user_id;
+        if (! $distributorId && $order) {
+            $distributorId = DB::table('user_relations')
+                ->where('child_user_id', $order->agent_user_id)
+                ->where('relation_type', 'distributor_agent')
+                ->where('status', 'active')
+                ->orderBy('id')->value('parent_user_id');
+        }
+        $distributor = $distributorId
+            ? DB::table('users')->where('id', $distributorId)
+                ->select('name', 'bank_code', 'bank_account', 'bank_holder', 'phone')->first()
+            : DB::table('users')->where('role_code', 'distributor')
+                ->select('name', 'bank_code', 'bank_account', 'bank_holder', 'phone')
+                ->orderBy('id')->first();
 
         $bankName = null;
         if ($distributor && $distributor->bank_code) {

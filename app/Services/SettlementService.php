@@ -219,8 +219,19 @@ class SettlementService
         $businessType = $agent?->business_type ?? 'none';
         $tax = TaxService::calc($businessType, max(0, $totalAgentNet));
 
-        // 총판 정보 (운영 v1: 첫 번째 distributor)
-        $distributor = \App\Models\User::where('role_code', 'distributor')->first();
+        // 총판 결정: 주문에 라우팅된 총판 사용 (다중 총판 지원)
+        // fallback: 영업자의 첫 총판 → 그것도 없으면 첫 distributor
+        $distributorId = $order?->distributor_user_id;
+        if (! $distributorId && $agent) {
+            $distributorId = \Illuminate\Support\Facades\DB::table('user_relations')
+                ->where('child_user_id', $agent->id)
+                ->where('relation_type', 'distributor_agent')
+                ->where('status', 'active')
+                ->orderBy('id')->value('parent_user_id');
+        }
+        $distributor = $distributorId
+            ? \App\Models\User::find($distributorId)
+            : \App\Models\User::where('role_code', 'distributor')->first();
 
         return \App\Models\SettlementRecord::create([
             'payment_request_id'   => $pr->id,
