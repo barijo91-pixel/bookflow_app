@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\PaymentRequest;
 use App\Services\NotificationService;
+use App\Services\PortOneService;
 use App\Services\SettlementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -226,8 +227,10 @@ class PaymentRequestController extends Controller
         }
 
         $items = json_decode($pr->items_snapshot ?? '[]', true) ?: [];
+        $portOneActive = PortOneService::isActive();
+        $portOneImpUid = PortOneService::impUid();
 
-        return view('public.pay.show', compact('pr', 'vendor', 'distributor', 'bankName', 'items'));
+        return view('public.pay.show', compact('pr', 'vendor', 'distributor', 'bankName', 'items', 'portOneActive', 'portOneImpUid'));
     }
 
     /**
@@ -275,5 +278,87 @@ class PaymentRequestController extends Controller
 
         return redirect()->route('public.pay', $token)
             ->with('success', '결제가 완료되었습니다. (테스트 모드)');
+    }
+
+    /**
+     * PortOne 결제 완료 콜백 (실 PG 결제)
+     * POST /pay/{token}/portone-complete
+     *
+     * 요청: imp_uid (PortOne 결제 식별), merchant_uid (가맹점 주문번호)
+     *
+     * 처리:
+     *  1. PortOne API로 실제 결제 정보 검증 (위변조 방지)
+     *  2. 결제 금액 == 청구 금액 확인
+     *  3. payment_request.status='paid'
+     *  4. SettlementService 호출 → SettlementRecord 생성
+     */
+    public function portOneComplete(Request $request, string $token)
+    {
+        $pr = PaymentRequest::where('token', $token)->first();
+        abort_if(! $pr, 404, '결제 요청을 찾을 수 없습니다.');
+
+        $data = $request->validate([
+            'imp_uid'      => ['required', 'string', 'max:100'],
+            'merchant_uid' => ['required', 'string', 'max:100'],
+        ]);
+
+        if ($pr->status === 'paid') {
+            return response()->json(['success' => true, 'message' => '이미 결제 완료']);
+        }
+
+        // PortOne API로 결제 검증
+        $payment = PortOneService::getPayment($data['imp_uid']);
+        if (! $payment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PG 결제 정보를 확인할 수 없습니다.',
+            ], 400);
+        }
+
+        // 위변조 방지: 결제 상태 + 금액 검증
+        if (($payment['status'] ?? '') !== 'paid') {
+            return response()->json([
+                'success' => false,
+                'message' => '결제 상태 이상: ' . ($payment['status'] ?? '?'),
+            ], 400);
+        }
+
+        if ((int) ($payment['amount'] ?? 0) !== (int) $pr->amount) {
+            // 결제 금액 위변조 → 자동 환불
+            PortOneService::cancel($data['imp_uid'], (int) ($payment['amount'] ?? 0), '결제 금액 불일치 자동 환불');
+            AuditLog::log('payment_requests', $pr->id, 'amount_mismatch', null, [
+                'expected' => $pr->amount,
+                'actual'   => $payment['amount'] ?? 0,
+                'imp_uid'  => $data['imp_uid'],
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => '결제 금액 불일치. 자동 환불 처리되었습니다.',
+            ], 400);
+        }
+
+        DB::transaction(function () use ($pr, $data, $payment) {
+            $pr->update([
+                'status'  => 'paid',
+                'paid_at' => now(),
+            ]);
+
+            $settlement = SettlementService::createFromPaymentRequest($pr, $data['imp_uid']);
+
+            AuditLog::log('payment_requests', $pr->id, 'portone_paid', null, [
+                'imp_uid'          => $data['imp_uid'],
+                'merchant_uid'     => $data['merchant_uid'],
+                'pg_provider'      => $payment['pg_provider'] ?? '',
+                'pay_method'       => $payment['pay_method'] ?? '',
+                'settlement_id'    => $settlement->id,
+                'parent_paid'      => $pr->amount,
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => '결제가 완료되었습니다.',
+            'redirect_url' => route('public.pay', $token),
+        ]);
     }
 }

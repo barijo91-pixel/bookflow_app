@@ -30,10 +30,14 @@ Route::get('/p/{token}', [\App\Http\Controllers\ParentShareController::class, 's
 Route::get('/pay/{token}', [\App\Http\Controllers\PaymentRequestController::class, 'publicShow'])
     ->middleware('throttle:30,1')
     ->name('public.pay');
-// Mock PG 결제 처리 (C-3에서 실 PG로 교체) — 분당 10회 제한
+// Mock PG 결제 처리 (PortOne 미설정 시 fallback) — 분당 10회 제한
 Route::post('/pay/{token}/mock-pay', [\App\Http\Controllers\PaymentRequestController::class, 'mockPay'])
     ->middleware('throttle:10,1')
     ->name('public.pay.mock');
+// PortOne 실 PG 결제 완료 콜백 — 분당 30회 제한
+Route::post('/pay/{token}/portone-complete', [\App\Http\Controllers\PaymentRequestController::class, 'portOneComplete'])
+    ->middleware('throttle:30,1')
+    ->name('public.pay.portone');
 
 // SEO
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');

@@ -96,18 +96,29 @@
         @endif
 
         @if(in_array($pr->status, ['sent', 'viewed']))
-            {{-- PG 카드 결제 (테스트 모드) — C-3에서 실 PG로 교체 --}}
             <div class="pay-section">
                 <h6><i class="bi bi-credit-card-2-front"></i> 카드로 간편하게 결제</h6>
-                <form method="POST" action="{{ route('public.pay.mock', $pr->token) }}">
-                    @csrf
-                    <button type="submit" class="btn w-100 py-3" style="background:var(--navy); color:#fff; font-weight:700; font-size:1.05rem; border-radius:10px;">
+                @if($portOneActive ?? false)
+                    {{-- PortOne 실 PG 결제 --}}
+                    <button type="button" id="portOnePayBtn" class="btn w-100 py-3"
+                            style="background:var(--navy); color:#fff; font-weight:700; font-size:1.05rem; border-radius:10px;">
                         <i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원
                     </button>
-                </form>
-                <p class="small text-center text-warning mt-2 mb-0" style="font-size:.75rem;">
-                    <i class="bi bi-info-circle"></i> 현재 <strong>테스트 모드</strong>입니다. 실제 PG는 곧 연동됩니다.
-                </p>
+                    <p class="small text-center text-muted mt-2 mb-0" style="font-size:.75rem;">
+                        <i class="bi bi-shield-check"></i> 안전한 PG사 결제 시스템
+                    </p>
+                @else
+                    {{-- mock 결제 (PortOne 미설정 시 fallback) --}}
+                    <form method="POST" action="{{ route('public.pay.mock', $pr->token) }}">
+                        @csrf
+                        <button type="submit" class="btn w-100 py-3" style="background:var(--navy); color:#fff; font-weight:700; font-size:1.05rem; border-radius:10px;">
+                            <i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원
+                        </button>
+                    </form>
+                    <p class="small text-center text-warning mt-2 mb-0" style="font-size:.75rem;">
+                        <i class="bi bi-info-circle"></i> 현재 <strong>테스트 모드</strong>입니다. 관리자가 PG 키 설정 시 실 결제 가능합니다.
+                    </p>
+                @endif
             </div>
 
             <div class="pay-section">
@@ -168,5 +179,73 @@ function copyAcc() {
     });
 }
 </script>
+
+@if(($portOneActive ?? false) && in_array($pr->status, ['sent', 'viewed']))
+{{-- PortOne (구 아임포트) SDK --}}
+<script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+<script>
+(function() {
+    const IMP = window.IMP;
+    IMP.init('{{ $portOneImpUid }}');
+
+    const merchantUid = 'pay_{{ $pr->id }}_' + Date.now();
+    const csrfToken = '{{ csrf_token() }}';
+
+    document.getElementById('portOnePayBtn').addEventListener('click', function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> 결제 요청 중...';
+
+        IMP.request_pay({
+            pg: 'html5_inicis',  // 또는 'kakaopay', 'tosspayments' — 관리자가 선택 가능하게 추후 확장
+            pay_method: 'card',
+            merchant_uid: merchantUid,
+            name: '교재 대금 — {{ $vendor->name ?? 'BookSys' }}',
+            amount: {{ (int) $pr->amount }},
+            buyer_name: {!! json_encode($pr->parent_name ?? $pr->student_name ?? '') !!},
+            buyer_tel: {!! json_encode($pr->parent_phone ?? '') !!},
+        }, function(rsp) {
+            if (rsp.success) {
+                // 결제 성공 → 서버 검증 호출
+                fetch('{{ route('public.pay.portone', $pr->token) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        imp_uid: rsp.imp_uid,
+                        merchant_uid: rsp.merchant_uid,
+                    }),
+                })
+                .then(r => r.json())
+                .then(j => {
+                    if (j.success) {
+                        window.location.href = j.redirect_url || window.location.href;
+                    } else {
+                        alert('결제 검증 실패: ' + (j.message || '알 수 없는 오류'));
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원';
+                    }
+                })
+                .catch(err => {
+                    alert('서버 통신 오류. 다시 시도해주세요.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원';
+                });
+            } else {
+                // 결제 실패/취소
+                if (rsp.error_msg && !rsp.error_msg.includes('USER_CANCEL')) {
+                    alert('결제 실패: ' + rsp.error_msg);
+                }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원';
+            }
+        });
+    });
+})();
+</script>
+@endif
 </body>
 </html>
