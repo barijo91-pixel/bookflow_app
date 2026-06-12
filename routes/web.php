@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::get('mypage',          [\App\Http\Controllers\MyPageController::class, 'index'])->name('mypage');
     Route::get('mypage/profile',  [\App\Http\Controllers\MyPageController::class, 'showProfile'])->name('mypage.profile');
     Route::put('mypage/profile',  [\App\Http\Controllers\MyPageController::class, 'updateProfile'])->name('mypage.profile.update');
+    Route::get('mypage/tax',      [\App\Http\Controllers\MyPageController::class, 'taxInfo'])->name('mypage.tax');
     // 비밀번호 변경 — 현재 비번 brute force 방어 (15분에 5회)
     Route::put('mypage/password', [\App\Http\Controllers\MyPageController::class, 'updatePassword'])
         ->middleware('throttle:5,15')

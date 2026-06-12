@@ -132,9 +132,54 @@ class MyPageController extends Controller
             $rules['bank_account'] = ['nullable', 'string', 'max:50'];
             $rules['bank_holder']  = ['nullable', 'string', 'max:50'];
         }
+        // 영업자(사입자)는 세무 정보 + 계좌
+        if ($user->role_code === 'agent') {
+            $rules['business_type'] = ['required', 'in:none,individual_simple,individual_general,corporate'];
+            $rules['business_no']   = ['nullable', 'string', 'max:20'];
+            $rules['business_name'] = ['nullable', 'string', 'max:100'];
+            $rules['bank_code']     = ['nullable', 'string', 'max:10'];
+            $rules['bank_account']  = ['nullable', 'string', 'max:50'];
+            $rules['bank_holder']   = ['nullable', 'string', 'max:50'];
+        }
         $data = $request->validate($rules);
         $user->update($data);
         return back()->with('success', '정보가 저장되었습니다.');
+    }
+
+    /** 영업자(사입자) 세무 정보 페이지 — 계획서 8-A장 */
+    public function taxInfo()
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'agent') {
+            abort(403, '영업자만 접근 가능합니다.');
+        }
+
+        // 누적 연간 수수료 (PG 정산 전까지는 주문 기반 추정)
+        $yearStart = now()->startOfYear()->toDateString();
+        $estimated = DB::table('orders as o')
+            ->join('agent_vendor_discounts as avd', function ($j) use ($user) {
+                $j->on('avd.vendor_id', '=', 'o.vendor_id')
+                  ->where('avd.agent_user_id', '=', $user->id);
+            })
+            ->where('o.agent_user_id', $user->id)
+            ->whereDate('o.created_at', '>=', $yearStart)
+            ->whereNull('o.deleted_at')
+            ->whereIn('o.status_code', ['confirmed', 'accepted', 'shipped', 'in_transit', 'completed'])
+            ->sum(DB::raw('o.subtotal_amount * (avd.discount_rate / 100)'));
+        // 마진율 자체가 수수료 추정의 일부. 실제 정산률(예: 8%p × 0.4 사입자 분배)은 PG에서.
+        // 임시: 도서 거래 마진의 40% (계획서 6:4 분배 기준) 추정
+        $estimatedCommission = (int) round($estimated * 0.4);
+
+        $taxCalc = \App\Services\TaxService::calc($user->business_type ?? 'none', $estimatedCommission);
+        $stageInfo = \App\Services\TaxService::checkStage($estimatedCommission, $user->business_type ?? 'none');
+
+        return view('public.mypage.tax_info', [
+            'user'                => $user,
+            'estimatedCommission' => $estimatedCommission,
+            'taxCalc'             => $taxCalc,
+            'stageInfo'           => $stageInfo,
+            'types'               => \App\Services\TaxService::TYPES,
+        ]);
     }
 
     public function updatePassword(Request $request)

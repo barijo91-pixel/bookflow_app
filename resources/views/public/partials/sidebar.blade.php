@@ -69,6 +69,9 @@
                 <a href="{{ route('my.discounts.index') }}" class="nav-item {{ $startsWith('my.discounts') }}">
                     <i class="bi bi-percent"></i> 할인율 관리
                 </a>
+                <a href="{{ route('mypage.tax') }}" class="nav-item {{ $is('mypage.tax') }}">
+                    <i class="bi bi-receipt-cutoff"></i> 세무 정보
+                </a>
                 @break
 
             @case('academy')
