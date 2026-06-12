@@ -281,6 +281,67 @@ class MyPageController extends Controller
         return view('public.mypage.settlements', compact('records', 'stats', 'user', 'status'));
     }
 
+    /**
+     * 사입자/총판용 수익 시뮬레이션 — 본인 학원/도서/할인율 기반
+     */
+    public function incomeSimulator(Request $request)
+    {
+        $user = Auth::user();
+        if (! in_array($user->role_code, ['agent', 'distributor'])) {
+            abort(403, '영업자/총판만 접근 가능합니다.');
+        }
+
+        $vendorId   = $request->input('vendor_id');
+        $unitPrice  = (int) $request->input('unit_price', 16000);
+        $qty        = (int) $request->input('qty', 30);
+        $splitRatio = '6:4'; // 향후 사입자별 다른 비율 적용 가능
+
+        // 본인 거래처 목록
+        if ($user->role_code === 'agent') {
+            $vendors = DB::table('agent_vendor_discounts as avd')
+                ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
+                ->where('avd.agent_user_id', $user->id)
+                ->where('avd.is_active', true)
+                ->select('v.id', 'v.name', 'avd.discount_rate')
+                ->orderBy('v.name')->get();
+        } else {
+            $vendors = DB::table('vendors')->select('id', 'name')
+                ->selectRaw('30 as discount_rate')
+                ->orderBy('name')->get();
+        }
+
+        // 선택된 학원의 할인율 사용 (없으면 30%)
+        $discountRate = 30.0;
+        if ($vendorId) {
+            $found = $vendors->firstWhere('id', (int) $vendorId);
+            if ($found) {
+                $discountRate = (float) $found->discount_rate;
+            }
+        }
+
+        $b2b = \App\Services\SettlementService::calcB2B($unitPrice, $qty, $discountRate, $splitRatio);
+        $b2c = \App\Services\SettlementService::calcB2C($unitPrice, $qty, 0, $splitRatio);
+
+        $businessType = $user->business_type ?? 'none';
+        $b2bTax = \App\Services\TaxService::calc($businessType, max(0, $b2b['agent_total_margin']));
+        $b2cTax = \App\Services\TaxService::calc($businessType, max(0, $b2c['agent_net']));
+
+        return view('public.mypage.income_simulator', [
+            'user'         => $user,
+            'vendors'      => $vendors,
+            'unitPrice'    => $unitPrice,
+            'qty'          => $qty,
+            'discountRate' => $discountRate,
+            'vendorId'     => $vendorId,
+            'b2b'          => $b2b,
+            'b2c'          => $b2c,
+            'b2bTax'       => $b2bTax,
+            'b2cTax'       => $b2cTax,
+            'businessType' => $businessType,
+            'splitRatio'   => $splitRatio,
+        ]);
+    }
+
     public function updatePassword(Request $request)
     {
         $user = Auth::user();

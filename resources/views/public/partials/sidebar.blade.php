@@ -49,6 +49,9 @@
                 <a href="{{ route('my.agents.index') }}" class="nav-item {{ $startsWith('my.agents') }}">
                     <i class="bi bi-person-badge"></i> 소속 영업자
                 </a>
+                <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
+                    <i class="bi bi-graph-up-arrow"></i> 수익 시뮬레이션
+                </a>
                 <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
                     <i class="bi bi-cash-stack"></i> 정산 내역
                 </a>
@@ -71,6 +74,9 @@
                 </a>
                 <a href="{{ route('my.discounts.index') }}" class="nav-item {{ $startsWith('my.discounts') }}">
                     <i class="bi bi-percent"></i> 할인율 관리
+                </a>
+                <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
+                    <i class="bi bi-graph-up-arrow"></i> 수익 시뮬레이션
                 </a>
                 <a href="{{ route('mypage.tax') }}" class="nav-item {{ $is('mypage.tax') }}">
                     <i class="bi bi-receipt-cutoff"></i> 세무 정보
