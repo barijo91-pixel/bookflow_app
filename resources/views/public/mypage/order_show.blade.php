@@ -116,25 +116,81 @@
                     @endif
 
                     @if($canShip)
+                        @php $isDirect = ($order->delivery_type ?? 'parcel') === 'direct'; @endphp
                         <form method="POST" action="{{ route('my.orders.ship', $order->id) }}" class="mb-2">
                             @csrf
-                            <div class="mb-2">
-                                <label class="form-label small text-muted mb-1">택배사</label>
-                                <select name="courier_code" class="form-select form-select-sm" required>
-                                    <option value="">선택</option>
-                                    @foreach($courierOptions as $c)
-                                        <option value="{{ $c->code }}">{{ $c->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small text-muted mb-1">송장번호</label>
-                                <input type="text" name="tracking_no" class="form-control form-control-sm" required>
-                            </div>
-                            <button class="btn btn-success w-100">
-                                <i class="bi bi-truck"></i> 출고 처리
-                            </button>
+                            @if($isDirect)
+                                {{-- 직접배송: 화물·용달 기사 정보 입력 (계획서 6-2장) --}}
+                                <div class="alert alert-warning py-2 small mb-2">
+                                    <i class="bi bi-truck"></i> <strong>직접배송 요청</strong> — 화물·용달 배차 후 기사 정보를 입력해주세요.
+                                    @if(! empty($order->delivery_memo))
+                                        <div class="small text-muted mt-1">📝 영업자 메모: {{ $order->delivery_memo }}</div>
+                                    @endif
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted mb-1">기사 이름 *</label>
+                                    <input type="text" name="driver_name" class="form-control form-control-sm" maxlength="50" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted mb-1">기사 연락처 *</label>
+                                    <input type="tel" name="driver_phone" class="form-control form-control-sm" maxlength="20" placeholder="010-0000-0000" required>
+                                </div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-7">
+                                        <label class="form-label small text-muted mb-1">차량번호 (선택)</label>
+                                        <input type="text" name="vehicle_no" class="form-control form-control-sm" maxlength="20" placeholder="12가 3456">
+                                    </div>
+                                    <div class="col-5">
+                                        <label class="form-label small text-muted mb-1">배송비 (원)</label>
+                                        <input type="number" name="delivery_fee" class="form-control form-control-sm text-end" min="0" step="1000" value="0">
+                                    </div>
+                                </div>
+                                <button class="btn btn-success w-100">
+                                    <i class="bi bi-send"></i> 배차 정보 저장 + 출고 처리
+                                </button>
+                            @else
+                                {{-- 택배 --}}
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted mb-1">택배사</label>
+                                    <select name="courier_code" class="form-select form-select-sm" required>
+                                        <option value="">선택</option>
+                                        @foreach($courierOptions as $c)
+                                            <option value="{{ $c->code }}">{{ $c->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted mb-1">송장번호</label>
+                                    <input type="text" name="tracking_no" class="form-control form-control-sm" required>
+                                </div>
+                                <button class="btn btn-success w-100">
+                                    <i class="bi bi-truck"></i> 출고 처리
+                                </button>
+                            @endif
                         </form>
+                    @endif
+
+                    {{-- 영업자 전용: 직접배송 신청 버튼 (확정/접수 단계) --}}
+                    @if($user->role_code === 'agent' && $order->agent_user_id == $user->id
+                        && in_array($order->status_code, ['confirmed', 'accepted'], true)
+                        && ($order->delivery_type ?? 'parcel') !== 'direct')
+                        <div class="mt-3 pt-3 border-top">
+                            <form method="POST" action="{{ route('my.orders.direct_delivery', $order->id) }}"
+                                  onsubmit="return confirm('이 주문을 직접배송(화물·용달)으로 변경 신청할까요?')">
+                                @csrf
+                                <div class="mb-2">
+                                    <label class="form-label small fw-bold navy mb-1">
+                                        <i class="bi bi-truck"></i> 직접배송 신청 (화물·용달)
+                                    </label>
+                                    <textarea name="delivery_memo" class="form-control form-control-sm" rows="2"
+                                              maxlength="500" placeholder="예: 당일 배송 필요 / 근거리 직납 / 고중량"></textarea>
+                                </div>
+                                <button class="btn btn-warning w-100 btn-sm">
+                                    <i class="bi bi-send"></i> 직접배송 신청 → 총판 알림
+                                </button>
+                                <div class="small text-muted mt-1">배송비는 총판이 별도 청구합니다.</div>
+                            </form>
+                        </div>
                     @endif
 
                     @if($canCancel)
@@ -160,16 +216,60 @@
 
         {{-- 출고 정보 --}}
         @if($shipment)
+            @php $isDirect = ($order->delivery_type ?? 'parcel') === 'direct'; @endphp
             <div class="card section-card mb-3">
                 <div class="card-header"><strong><i class="bi bi-truck"></i> 출고/배송</strong></div>
                 <div class="card-body small">
                     <dl class="row mb-0">
-                        <dt class="col-4 text-muted">택배사</dt>
-                        <dd class="col-8">{{ $shipment->courier_code }}</dd>
-                        <dt class="col-4 text-muted">송장번호</dt>
-                        <dd class="col-8"><code>{{ $shipment->tracking_no }}</code></dd>
-                        <dt class="col-4 text-muted">출고일</dt>
-                        <dd class="col-8">{{ $shipment->shipped_at ? \Carbon\Carbon::parse($shipment->shipped_at)->format('Y-m-d H:i') : '-' }}</dd>
+                        <dt class="col-4 text-muted">배송 방식</dt>
+                        <dd class="col-8">
+                            @if($isDirect)
+                                <span class="badge bg-warning text-dark">직접배송 (화물·용달)</span>
+                            @else
+                                <span class="badge bg-light text-dark">택배</span>
+                            @endif
+                        </dd>
+                        @if($isDirect)
+                            {{-- 직접배송: 기사 정보 (계획서 6-2장) --}}
+                            @if($shipment->driver_name)
+                                <dt class="col-4 text-muted">기사 이름</dt>
+                                <dd class="col-8"><strong>{{ $shipment->driver_name }}</strong></dd>
+                                <dt class="col-4 text-muted">연락처</dt>
+                                <dd class="col-8">
+                                    <a href="tel:{{ $shipment->driver_phone }}" class="text-decoration-none">
+                                        <i class="bi bi-telephone"></i> {{ format_phone($shipment->driver_phone) }}
+                                    </a>
+                                </dd>
+                                @if($shipment->vehicle_no)
+                                    <dt class="col-4 text-muted">차량번호</dt>
+                                    <dd class="col-8"><code>{{ $shipment->vehicle_no }}</code></dd>
+                                @endif
+                                @if($shipment->delivery_fee > 0)
+                                    <dt class="col-4 text-muted">배송비</dt>
+                                    <dd class="col-8 fw-bold">{{ number_format($shipment->delivery_fee) }}원 <span class="small text-muted">(총판 → 사입자 청구)</span></dd>
+                                @endif
+                            @else
+                                <dt class="col-4 text-muted">상태</dt>
+                                <dd class="col-8">
+                                    @if($shipment->direct_requested_at)
+                                        <span class="badge bg-info">배차 대기 중</span>
+                                        <div class="small text-muted mt-1">신청: {{ \Carbon\Carbon::parse($shipment->direct_requested_at)->format('m-d H:i') }}</div>
+                                    @else
+                                        -
+                                    @endif
+                                </dd>
+                            @endif
+                        @else
+                            {{-- 택배 --}}
+                            <dt class="col-4 text-muted">택배사</dt>
+                            <dd class="col-8">{{ $shipment->courier_code ?? '-' }}</dd>
+                            <dt class="col-4 text-muted">송장번호</dt>
+                            <dd class="col-8"><code>{{ $shipment->tracking_no ?? '-' }}</code></dd>
+                        @endif
+                        @if($shipment->shipped_at)
+                            <dt class="col-4 text-muted">출고일</dt>
+                            <dd class="col-8">{{ \Carbon\Carbon::parse($shipment->shipped_at)->format('Y-m-d H:i') }}</dd>
+                        @endif
                     </dl>
                 </div>
             </div>

@@ -73,6 +73,8 @@ Route::middleware('auth')->group(function () {
         Route::put('orders/{id}',                  [\App\Http\Controllers\MyPageController::class, 'updateOrder'])->name('orders.update');
         Route::post('orders/{id}/transition',      [\App\Http\Controllers\MyPageController::class, 'transitionOrder'])->name('orders.transition');
         Route::post('orders/{id}/ship',            [\App\Http\Controllers\MyPageController::class, 'shipOrder'])->name('orders.ship');
+        // 영업자: 직접배송 신청 (계획서 6-2장)
+        Route::post('orders/{id}/direct-delivery', [\App\Http\Controllers\MyPageController::class, 'requestDirectDelivery'])->name('orders.direct_delivery');
 
         // 학원 — 학부모 결제 요청
         Route::get('orders/{id}/payment-requests/create',

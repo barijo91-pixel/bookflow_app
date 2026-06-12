@@ -478,22 +478,60 @@ class MyPageController extends Controller
             return back()->with('error', "출고는 '총판접수' 상태에서만 가능합니다. 현재: {$order->status_code}");
         }
 
-        $data = $request->validate([
-            'courier_code' => ['required', 'string', 'max:30'],
-            'tracking_no'  => ['required', 'string', 'max:50'],
-        ]);
+        // 배송 방식에 따라 분기 — 계획서 6-2장 (직접배송 신규 필요)
+        $isDirect = ($order->delivery_type ?? 'parcel') === 'direct';
 
-        DB::transaction(function () use ($order, $data) {
+        if ($isDirect) {
+            // 직접배송: 기사 정보 입력
+            $data = $request->validate([
+                'driver_name'  => ['required', 'string', 'max:50'],
+                'driver_phone' => ['required', 'string', 'max:20'],
+                'vehicle_no'   => ['nullable', 'string', 'max:20'],
+                'delivery_fee' => ['nullable', 'integer', 'min:0', 'max:9999999'],
+            ]);
+            $shipmentData = [
+                'driver_name'      => $data['driver_name'],
+                'driver_phone'     => preg_replace('/[^0-9]/', '', $data['driver_phone']),
+                'vehicle_no'       => $data['vehicle_no'] ?? null,
+                'delivery_fee'     => $data['delivery_fee'] ?? 0,
+                'dispatched_at'    => now(),
+                'ship_status_code' => 'shipped',
+                'shipped_at'       => now(),
+            ];
+            $logReason = "직접배송 배차: 기사 {$data['driver_name']} ({$data['driver_phone']})";
+            $notifyExtra = [
+                'driver_name'  => $data['driver_name'],
+                'driver_phone' => $data['driver_phone'],
+                'vehicle_no'   => $data['vehicle_no'] ?? '',
+                'delivery_fee' => $data['delivery_fee'] ?? 0,
+            ];
+        } else {
+            // 택배: 택배사 + 송장번호
+            $data = $request->validate([
+                'courier_code' => ['required', 'string', 'max:30'],
+                'tracking_no'  => ['required', 'string', 'max:50'],
+            ]);
+            $shipmentData = [
+                'courier_code'     => $data['courier_code'],
+                'tracking_no'      => $data['tracking_no'],
+                'ship_status_code' => 'shipped',
+                'shipped_at'       => now(),
+            ];
+            $logReason = '송장입력: '.$data['courier_code'].' '.$data['tracking_no'];
+            $courierName = DB::table('codes')->where('group_code', 'courier')->where('code', $data['courier_code'])->value('name') ?? $data['courier_code'];
+            $notifyExtra = [
+                'courier_name' => $courierName,
+                'tracking_no'  => $data['tracking_no'],
+            ];
+        }
+
+        DB::transaction(function () use ($order, $shipmentData, $logReason) {
             DB::table('order_shipments')->updateOrInsert(
                 ['order_id' => $order->id],
-                [
-                    'courier_code'     => $data['courier_code'],
-                    'tracking_no'      => $data['tracking_no'],
-                    'ship_status_code' => 'shipped',
-                    'shipped_at'       => now(),
-                    'updated_at'       => now(),
-                    'created_at'       => now(),
-                ]
+                array_merge($shipmentData, [
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ])
             );
             DB::table('orders')->where('id', $order->id)->update([
                 'status_code' => 'shipped',
@@ -505,22 +543,52 @@ class MyPageController extends Controller
                 'from_status'=> 'accepted',
                 'to_status'  => 'shipped',
                 'changed_by' => auth()->id(),
-                'reason'     => '송장입력: '.$data['courier_code'].' '.$data['tracking_no'],
+                'reason'     => $logReason,
                 'created_at' => now(),
             ]);
         });
 
         AuditLog::log('orders', $order->id, 'ship',
             ['status_code' => 'accepted'],
-            ['status_code' => 'shipped', 'courier_code' => $data['courier_code'], 'tracking_no' => $data['tracking_no']]);
+            array_merge(['status_code' => 'shipped'], $shipmentData));
 
-        $courierName = DB::table('codes')->where('group_code', 'courier')->where('code', $data['courier_code'])->value('name') ?? $data['courier_code'];
-        $this->dispatchOrderNotification($order->fresh(), 'shipped', $notify, null, [
-            'courier_name' => $courierName,
-            'tracking_no'  => $data['tracking_no'],
+        $this->dispatchOrderNotification($order->fresh(), 'shipped', $notify, null, $notifyExtra);
+
+        return back()->with('success', $isDirect ? '직접배송 배차 정보 저장 완료' : '출고 처리 완료');
+    }
+
+    /** 영업자가 [직접배송 신청] 클릭 — 계획서 6-2장 */
+    public function requestDirectDelivery(Request $request, $id)
+    {
+        $order = \App\Models\Order::findOrFail($id);
+        $user  = Auth::user();
+        if ($user->role_code !== 'agent' || $order->agent_user_id != $user->id) {
+            abort(403, '영업자 본인 주문만 신청 가능합니다.');
+        }
+        if (! in_array($order->status_code, ['confirmed', 'accepted'], true)) {
+            return back()->with('error', '확정/접수 상태에서만 직접배송 신청 가능합니다.');
+        }
+
+        $data = $request->validate([
+            'delivery_memo' => ['nullable', 'string', 'max:500'],
         ]);
 
-        return back()->with('success', '출고 처리 완료');
+        DB::transaction(function () use ($order, $data) {
+            DB::table('orders')->where('id', $order->id)->update([
+                'delivery_type' => 'direct',
+                'delivery_memo' => $data['delivery_memo'] ?? null,
+                'updated_at'    => now(),
+            ]);
+            DB::table('order_shipments')->updateOrInsert(
+                ['order_id' => $order->id],
+                ['direct_requested_at' => now(), 'updated_at' => now(), 'created_at' => now()]
+            );
+        });
+
+        AuditLog::log('orders', $order->id, 'direct_delivery_request',
+            null, ['delivery_type' => 'direct', 'memo' => $data['delivery_memo'] ?? null]);
+
+        return back()->with('success', '직접배송 신청 완료 — 총판에게 알림이 전송됩니다.');
     }
 
     /** 주문 상태 변경 알림 발송 (Admin\OrderController와 동일 로직) */
