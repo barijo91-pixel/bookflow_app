@@ -26,6 +26,9 @@
         <a href="{{ route('admin.vendors.index') }}" class="nav-item {{ $is('admin.vendors') }}">
             <i class="bi bi-building"></i> 거래처(학원)
         </a>
+        <a href="{{ route('admin.settlement.simulator') }}" class="nav-item {{ $is('admin.settlement') }}">
+            <i class="bi bi-calculator"></i> 정산 시뮬레이터
+        </a>
         <div class="nav-section">회원</div>
         <a href="{{ route('admin.users.index') }}" class="nav-item {{ $is('admin.users.index') . $is('admin.users.import') }}">
             <i class="bi bi-people"></i> 사용자 목록

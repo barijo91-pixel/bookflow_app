@@ -274,5 +274,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('code-groups/{group_code}/codes',         [CodeController::class, 'store'])->name('codes.store');
         Route::put('code-groups/{group_code}/codes/{id}',     [CodeController::class, 'update'])->name('codes.update');
         Route::delete('code-groups/{group_code}/codes/{id}',  [CodeController::class, 'destroy'])->name('codes.destroy');
+
+        // 정산 시뮬레이션 (계획서 7장 — PG 실연동 전 계산 검증용)
+        Route::get('settlement/simulator',     [\App\Http\Controllers\Admin\SettlementController::class, 'simulator'])->name('settlement.simulator');
+        Route::get('settlement/order/{order}', [\App\Http\Controllers\Admin\SettlementController::class, 'orderPreview'])->name('settlement.order_preview');
     });
 });

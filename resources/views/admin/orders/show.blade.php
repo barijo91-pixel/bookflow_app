@@ -21,6 +21,11 @@
             @endswitch
         </h1>
     </div>
+    <div>
+        <a href="{{ route('admin.settlement.order_preview', $order->id) }}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-calculator"></i> 정산 미리보기
+        </a>
+    </div>
 </div>
 
 @if($errors->any())

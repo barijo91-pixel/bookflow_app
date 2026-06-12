@@ -24,4 +24,14 @@ class Order extends Model
     {
         return $this->hasMany(\App\Models\OrderItem::class);
     }
+
+    public function vendor()
+    {
+        return $this->belongsTo(\App\Models\Vendor::class);
+    }
+
+    public function agent()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'agent_user_id');
+    }
 }
