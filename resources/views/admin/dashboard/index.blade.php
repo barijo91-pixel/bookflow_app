@@ -61,6 +61,45 @@
     </div>
 </div>
 
+{{-- 운영 준비도 위젯 (미완료 항목 있을 시에만 표시) --}}
+@if(isset($opsReadiness) && ($opsReadiness['critical_undone'] > 0 || $opsReadiness['important_undone'] > 0 || $opsReadiness['cleanup_needed'] > 0))
+    @php
+        $totalUndone = $opsReadiness['critical_undone'] + $opsReadiness['important_undone'] + $opsReadiness['cleanup_needed'];
+        $progressPct = $opsReadiness['total'] > 0 ? round($opsReadiness['done'] / $opsReadiness['total'] * 100) : 0;
+    @endphp
+    <div class="card section-card mb-4 {{ $opsReadiness['critical_undone'] > 0 ? 'border-danger' : 'border-warning' }}">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <strong>
+                @if($opsReadiness['critical_undone'] > 0)
+                    <i class="bi bi-exclamation-octagon-fill text-danger"></i>
+                @else
+                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                @endif
+                운영 준비도 ({{ $opsReadiness['done'] }}/{{ $opsReadiness['total'] }})
+            </strong>
+            <a href="{{ route('admin.operations_checklist') }}" class="btn btn-sm btn-primary">
+                점검 페이지로 <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="progress mb-2" style="height:8px;">
+                <div class="progress-bar {{ $opsReadiness['critical_undone'] > 0 ? 'bg-danger' : 'bg-warning' }}" style="width:{{ $progressPct }}%"></div>
+            </div>
+            <div class="d-flex gap-3 small">
+                @if($opsReadiness['critical_undone'] > 0)
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> 필수 미완료 {{ $opsReadiness['critical_undone'] }}개</span>
+                @endif
+                @if($opsReadiness['important_undone'] > 0)
+                    <span class="text-warning"><i class="bi bi-exclamation-circle-fill"></i> 권장 미완료 {{ $opsReadiness['important_undone'] }}개</span>
+                @endif
+                @if($opsReadiness['cleanup_needed'] > 0)
+                    <span class="text-info"><i class="bi bi-trash"></i> 데모 데이터 정리 필요</span>
+                @endif
+            </div>
+        </div>
+    </div>
+@endif
+
 {{-- 정산 통계 (계획서 7장) --}}
 @if(($settlement->cnt ?? 0) > 0)
 <div class="card section-card mb-4">

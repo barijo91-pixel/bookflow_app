@@ -55,5 +55,8 @@
         <a href="{{ route('admin.audit-logs.index') }}" class="nav-item {{ $is('admin.audit-logs') }}">
             <i class="bi bi-shield-check"></i> 감사 로그
         </a>
+        <a href="{{ route('admin.operations_checklist') }}" class="nav-item {{ $is('admin.operations_checklist') }}">
+            <i class="bi bi-clipboard-check"></i> 운영 준비도
+        </a>
     </nav>
 </aside>

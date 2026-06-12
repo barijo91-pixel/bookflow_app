@@ -105,10 +105,23 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // 운영 준비도 (실제 운영 진입 전 체크)
+        $opsReadiness = \App\Services\OperationsReadinessService::summary();
+
         return view('admin.dashboard.index', compact(
             'stats', 'recentUsers', 'recentOrders', 'recentNotifications', 'recentAudits',
             'settlement', 'topAgents', 'topVendors',
-            'chartLabels', 'chartAmounts', 'chartCnt'
+            'chartLabels', 'chartAmounts', 'chartCnt',
+            'opsReadiness'
         ));
+    }
+
+    /**
+     * 운영 준비도 체크리스트 페이지
+     */
+    public function operationsChecklist()
+    {
+        $checks = \App\Services\OperationsReadinessService::check();
+        return view('admin.dashboard.operations_checklist', compact('checks'));
     }
 }

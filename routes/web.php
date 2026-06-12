@@ -171,6 +171,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'admin', 'admin.session.timeout'])->group(function () {
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('operations-checklist', [DashboardController::class, 'operationsChecklist'])->name('operations_checklist');
 
         // 사용자
         Route::get('users',                  [UserController::class, 'index'])->name('users.index');
