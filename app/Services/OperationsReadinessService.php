@@ -53,10 +53,10 @@ class OperationsReadinessService
                 'href'  => route('admin.settings.edit') . '?group=company',
             ],
             [
-                'key'   => 'company_business_no',
+                'key'   => 'business_no',
                 'label' => '사업자등록번호',
                 'desc'  => '운영 필수 — 세금계산서/정산',
-                'done'  => ! empty(setting('company_business_no')),
+                'done'  => ! empty(setting('business_no')),
                 'href'  => route('admin.settings.edit') . '?group=company',
             ],
             [
