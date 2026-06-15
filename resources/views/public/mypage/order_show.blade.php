@@ -170,23 +170,39 @@
                         </form>
                     @endif
 
-                    {{-- 영업자 전용: 직접배송 신청 버튼 (확정/접수 단계) --}}
+                    {{-- 영업자 전용: 배송 안내 + 직접배송(옵션) — 확정/접수 단계, 일반배송일 때 --}}
                     @if($user->role_code === 'agent' && $order->agent_user_id == $user->id
                         && in_array($order->status_code, ['confirmed', 'accepted'], true)
                         && ($order->delivery_type ?? 'parcel') !== 'direct')
                         <div class="mt-3 pt-3 border-top">
+                            {{-- 일반배송(택배)이 기본임을 안내 --}}
+                            <div class="alert alert-success small mb-2">
+                                <i class="bi bi-check-circle-fill"></i>
+                                @if($order->status_code === 'confirmed')
+                                    주문이 <strong>확정</strong>되어 총판({{ $dist->name ?? '총판' }})에 전달되었습니다.
+                                    기본 <strong>택배</strong>로 출고되며 영업자가 더 할 일은 없습니다.
+                                @else
+                                    총판이 <strong>접수</strong>했습니다. 기본 <strong>택배</strong>로 출고됩니다.
+                                @endif
+                            </div>
+
+                            {{-- 직접배송은 옵션 (접이식) --}}
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-info-circle"></i>
+                                대형 학원·고중량 등 <strong>화물·용달 직접배송</strong>이 필요할 때만 아래에서 신청하세요.
+                            </div>
                             <form method="POST" action="{{ route('my.orders.direct_delivery', $order->id) }}"
                                   onsubmit="return confirm('이 주문을 직접배송(화물·용달)으로 변경 신청할까요?')">
                                 @csrf
                                 <div class="mb-2">
                                     <label class="form-label small fw-bold navy mb-1">
-                                        <i class="bi bi-truck"></i> 직접배송 신청 (화물·용달)
+                                        <i class="bi bi-truck"></i> 직접배송 신청 (선택)
                                     </label>
                                     <textarea name="delivery_memo" class="form-control form-control-sm" rows="2"
                                               maxlength="500" placeholder="예: 당일 배송 필요 / 근거리 직납 / 고중량"></textarea>
                                 </div>
-                                <button class="btn btn-warning w-100 btn-sm">
-                                    <i class="bi bi-send"></i> 직접배송 신청 → 총판 알림
+                                <button class="btn btn-outline-warning w-100 btn-sm">
+                                    <i class="bi bi-send"></i> 직접배송으로 변경 신청 → 총판 알림
                                 </button>
                                 <div class="small text-muted mt-1">배송비는 총판이 별도 청구합니다.</div>
                             </form>
