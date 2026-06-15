@@ -92,6 +92,20 @@
                             </a>
                             @if($u->isSuperAdmin())<span class="badge bg-danger ms-1">SUPER</span>@endif
                             @if($isSelf)<span class="badge bg-primary ms-1">나</span>@endif
+                            @php
+                                // 사업체명: 총판/영업자 → 상호명, 학원 → 학원(거래처)명
+                                $bizLabel = null; $bizIcon = 'shop';
+                                if (in_array($u->role_code, ['distributor', 'agent'])) {
+                                    $bizLabel = $u->business_name ?? null;
+                                    $bizIcon  = $u->role_code === 'distributor' ? 'truck' : 'person-badge';
+                                } elseif ($u->role_code === 'academy') {
+                                    $bizLabel = $affiliations[$u->id]['names'][0] ?? null;
+                                    $bizIcon  = 'mortarboard';
+                                }
+                            @endphp
+                            @if($bizLabel)
+                                <div class="small text-muted"><i class="bi bi-{{ $bizIcon }}"></i> {{ $bizLabel }}</div>
+                            @endif
                         </td>
                         <td class="text-muted small"><code>{{ $u->login_id }}</code></td>
                         <td class="text-muted small">{{ format_phone($u->phone) }}</td>

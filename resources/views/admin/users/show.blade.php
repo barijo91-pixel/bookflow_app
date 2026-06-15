@@ -211,7 +211,8 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('admin.users.assign_distributor', $user) }}">
+                    <form method="POST" action="{{ route('admin.users.assign_distributor', $user) }}"
+                          onsubmit="return confirm('소속 총판을 지정/변경하시겠습니까?');">
                         @csrf
                         <label class="form-label small text-muted">{{ $currentDistributor ? '총판 변경' : '총판 지정' }}</label>
                         <div class="input-group">
@@ -224,8 +225,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <button class="btn btn-primary" type="submit"
-                                onsubmit="return confirm('소속 총판을 변경하시겠습니까?');">
+                            <button class="btn btn-primary" type="submit">
                                 <i class="bi bi-check-lg"></i> 적용
                             </button>
                         </div>
