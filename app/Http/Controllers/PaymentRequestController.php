@@ -264,6 +264,11 @@ class PaymentRequestController extends Controller
      */
     public function mockPay(Request $request, string $token)
     {
+        // 보안: 실 PG(PortOne) 활성 시 mock 결제 차단 — 결제 우회 방지
+        if (PortOneService::isActive()) {
+            abort(403, '실 결제 모드에서는 사용할 수 없습니다.');
+        }
+
         $pr = PaymentRequest::where('token', $token)->first();
         abort_if(! $pr, 404, '결제 요청을 찾을 수 없습니다.');
 
