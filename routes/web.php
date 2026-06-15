@@ -191,7 +191,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
         Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset_password');
         Route::post('users/{user}/assign-distributor', [UserController::class, 'assignDistributor'])->name('users.assign_distributor');
-        Route::post('users/{user}/assign-vendor', [UserController::class, 'assignVendor'])->name('users.assign_vendor');
+        Route::post('users/{user}/assign-academy-agent', [UserController::class, 'assignAcademyAgent'])->name('users.assign_academy_agent');
 
         // 지역 (ajax + 관리)
         Route::get('regions/sigungu', [RegionController::class, 'sigungu'])->name('regions.sigungu');

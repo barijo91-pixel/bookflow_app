@@ -119,6 +119,21 @@
                         </div>
                     </div>
 
+                    {{-- 학원명 (학원 계정 — 거래처 자동 생성/동기화) --}}
+                    <div id="academy_section" style="{{ $user->role_code === 'academy' ? '' : 'display:none' }}">
+                        <hr class="my-4">
+                        <h6 class="mb-3 text-muted"><i class="bi bi-mortarboard"></i> 학원 정보</h6>
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small text-muted">학원명 *</label>
+                                <input type="text" name="academy_name" class="form-control"
+                                       value="{{ old('academy_name', $academyName ?? '') }}"
+                                       placeholder="예: OO영어학원">
+                                <small class="text-muted">저장 시 거래처가 자동 생성/연동됩니다. 담당 영업자는 우측에서 지정하세요.</small>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- 사업자 정보 + 정산 계좌 (총판/사입자) --}}
                     @php
                         $bizCodes = \Illuminate\Support\Facades\DB::table('codes')
@@ -237,53 +252,61 @@
             </div>
         @endif
 
-        {{-- 학원 계정: 소속 학원(거래처) 지정/변경 --}}
+        {{-- 학원 계정: 담당 영업자 지정/변경 --}}
         @if($user->role_code === 'academy')
-            <div class="card section-card mb-3 {{ $currentVendor ? '' : 'border-warning' }}">
+            <div class="card section-card mb-3 {{ $currentAgent ? '' : 'border-warning' }}">
                 <div class="card-header">
-                    <strong><i class="bi bi-mortarboard"></i> 소속 학원(거래처)</strong>
+                    <strong><i class="bi bi-person-badge"></i> 담당 영업자</strong>
                 </div>
                 <div class="card-body">
-                    @if($currentVendor)
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <div>
-                                <div class="fw-bold">{{ $currentVendor->name }}</div>
-                                @if($currentVendor->mobile)
-                                    <div class="small text-muted">{{ format_phone($currentVendor->mobile) }}</div>
-                                @endif
-                                <a href="{{ route('admin.vendors.show', $currentVendor->id) }}" class="small">거래처 상세 <i class="bi bi-box-arrow-up-right"></i></a>
-                            </div>
-                            <span class="badge bg-success">연결됨</span>
+                    @if(! $currentVendor)
+                        <div class="alert alert-warning small mb-0">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            먼저 좌측에서 <strong>학원명</strong>을 입력하고 저장하세요.
+                            거래처가 생성되어야 담당 영업자를 지정할 수 있습니다.
                         </div>
                     @else
-                        <div class="alert alert-warning small mb-3">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            소속 거래처가 없습니다. 학원을 연결해야 주문·결제가 정상 동작합니다.
-                        </div>
-                    @endif
+                        @if($currentAgent)
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div>
+                                    <div class="fw-bold">{{ $currentAgent->name }}</div>
+                                    <div class="small text-muted">
+                                        <code>{{ $currentAgent->login_id }}</code> · 할인율 {{ rtrim(rtrim(number_format($currentAgent->discount_rate, 2), '0'), '.') }}%
+                                    </div>
+                                </div>
+                                <span class="badge bg-success">담당중</span>
+                            </div>
+                        @else
+                            <div class="alert alert-warning small mb-3">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                담당 영업자가 없습니다. 주문 라우팅·정산을 위해 지정하세요.
+                            </div>
+                        @endif
 
-                    <form method="POST" action="{{ route('admin.users.assign_vendor', $user) }}"
-                          onsubmit="return confirm('소속 학원(거래처)을 지정/변경하시겠습니까?');">
-                        @csrf
-                        <label class="form-label small text-muted">{{ $currentVendor ? '거래처 변경' : '거래처 지정' }}</label>
-                        <div class="input-group">
-                            <select name="vendor_id" class="form-select" required>
-                                <option value="">거래처 선택...</option>
-                                @foreach($availableVendors as $v)
-                                    <option value="{{ $v->id }}"
-                                        @selected($currentVendor && $currentVendor->id === $v->id)>
-                                        {{ $v->name }}
+                        <form method="POST" action="{{ route('admin.users.assign_academy_agent', $user) }}"
+                              onsubmit="return confirm('담당 영업자를 지정/변경하시겠습니까?');">
+                            @csrf
+                            <label class="form-label small text-muted">{{ $currentAgent ? '영업자 변경' : '영업자 지정' }}</label>
+                            <select name="agent_user_id" class="form-select mb-2" required>
+                                <option value="">영업자 선택...</option>
+                                @foreach($availableAgents as $a)
+                                    <option value="{{ $a->id }}" @selected($currentAgent && $currentAgent->id === $a->id)>
+                                        {{ $a->name }} ({{ $a->login_id }})
                                     </option>
                                 @endforeach
                             </select>
-                            <button class="btn btn-primary" type="submit">
-                                <i class="bi bi-check-lg"></i> 적용
-                            </button>
-                        </div>
-                        @if($availableVendors->isEmpty())
-                            <div class="small text-danger mt-1">등록된 거래처가 없습니다. 먼저 거래처(학원)를 등록하세요.</div>
-                        @endif
-                    </form>
+                            <div class="input-group">
+                                <span class="input-group-text">할인율</span>
+                                <input type="number" name="discount_rate" class="form-control"
+                                       value="{{ $currentAgent->discount_rate ?? 10 }}" min="0" max="100" step="0.5">
+                                <span class="input-group-text">%</span>
+                                <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg"></i> 적용</button>
+                            </div>
+                            @if($availableAgents->isEmpty())
+                                <div class="small text-danger mt-1">활성 영업자가 없습니다. 먼저 영업자 계정을 등록하세요.</div>
+                            @endif
+                        </form>
+                    @endif
                 </div>
             </div>
         @endif
@@ -362,10 +385,14 @@
     const role = document.getElementById('role_code');
     const adminWrap = document.getElementById('admin_level_wrap');
     const bizSection = document.getElementById('business_section');
+    const academySection = document.getElementById('academy_section');
     role.addEventListener('change', () => {
         adminWrap.style.display = (role.value === 'admin') ? '' : 'none';
         if (bizSection) {
             bizSection.style.display = (['distributor','agent'].includes(role.value)) ? '' : 'none';
+        }
+        if (academySection) {
+            academySection.style.display = (role.value === 'academy') ? '' : 'none';
         }
     });
 

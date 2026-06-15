@@ -235,22 +235,36 @@ class UserController extends Controller
                 'u.id as user_id','u.name as user_name','u.email as user_email','u.role_code')
             ->orderByDesc('r.id')->get();
 
-        // 학원 계정: 현재 소속 거래처(학원) + 선택 가능한 거래처 목록
+        // 학원 계정: 연결된 거래처(학원) + 학원명 + 담당 영업자
         $currentVendor = null;
-        $availableVendors = collect();
+        $academyName = '';
+        $currentAgent = null;
+        $availableAgents = collect();
         if ($user->isAcademy()) {
             $currentVendor = DB::table('vendor_users as vu')
                 ->join('vendors as v', 'v.id', '=', 'vu.vendor_id')
                 ->where('vu.user_id', $user->id)
                 ->whereNull('v.deleted_at')
-                ->select('v.id', 'v.name', 'v.mobile', 'vu.is_primary')
+                ->select('v.id', 'v.name')
                 ->orderByDesc('vu.is_primary')->orderBy('vu.id')
                 ->first();
-            $availableVendors = DB::table('vendors')
-                ->whereNull('deleted_at')
+            $academyName = $currentVendor->name ?? '';
+
+            if ($currentVendor) {
+                $currentAgent = DB::table('agent_vendor_discounts as avd')
+                    ->join('users as u', 'u.id', '=', 'avd.agent_user_id')
+                    ->where('avd.vendor_id', $currentVendor->id)
+                    ->where('avd.is_active', true)
+                    ->select('u.id', 'u.name', 'u.login_id', 'avd.discount_rate')
+                    ->orderBy('avd.id')->first();
+            }
+
+            $availableAgents = DB::table('users')
+                ->where('role_code', 'agent')
                 ->where('status_code', 'active')
+                ->whereNull('deleted_at')
                 ->orderBy('name')
-                ->get(['id', 'name']);
+                ->get(['id', 'name', 'login_id']);
         }
 
         // 영업자: 현재 소속 총판 + 선택 가능한 총판 목록
@@ -297,52 +311,125 @@ class UserController extends Controller
             'user', 'roleOptions', 'statusOptions', 'sidos', 'currentSidoId', 'sigungus',
             'relationsAsParent', 'relationsAsChild', 'recentOrders',
             'currentDistributor', 'availableDistributors',
-            'currentVendor', 'availableVendors'
+            'currentVendor', 'academyName', 'currentAgent', 'availableAgents'
         ));
     }
 
-    // -------------------- 학원 계정 소속 거래처(학원) 지정/변경 --------------------
-    public function assignVendor(Request $request, User $user)
+    /**
+     * 학원 계정에 연결된 거래처(vendor)를 찾거나 학원명으로 자동 생성
+     * @return int vendor_id
+     */
+    private function ensureAcademyVendor(User $user, string $academyName): int
+    {
+        $link = DB::table('vendor_users as vu')
+            ->join('vendors as v', 'v.id', '=', 'vu.vendor_id')
+            ->where('vu.user_id', $user->id)
+            ->whereNull('v.deleted_at')
+            ->select('v.id')->first();
+
+        if ($link) {
+            // 기존 거래처 학원명 동기화
+            DB::table('vendors')->where('id', $link->id)->update([
+                'name'       => $academyName,
+                'updated_at' => now(),
+            ]);
+            return $link->id;
+        }
+
+        // 신규 거래처 생성 + 학원 계정 연결 (학원 계정 정보 상속)
+        $vendorId = DB::table('vendors')->insertGetId([
+            'name'           => $academyName,
+            'type_code'      => 'academy',
+            'status_code'    => 'active',
+            'owner_name'     => $user->name,
+            'mobile'         => $user->phone,
+            'region_id'      => $user->region_id,
+            'address'        => $user->address,
+            'address_detail' => $user->address_detail,
+            'created_at'     => now(),
+            'updated_at'     => now(),
+        ]);
+        DB::table('vendor_users')->insert([
+            'vendor_id'  => $vendorId,
+            'user_id'    => $user->id,
+            'role'       => 'owner',
+            'is_primary' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        return $vendorId;
+    }
+
+    // -------------------- 학원 계정 담당 영업자 지정/변경 --------------------
+    public function assignAcademyAgent(Request $request, User $user)
     {
         if (! $user->isAcademy()) {
-            return back()->with('error', '학원 계정에만 소속 거래처를 지정할 수 있습니다.');
+            return back()->with('error', '학원 계정에만 담당 영업자를 지정할 수 있습니다.');
         }
 
         $data = $request->validate([
-            'vendor_id' => ['required', 'integer', 'exists:vendors,id'],
+            'agent_user_id' => ['required', 'integer', 'exists:users,id'],
+            'discount_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
-        // 이미 동일 거래처에 연결돼 있으면 변경 없음
-        $alreadyLinked = DB::table('vendor_users')
-            ->where('user_id', $user->id)
-            ->where('vendor_id', $data['vendor_id'])
-            ->exists();
-        if ($alreadyLinked) {
-            $vName = DB::table('vendors')->where('id', $data['vendor_id'])->value('name');
-            return back()->with('info', "이미 '{$vName}' 거래처에 연결되어 있습니다.");
+        // 연결된 거래처 확인 (학원명 먼저 저장해야 함)
+        $vendor = DB::table('vendor_users as vu')
+            ->join('vendors as v', 'v.id', '=', 'vu.vendor_id')
+            ->where('vu.user_id', $user->id)
+            ->whereNull('v.deleted_at')
+            ->select('v.id')->first();
+        if (! $vendor) {
+            return back()->with('error', '먼저 학원명을 입력하고 저장하세요. (거래처가 생성되어야 영업자를 지정할 수 있습니다)');
         }
 
-        DB::transaction(function () use ($user, $data) {
-            // 학원 계정은 1개 거래처에 소속 (기존 연결 제거 후 새로)
-            DB::table('vendor_users')->where('user_id', $user->id)->delete();
-            DB::table('vendor_users')->insert([
-                'vendor_id'  => $data['vendor_id'],
-                'user_id'    => $user->id,
-                'role'       => 'owner',
-                'is_primary' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        $agent = User::find($data['agent_user_id']);
+        if (! $agent || $agent->role_code !== 'agent') {
+            return back()->withErrors(['agent_user_id' => '유효한 영업자가 아닙니다.']);
+        }
+
+        $rate = $data['discount_rate'] ?? 10;
+
+        DB::transaction(function () use ($vendor, $agent, $rate) {
+            // 기존 active 영업자 매핑 비활성화
+            DB::table('agent_vendor_discounts')
+                ->where('vendor_id', $vendor->id)
+                ->where('is_active', true)
+                ->update(['is_active' => false, 'ended_at' => now()->toDateString(), 'updated_at' => now()]);
+
+            // 이 영업자-거래처 레코드 있으면 재활성화, 없으면 생성 (uniq_agent_vendor 회피)
+            $existing = DB::table('agent_vendor_discounts')
+                ->where('vendor_id', $vendor->id)
+                ->where('agent_user_id', $agent->id)->first();
+
+            if ($existing) {
+                DB::table('agent_vendor_discounts')->where('id', $existing->id)->update([
+                    'is_active'     => true,
+                    'discount_rate' => $rate,
+                    'started_at'    => now()->toDateString(),
+                    'ended_at'      => null,
+                    'updated_at'    => now(),
+                ]);
+            } else {
+                DB::table('agent_vendor_discounts')->insert([
+                    'agent_user_id' => $agent->id,
+                    'vendor_id'     => $vendor->id,
+                    'discount_rate' => $rate,
+                    'started_at'    => now()->toDateString(),
+                    'is_active'     => true,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
+            }
         });
 
-        $vName = DB::table('vendors')->where('id', $data['vendor_id'])->value('name');
-        AuditLog::log('users', $user->id, 'assign_vendor', null, [
+        AuditLog::log('users', $user->id, 'assign_academy_agent', null, [
             'academy_user_id' => $user->id,
-            'vendor_id'       => $data['vendor_id'],
-            'vendor_name'     => $vName,
+            'agent_user_id'   => $agent->id,
+            'agent_name'      => $agent->name,
+            'discount_rate'   => $rate,
         ]);
 
-        return back()->with('success', "소속 학원이 '{$vName}'(으)로 지정되었습니다.");
+        return back()->with('success', "담당 영업자가 '{$agent->name}'(할인율 {$rate}%)(으)로 지정되었습니다.");
     }
 
     // -------------------- 영업자 소속 총판 지정/변경 --------------------
@@ -443,6 +530,8 @@ class UserController extends Controller
             'bank_code'     => ['nullable', 'string', 'max:10'],
             'bank_account'  => ['nullable', 'string', 'max:40'],
             'bank_holder'   => ['nullable', 'string', 'max:50'],
+            // 학원명 (학원 계정 — 거래처 자동 생성/동기화)
+            'academy_name'  => ['nullable', 'string', 'max:150'],
         ]);
 
         $me = auth()->user();
@@ -491,6 +580,12 @@ class UserController extends Controller
         }
 
         $user->save();
+
+        // 학원 계정: 학원명 → 거래처(vendor) 자동 생성/동기화
+        if ($user->isAcademy() && ! empty($data['academy_name'])) {
+            $this->ensureAcademyVendor($user, trim($data['academy_name']));
+        }
+
         AuditLog::log('users', $user->id, 'update', $user->getOriginal(), $user->only(['name','phone','role_code','admin_level','status_code','region_id']));
         return redirect()->route('admin.users.show', $user)->with('success', '저장되었습니다.');
     }
