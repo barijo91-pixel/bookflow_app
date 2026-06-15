@@ -183,6 +183,60 @@
     </div>
 
     <div class="col-lg-5">
+        {{-- 영업자: 소속 총판 (지정/변경) --}}
+        @if($user->role_code === 'agent')
+            <div class="card section-card mb-3 {{ $currentDistributor ? '' : 'border-warning' }}">
+                <div class="card-header">
+                    <strong><i class="bi bi-truck"></i> 소속 총판</strong>
+                </div>
+                <div class="card-body">
+                    @if($currentDistributor)
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <div class="fw-bold">{{ $currentDistributor->name }}</div>
+                                <div class="small text-muted">
+                                    <code>{{ $currentDistributor->login_id }}</code>
+                                    @if($currentDistributor->phone) · {{ format_phone($currentDistributor->phone) }} @endif
+                                </div>
+                                <div class="small text-muted">
+                                    소속일: {{ \Carbon\Carbon::parse($currentDistributor->started_at)->format('Y-m-d') }}
+                                </div>
+                            </div>
+                            <span class="badge bg-success">소속중</span>
+                        </div>
+                    @else
+                        <div class="alert alert-warning small mb-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            소속 총판이 없습니다. 총판을 지정해야 주문 라우팅·정산이 정상 동작합니다.
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('admin.users.assign_distributor', $user) }}">
+                        @csrf
+                        <label class="form-label small text-muted">{{ $currentDistributor ? '총판 변경' : '총판 지정' }}</label>
+                        <div class="input-group">
+                            <select name="distributor_user_id" class="form-select" required>
+                                <option value="">총판 선택...</option>
+                                @foreach($availableDistributors as $d)
+                                    <option value="{{ $d->id }}"
+                                        @selected($currentDistributor && $currentDistributor->id === $d->id)>
+                                        {{ $d->name }} ({{ $d->login_id }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button class="btn btn-primary" type="submit"
+                                onsubmit="return confirm('소속 총판을 변경하시겠습니까?');">
+                                <i class="bi bi-check-lg"></i> 적용
+                            </button>
+                        </div>
+                        @if($availableDistributors->isEmpty())
+                            <div class="small text-danger mt-1">활성 총판이 없습니다. 먼저 총판 계정을 등록하세요.</div>
+                        @endif
+                    </form>
+                </div>
+            </div>
+        @endif
+
         <div class="card section-card mb-3">
             <div class="card-header"><strong>관계</strong> <small class="text-muted">(총판-영업자-학원)</small></div>
             <div class="card-body p-0">

@@ -235,6 +235,26 @@ class UserController extends Controller
                 'u.id as user_id','u.name as user_name','u.email as user_email','u.role_code')
             ->orderByDesc('r.id')->get();
 
+        // 영업자: 현재 소속 총판 + 선택 가능한 총판 목록
+        $currentDistributor = null;
+        $availableDistributors = collect();
+        if ($user->isAgent()) {
+            $currentDistributor = DB::table('user_relations as r')
+                ->join('users as u', 'u.id', '=', 'r.parent_user_id')
+                ->where('r.child_user_id', $user->id)
+                ->where('r.relation_type', 'distributor_agent')
+                ->where('r.status', 'active')
+                ->select('u.id', 'u.name', 'u.login_id', 'u.phone', 'r.started_at')
+                ->orderBy('r.id')
+                ->first();
+            $availableDistributors = DB::table('users')
+                ->where('role_code', 'distributor')
+                ->where('status_code', 'active')
+                ->whereNull('deleted_at')
+                ->orderBy('name')
+                ->get(['id', 'name', 'login_id']);
+        }
+
         // 최근 주문 (역할별)
         $recentOrders = collect();
         if ($user->isAgent()) {
@@ -257,8 +277,88 @@ class UserController extends Controller
 
         return view('admin.users.show', compact(
             'user', 'roleOptions', 'statusOptions', 'sidos', 'currentSidoId', 'sigungus',
-            'relationsAsParent', 'relationsAsChild', 'recentOrders'
+            'relationsAsParent', 'relationsAsChild', 'recentOrders',
+            'currentDistributor', 'availableDistributors'
         ));
+    }
+
+    // -------------------- 영업자 소속 총판 지정/변경 --------------------
+    public function assignDistributor(Request $request, User $user)
+    {
+        if (! $user->isAgent()) {
+            return back()->with('error', '영업자에게만 소속 총판을 지정할 수 있습니다.');
+        }
+
+        $data = $request->validate([
+            'distributor_user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        $dist = User::find($data['distributor_user_id']);
+        if (! $dist || $dist->role_code !== 'distributor') {
+            return back()->withErrors(['distributor_user_id' => '유효한 총판이 아닙니다.']);
+        }
+
+        // 동일 총판이 이미 active면 변경 없음
+        $alreadyActive = DB::table('user_relations')
+            ->where('parent_user_id', $dist->id)
+            ->where('child_user_id', $user->id)
+            ->where('relation_type', 'distributor_agent')
+            ->where('status', 'active')
+            ->exists();
+        if ($alreadyActive) {
+            return back()->with('info', "이미 '{$dist->name}' 총판에 소속되어 있습니다.");
+        }
+
+        DB::transaction(function () use ($user, $dist) {
+            $now = now();
+
+            // 기존 active 소속 총판 모두 종료
+            DB::table('user_relations')
+                ->where('child_user_id', $user->id)
+                ->where('relation_type', 'distributor_agent')
+                ->where('status', 'active')
+                ->update([
+                    'status'        => 'terminated',
+                    'terminated_at' => $now->toDateString(),
+                    'terminated_by' => auth()->id(),
+                    'updated_at'    => $now,
+                ]);
+
+            // 새 총판 관계: 과거 종료 이력 있으면 재활성화, 없으면 생성 (unique 제약 회피)
+            $existing = DB::table('user_relations')
+                ->where('parent_user_id', $dist->id)
+                ->where('child_user_id', $user->id)
+                ->where('relation_type', 'distributor_agent')
+                ->first();
+
+            if ($existing) {
+                DB::table('user_relations')->where('id', $existing->id)->update([
+                    'status'        => 'active',
+                    'started_at'    => $now->toDateString(),
+                    'terminated_at' => null,
+                    'terminated_by' => null,
+                    'updated_at'    => $now,
+                ]);
+            } else {
+                DB::table('user_relations')->insert([
+                    'parent_user_id' => $dist->id,
+                    'child_user_id'  => $user->id,
+                    'relation_type'  => 'distributor_agent',
+                    'status'         => 'active',
+                    'started_at'     => $now->toDateString(),
+                    'created_at'     => $now,
+                    'updated_at'     => $now,
+                ]);
+            }
+        });
+
+        AuditLog::log('users', $user->id, 'assign_distributor', null, [
+            'agent_user_id'       => $user->id,
+            'distributor_user_id' => $dist->id,
+            'distributor_name'    => $dist->name,
+        ]);
+
+        return back()->with('success', "소속 총판이 '{$dist->name}'(으)로 지정되었습니다.");
     }
 
     // -------------------- UPDATE --------------------
