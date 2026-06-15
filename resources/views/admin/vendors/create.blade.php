@@ -106,11 +106,34 @@
                 </div>
             </div>
 
+            <h6 class="text-muted mt-4 mb-3"><i class="bi bi-person-badge"></i> 담당 영업자 <span class="badge bg-light text-dark">선택</span></h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small text-muted">담당 영업자</label>
+                    <select name="agent_user_id" class="form-select">
+                        <option value="">나중에 지정 (등록 후 상세에서)</option>
+                        @foreach($agents as $a)
+                            <option value="{{ $a->id }}" @selected(old('agent_user_id') == $a->id)>
+                                {{ $a->name }} ({{ $a->login_id }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @if($agents->isEmpty())
+                        <div class="small text-danger mt-1">활성 영업자가 없습니다. 먼저 영업자 계정을 등록하세요.</div>
+                    @endif
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">할인율 (%)</label>
+                    <input type="number" name="discount_rate" class="form-control" value="{{ old('discount_rate', 10) }}" min="0" max="100" step="0.5">
+                    <small class="text-muted">학원 도매 할인율</small>
+                </div>
+            </div>
+
             <h6 class="text-muted mt-4 mb-3"><i class="bi bi-sticky"></i> 메모</h6>
             <textarea name="memo" class="form-control" rows="3">{{ old('memo') }}</textarea>
         </div>
         <div class="card-footer d-flex justify-content-between">
-            <small class="text-muted">담당자/영업자 매핑은 등록 후 상세 페이지에서 진행합니다.</small>
+            <small class="text-muted">담당자(학원 로그인 계정) 매핑은 등록 후 상세 페이지에서 진행합니다.</small>
             <div>
                 <a href="{{ route('admin.vendors.index') }}" class="btn btn-secondary">취소</a>
                 <button class="btn btn-primary"><i class="bi bi-check-lg"></i> 등록</button>

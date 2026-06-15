@@ -51,7 +51,11 @@ class VendorController extends Controller
         $typeOptions   = DB::table('codes')->where('group_code', 'vendor_type')->orderBy('sort_order')->get();
         $bankOptions   = DB::table('codes')->where('group_code', 'bank')->orderBy('sort_order')->get();
         $sidos         = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get();
-        return view('admin.vendors.create', compact('typeOptions', 'bankOptions', 'sidos'));
+        // 담당 영업자 후보 (등록 시 바로 지정)
+        $agents = User::where('role_code', 'agent')
+            ->where('status_code', 'active')
+            ->orderBy('name')->get(['id', 'name', 'login_id']);
+        return view('admin.vendors.create', compact('typeOptions', 'bankOptions', 'sidos', 'agents'));
     }
 
     public function store(Request $request)
@@ -59,7 +63,33 @@ class VendorController extends Controller
         $data = $this->validatePayload($request);
         $data['status_code'] = 'active';
 
-        $vendor = Vendor::create($data);
+        // 담당 영업자 (선택)
+        $agentData = $request->validate([
+            'agent_user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'discount_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        $vendor = DB::transaction(function () use ($data, $agentData) {
+            $vendor = Vendor::create($data);
+
+            // 담당 영업자 매핑 (선택 시)
+            if (! empty($agentData['agent_user_id'])) {
+                $agent = User::find($agentData['agent_user_id']);
+                if ($agent && $agent->role_code === 'agent') {
+                    DB::table('agent_vendor_discounts')->insert([
+                        'agent_user_id' => $agent->id,
+                        'vendor_id'     => $vendor->id,
+                        'discount_rate' => $agentData['discount_rate'] ?? 10,
+                        'started_at'    => now()->toDateString(),
+                        'is_active'     => true,
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ]);
+                }
+            }
+            return $vendor;
+        });
+
         return redirect()->route('admin.vendors.show', $vendor)->with('success', '거래처가 등록되었습니다.');
     }
 
