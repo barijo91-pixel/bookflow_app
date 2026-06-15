@@ -237,6 +237,57 @@
             </div>
         @endif
 
+        {{-- 학원 계정: 소속 학원(거래처) 지정/변경 --}}
+        @if($user->role_code === 'academy')
+            <div class="card section-card mb-3 {{ $currentVendor ? '' : 'border-warning' }}">
+                <div class="card-header">
+                    <strong><i class="bi bi-mortarboard"></i> 소속 학원(거래처)</strong>
+                </div>
+                <div class="card-body">
+                    @if($currentVendor)
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <div class="fw-bold">{{ $currentVendor->name }}</div>
+                                @if($currentVendor->mobile)
+                                    <div class="small text-muted">{{ format_phone($currentVendor->mobile) }}</div>
+                                @endif
+                                <a href="{{ route('admin.vendors.show', $currentVendor->id) }}" class="small">거래처 상세 <i class="bi bi-box-arrow-up-right"></i></a>
+                            </div>
+                            <span class="badge bg-success">연결됨</span>
+                        </div>
+                    @else
+                        <div class="alert alert-warning small mb-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            소속 거래처가 없습니다. 학원을 연결해야 주문·결제가 정상 동작합니다.
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('admin.users.assign_vendor', $user) }}"
+                          onsubmit="return confirm('소속 학원(거래처)을 지정/변경하시겠습니까?');">
+                        @csrf
+                        <label class="form-label small text-muted">{{ $currentVendor ? '거래처 변경' : '거래처 지정' }}</label>
+                        <div class="input-group">
+                            <select name="vendor_id" class="form-select" required>
+                                <option value="">거래처 선택...</option>
+                                @foreach($availableVendors as $v)
+                                    <option value="{{ $v->id }}"
+                                        @selected($currentVendor && $currentVendor->id === $v->id)>
+                                        {{ $v->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-check-lg"></i> 적용
+                            </button>
+                        </div>
+                        @if($availableVendors->isEmpty())
+                            <div class="small text-danger mt-1">등록된 거래처가 없습니다. 먼저 거래처(학원)를 등록하세요.</div>
+                        @endif
+                    </form>
+                </div>
+            </div>
+        @endif
+
         <div class="card section-card mb-3">
             <div class="card-header"><strong>관계</strong> <small class="text-muted">(총판-영업자-학원)</small></div>
             <div class="card-body p-0">

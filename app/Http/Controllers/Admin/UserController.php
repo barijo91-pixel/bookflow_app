@@ -235,6 +235,24 @@ class UserController extends Controller
                 'u.id as user_id','u.name as user_name','u.email as user_email','u.role_code')
             ->orderByDesc('r.id')->get();
 
+        // 학원 계정: 현재 소속 거래처(학원) + 선택 가능한 거래처 목록
+        $currentVendor = null;
+        $availableVendors = collect();
+        if ($user->isAcademy()) {
+            $currentVendor = DB::table('vendor_users as vu')
+                ->join('vendors as v', 'v.id', '=', 'vu.vendor_id')
+                ->where('vu.user_id', $user->id)
+                ->whereNull('v.deleted_at')
+                ->select('v.id', 'v.name', 'v.mobile', 'vu.is_primary')
+                ->orderByDesc('vu.is_primary')->orderBy('vu.id')
+                ->first();
+            $availableVendors = DB::table('vendors')
+                ->whereNull('deleted_at')
+                ->where('status_code', 'active')
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
+
         // 영업자: 현재 소속 총판 + 선택 가능한 총판 목록
         $currentDistributor = null;
         $availableDistributors = collect();
@@ -278,8 +296,53 @@ class UserController extends Controller
         return view('admin.users.show', compact(
             'user', 'roleOptions', 'statusOptions', 'sidos', 'currentSidoId', 'sigungus',
             'relationsAsParent', 'relationsAsChild', 'recentOrders',
-            'currentDistributor', 'availableDistributors'
+            'currentDistributor', 'availableDistributors',
+            'currentVendor', 'availableVendors'
         ));
+    }
+
+    // -------------------- 학원 계정 소속 거래처(학원) 지정/변경 --------------------
+    public function assignVendor(Request $request, User $user)
+    {
+        if (! $user->isAcademy()) {
+            return back()->with('error', '학원 계정에만 소속 거래처를 지정할 수 있습니다.');
+        }
+
+        $data = $request->validate([
+            'vendor_id' => ['required', 'integer', 'exists:vendors,id'],
+        ]);
+
+        // 이미 동일 거래처에 연결돼 있으면 변경 없음
+        $alreadyLinked = DB::table('vendor_users')
+            ->where('user_id', $user->id)
+            ->where('vendor_id', $data['vendor_id'])
+            ->exists();
+        if ($alreadyLinked) {
+            $vName = DB::table('vendors')->where('id', $data['vendor_id'])->value('name');
+            return back()->with('info', "이미 '{$vName}' 거래처에 연결되어 있습니다.");
+        }
+
+        DB::transaction(function () use ($user, $data) {
+            // 학원 계정은 1개 거래처에 소속 (기존 연결 제거 후 새로)
+            DB::table('vendor_users')->where('user_id', $user->id)->delete();
+            DB::table('vendor_users')->insert([
+                'vendor_id'  => $data['vendor_id'],
+                'user_id'    => $user->id,
+                'role'       => 'owner',
+                'is_primary' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        $vName = DB::table('vendors')->where('id', $data['vendor_id'])->value('name');
+        AuditLog::log('users', $user->id, 'assign_vendor', null, [
+            'academy_user_id' => $user->id,
+            'vendor_id'       => $data['vendor_id'],
+            'vendor_name'     => $vName,
+        ]);
+
+        return back()->with('success', "소속 학원이 '{$vName}'(으)로 지정되었습니다.");
     }
 
     // -------------------- 영업자 소속 총판 지정/변경 --------------------
