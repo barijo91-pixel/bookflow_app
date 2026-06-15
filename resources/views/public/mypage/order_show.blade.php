@@ -196,13 +196,14 @@
                                 @csrf
                                 <div class="mb-2">
                                     <label class="form-label small fw-bold navy mb-1">
-                                        <i class="bi bi-truck"></i> 직접배송 신청 (선택)
+                                        <i class="bi bi-truck"></i> 직접배송 메모
                                     </label>
                                     <textarea name="delivery_memo" class="form-control form-control-sm" rows="2"
                                               maxlength="500" placeholder="예: 당일 배송 필요 / 근거리 직납 / 고중량"></textarea>
                                 </div>
-                                <button class="btn btn-outline-warning w-100 btn-sm">
-                                    <i class="bi bi-send"></i> 직접배송으로 변경 신청 → 총판 알림
+                                <button class="btn btn-warning text-dark fw-bold w-100">
+                                    <i class="bi bi-truck"></i> 직접배송 신청
+                                    <span class="fw-normal small">(일반배송은 해당 없음)</span>
                                 </button>
                                 <div class="small text-muted mt-1">배송비는 총판이 별도 청구합니다.</div>
                             </form>
