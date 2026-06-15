@@ -125,11 +125,11 @@ class CleanDemoData extends Command
             DB::table('order_shipments')->whereIn('order_id', $demoOrderIds)->delete();
             DB::table('orders')->whereIn('id', $demoOrderIds)->update(['deleted_at' => $now]);
 
-            // 학생/학급 정리 (학원 기반)
+            // 학생: soft delete / 학급: hard delete (deleted_at 컬럼 없음)
             DB::table('students')->whereIn('class_id', function ($q) use ($demoVendorIds) {
                 $q->select('id')->from('academy_classes')->whereIn('vendor_id', $demoVendorIds);
             })->update(['deleted_at' => $now]);
-            DB::table('academy_classes')->whereIn('vendor_id', $demoVendorIds)->update(['deleted_at' => $now]);
+            DB::table('academy_classes')->whereIn('vendor_id', $demoVendorIds)->delete();
 
             // 학원-사용자 연결, 영업자-학원 할인 정리
             DB::table('vendor_users')->whereIn('vendor_id', $demoVendorIds)->delete();
