@@ -238,6 +238,7 @@ class UserController extends Controller
         // 학원 계정: 연결된 거래처(학원) + 학원명 + 담당 영업자
         $currentVendor = null;
         $academyName = '';
+        $academyBizNo = '';
         $currentAgent = null;
         $availableAgents = collect();
         if ($user->isAcademy()) {
@@ -245,10 +246,11 @@ class UserController extends Controller
                 ->join('vendors as v', 'v.id', '=', 'vu.vendor_id')
                 ->where('vu.user_id', $user->id)
                 ->whereNull('v.deleted_at')
-                ->select('v.id', 'v.name')
+                ->select('v.id', 'v.name', 'v.business_no')
                 ->orderByDesc('vu.is_primary')->orderBy('vu.id')
                 ->first();
             $academyName = $currentVendor->name ?? '';
+            $academyBizNo = $currentVendor->business_no ?? '';
 
             if ($currentVendor) {
                 $currentAgent = DB::table('agent_vendor_discounts as avd')
@@ -311,7 +313,7 @@ class UserController extends Controller
             'user', 'roleOptions', 'statusOptions', 'sidos', 'currentSidoId', 'sigungus',
             'relationsAsParent', 'relationsAsChild', 'recentOrders',
             'currentDistributor', 'availableDistributors',
-            'currentVendor', 'academyName', 'currentAgent', 'availableAgents'
+            'currentVendor', 'academyName', 'academyBizNo', 'currentAgent', 'availableAgents'
         ));
     }
 
@@ -319,7 +321,7 @@ class UserController extends Controller
      * 학원 계정에 연결된 거래처(vendor)를 찾거나 학원명으로 자동 생성
      * @return int vendor_id
      */
-    private function ensureAcademyVendor(User $user, string $academyName): int
+    private function ensureAcademyVendor(User $user, string $academyName, ?string $businessNo = null): int
     {
         $link = DB::table('vendor_users as vu')
             ->join('vendors as v', 'v.id', '=', 'vu.vendor_id')
@@ -328,10 +330,11 @@ class UserController extends Controller
             ->select('v.id')->first();
 
         if ($link) {
-            // 기존 거래처 학원명 동기화
+            // 기존 거래처 학원명/사업자번호 동기화
             DB::table('vendors')->where('id', $link->id)->update([
-                'name'       => $academyName,
-                'updated_at' => now(),
+                'name'        => $academyName,
+                'business_no' => $businessNo,
+                'updated_at'  => now(),
             ]);
             return $link->id;
         }
@@ -339,6 +342,7 @@ class UserController extends Controller
         // 신규 거래처 생성 + 학원 계정 연결 (학원 계정 정보 상속)
         $vendorId = DB::table('vendors')->insertGetId([
             'name'           => $academyName,
+            'business_no'    => $businessNo,
             'type_code'      => 'academy',
             'status_code'    => 'active',
             'owner_name'     => $user->name,
@@ -530,8 +534,9 @@ class UserController extends Controller
             'bank_code'     => ['nullable', 'string', 'max:10'],
             'bank_account'  => ['nullable', 'string', 'max:40'],
             'bank_holder'   => ['nullable', 'string', 'max:50'],
-            // 학원명 (학원 계정 — 거래처 자동 생성/동기화)
-            'academy_name'  => ['nullable', 'string', 'max:150'],
+            // 학원명/사업자번호 (학원 계정 — 거래처 자동 생성/동기화)
+            'academy_name'    => ['nullable', 'string', 'max:150'],
+            'academy_biz_no'  => ['nullable', 'string', 'max:20'],
         ]);
 
         $me = auth()->user();
@@ -581,9 +586,9 @@ class UserController extends Controller
 
         $user->save();
 
-        // 학원 계정: 학원명 → 거래처(vendor) 자동 생성/동기화
+        // 학원 계정: 학원명/사업자번호 → 거래처(vendor) 자동 생성/동기화
         if ($user->isAcademy() && ! empty($data['academy_name'])) {
-            $this->ensureAcademyVendor($user, trim($data['academy_name']));
+            $this->ensureAcademyVendor($user, trim($data['academy_name']), $data['academy_biz_no'] ?? null);
         }
 
         AuditLog::log('users', $user->id, 'update', $user->getOriginal(), $user->only(['name','phone','role_code','admin_level','status_code','region_id']));

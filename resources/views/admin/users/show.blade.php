@@ -129,6 +129,14 @@
                                 <input type="text" name="academy_name" class="form-control"
                                        value="{{ old('academy_name', $academyName ?? '') }}"
                                        placeholder="예: OO영어학원">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small text-muted">사업자등록번호</label>
+                                <input type="text" name="academy_biz_no" class="form-control"
+                                       value="{{ old('academy_biz_no', $academyBizNo ?? '') }}"
+                                       placeholder="000-00-00000">
+                            </div>
+                            <div class="col-12">
                                 <small class="text-muted">저장 시 거래처가 자동 생성/연동됩니다. 담당 영업자는 우측에서 지정하세요.</small>
                             </div>
                         </div>
