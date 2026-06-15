@@ -45,14 +45,27 @@
             </div>
 
             <div class="card section-card mb-3" id="studentsCard" style="display:none;">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <strong>2. 학생/학부모 선택 + 1인당 금액</strong>
                     <div class="d-flex gap-2 align-items-center">
+                        @if($recommendedAmount > 0)
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="applyRecommended()"
+                                title="도서 1세트 정가 {{ number_format($setListPrice) }}원의 90% (도서정가제 소매가)">
+                                <i class="bi bi-magic"></i> 권장 {{ number_format($recommendedAmount) }}원 적용
+                            </button>
+                        @endif
                         <input type="number" id="bulkAmount" min="0" step="100" class="form-control form-control-sm text-end"
-                               style="width:130px" placeholder="일괄 금액">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="applyBulk()">전체 적용</button>
+                               style="width:120px" placeholder="직접 금액">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="applyBulk()">적용</button>
                     </div>
                 </div>
+                @if($recommendedAmount > 0)
+                    <div class="card-body py-2 small text-muted border-bottom">
+                        <i class="bi bi-info-circle"></i>
+                        학생 1명당 권장 금액 <strong class="navy">{{ number_format($recommendedAmount) }}원</strong>
+                        (도서 1세트 정가 {{ number_format($setListPrice) }}원 × 90% 도서정가제 소매가)
+                    </div>
+                @endif
                 <div id="studentsLoading" class="card-body small text-muted">학생 목록을 불러오는 중...</div>
                 <div class="table-responsive">
                     <table class="table table-sm align-middle mb-0" id="studentsTable" style="display:none;">
@@ -233,7 +246,15 @@ document.addEventListener('input', (e) => {
 
 function applyBulk() {
     const val = parseInt(document.getElementById('bulkAmount').value, 10) || 0;
-    document.querySelectorAll('.row-check').forEach((cb, idx) => {
+    applyAmountToAll(val);
+}
+
+function applyRecommended() {
+    applyAmountToAll({{ (int) ($recommendedAmount ?? 0) }});
+}
+
+function applyAmountToAll(val) {
+    document.querySelectorAll('.row-check').forEach((cb) => {
         cb.checked = true;
         cb.dispatchEvent(new Event('change'));
         const tr = cb.closest('tr');

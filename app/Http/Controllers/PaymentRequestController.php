@@ -43,15 +43,20 @@ class PaymentRequestController extends Controller
             ->leftJoin('books as b', 'b.id', '=', 'oi.book_id')
             ->where('oi.order_id', $orderId)
             ->select('oi.id', 'oi.book_id', 'oi.title_snapshot', 'oi.qty', 'oi.unit_price', 'oi.line_total',
-                'b.title as book_title')
+                'oi.list_price', 'b.title as book_title')
             ->get();
+
+        // 학생 1명당 권장 결제금액 = 도서 1세트 정가 합계 × 소매율(90%, 도서정가제)
+        // 정가가 없으면 단가로 대체
+        $setListPrice = (int) $items->sum(fn ($it) => (int) ($it->list_price ?: $it->unit_price));
+        $recommendedAmount = (int) round($setListPrice * \App\Services\SettlementService::RATE_B2C_RETAIL);
 
         // 이미 보낸 요청
         $existing = DB::table('payment_requests')->where('order_id', $orderId)
             ->orderByDesc('id')->get();
 
         return view('public.mypage.payment_request_create', compact(
-            'order', 'vendor', 'classes', 'items', 'existing'
+            'order', 'vendor', 'classes', 'items', 'existing', 'recommendedAmount', 'setListPrice'
         ));
     }
 
