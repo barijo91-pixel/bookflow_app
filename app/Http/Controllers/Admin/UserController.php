@@ -273,6 +273,13 @@ class UserController extends Controller
             'region_id'     => ['nullable', 'integer', 'exists:regions,id'],
             'address'       => ['nullable', 'string', 'max:255'],
             'address_detail'=> ['nullable', 'string', 'max:255'],
+            // 사업자/정산계좌 (총판·사입자)
+            'business_type' => ['nullable', Rule::in(['none','individual_simple','individual_general','corporate'])],
+            'business_no'   => ['nullable', 'string', 'max:20'],
+            'business_name' => ['nullable', 'string', 'max:150'],
+            'bank_code'     => ['nullable', 'string', 'max:10'],
+            'bank_account'  => ['nullable', 'string', 'max:40'],
+            'bank_holder'   => ['nullable', 'string', 'max:50'],
         ]);
 
         $me = auth()->user();
@@ -303,6 +310,16 @@ class UserController extends Controller
         $user->region_id = $data['region_id'] ?? null;
         $user->address = $data['address'] ?? null;
         $user->address_detail = $data['address_detail'] ?? null;
+
+        // 사업자/정산계좌 — 총판/사입자 권한일 때만 저장
+        if (in_array($data['role_code'], ['distributor', 'agent'])) {
+            $user->business_type = $data['business_type'] ?? 'none';
+            $user->business_no   = $data['business_no']   ?? null;
+            $user->business_name = $data['business_name'] ?? null;
+            $user->bank_code     = $data['bank_code']     ?? null;
+            $user->bank_account  = $data['bank_account']  ?? null;
+            $user->bank_holder   = $data['bank_holder']   ?? null;
+        }
 
         // active로 바뀐 경우 approved_at 기록
         if ($data['status_code'] === 'active' && ! $user->approved_at) {

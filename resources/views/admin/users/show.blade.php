@@ -118,6 +118,57 @@
                             <input type="text" name="address_detail" class="form-control" value="{{ old('address_detail', $user->address_detail) }}">
                         </div>
                     </div>
+
+                    {{-- 사업자 정보 + 정산 계좌 (총판/사입자) --}}
+                    @php
+                        $bizCodes = \Illuminate\Support\Facades\DB::table('codes')
+                            ->where('group_code', 'bank')->orderBy('sort_order')
+                            ->get(['code', 'name']);
+                    @endphp
+                    <div id="business_section" style="{{ in_array($user->role_code, ['distributor','agent']) ? '' : 'display:none' }}">
+                        <hr class="my-4">
+                        <h6 class="mb-3 text-muted"><i class="bi bi-receipt-cutoff"></i> 사업자 정보 / 정산 계좌</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label small text-muted">사업자 유형</label>
+                                <select name="business_type" class="form-select">
+                                    @foreach(\App\Services\TaxService::TYPES as $key => $label)
+                                        <option value="{{ $key }}" @selected(old('business_type', $user->business_type ?? 'none') === $key)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small text-muted">사업자등록번호</label>
+                                <input type="text" name="business_no" class="form-control" placeholder="000-00-00000"
+                                       value="{{ old('business_no', $user->business_no ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small text-muted">상호명</label>
+                                <input type="text" name="business_name" class="form-control"
+                                       value="{{ old('business_name', $user->business_name ?? '') }}">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small text-muted">은행</label>
+                                <select name="bank_code" class="form-select">
+                                    <option value="">선택</option>
+                                    @foreach($bizCodes as $c)
+                                        <option value="{{ $c->code }}" @selected(old('bank_code', $user->bank_code) === $c->code)>{{ $c->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small text-muted">계좌번호</label>
+                                <input type="text" name="bank_account" class="form-control"
+                                       value="{{ old('bank_account', $user->bank_account) }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small text-muted">예금주</label>
+                                <input type="text" name="bank_holder" class="form-control"
+                                       value="{{ old('bank_holder', $user->bank_holder) }}">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-footer d-flex justify-content-between">
                     <small class="text-muted">
@@ -205,8 +256,12 @@
 (function () {
     const role = document.getElementById('role_code');
     const adminWrap = document.getElementById('admin_level_wrap');
+    const bizSection = document.getElementById('business_section');
     role.addEventListener('change', () => {
         adminWrap.style.display = (role.value === 'admin') ? '' : 'none';
+        if (bizSection) {
+            bizSection.style.display = (['distributor','agent'].includes(role.value)) ? '' : 'none';
+        }
     });
 
     const sido = document.getElementById('sido_select');
