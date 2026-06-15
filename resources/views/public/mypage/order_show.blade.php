@@ -5,7 +5,7 @@
 @php
     $statusOptions = [
         'requested'  => ['접수', 'bg-warning text-dark'],
-        'confirmed'  => ['영업자 확정', 'bg-info'],
+        'confirmed'  => ['확정', 'bg-info'],
         'accepted'   => ['총판 접수', 'bg-primary'],
         'shipped'    => ['출고', 'bg-success'],
         'in_transit' => ['배송중', 'bg-success'],
@@ -99,7 +99,7 @@
                                 </label>
                             </div>
                             <button class="btn btn-primary w-100">
-                                <i class="bi bi-check-lg"></i> 영업자 확정
+                                <i class="bi bi-check-lg"></i> 주문 확정
                             </button>
                         </form>
                     @endif
@@ -318,7 +318,7 @@
                 @else
                     @php
                         $statusLabel = [
-                            'requested'  => '접수',         'confirmed' => '영업자 확정',
+                            'requested'  => '접수',         'confirmed' => '확정',
                             'accepted'   => '총판 접수',    'shipped'   => '출고',
                             'in_transit' => '배송중',       'completed' => '완료',
                             'canceled'   => '취소',         'returned'  => '반품',

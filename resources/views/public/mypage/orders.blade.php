@@ -5,7 +5,7 @@
 @php
     $statusOptions = [
         'requested'  => ['접수', 'bg-warning text-dark'],
-        'confirmed'  => ['영업자 확정', 'bg-info'],
+        'confirmed'  => ['확정', 'bg-info'],
         'accepted'   => ['총판 접수', 'bg-primary'],
         'shipped'    => ['출고', 'bg-success'],
         'in_transit' => ['배송중', 'bg-success'],
