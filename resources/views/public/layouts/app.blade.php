@@ -92,15 +92,57 @@
         .public-topbar .user-info .badge { margin-left: .3rem; }
         .public-content { flex: 1; padding: 1.5rem 1.5rem 2rem; }
 
-        /* 모바일 (768px 이하): 사이드바 숨김 + 햄버거 */
+        /* ---------- 모바일 하단 탭바 (앱 스타일) ---------- */
+        .mobile-bottom-nav { display: none; }
+        .sidebar-overlay { display: none; }
+
+        /* 모바일 (768px 이하): 사이드바 오프캔버스 + 하단 탭바 */
         @media (max-width: 768px) {
             .public-sidebar {
-                transform: translateX(-100%); transition: transform .2s;
-                box-shadow: 4px 0 12px rgba(0,0,0,.1);
+                transform: translateX(-100%); transition: transform .22s ease;
+                box-shadow: 4px 0 12px rgba(0,0,0,.1); width: 270px;
             }
             .public-sidebar.show { transform: translateX(0); }
             .public-main { margin-left: 0; }
             .public-topbar .hamburger { display: inline-flex; }
+
+            /* 배경 오버레이 (사이드바 열렸을 때) */
+            .sidebar-overlay {
+                position: fixed; inset: 0; background: rgba(0,0,0,.45);
+                z-index: 99; opacity: 0; transition: opacity .22s;
+            }
+            .sidebar-overlay.show { display: block; opacity: 1; }
+
+            /* 하단 탭바 */
+            .mobile-bottom-nav {
+                display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 150;
+                background: #fff; border-top: 1px solid #e5e7eb;
+                box-shadow: 0 -2px 12px rgba(0,0,0,.07);
+                padding-bottom: env(safe-area-inset-bottom, 0);
+            }
+            .mbn-item {
+                position: relative; flex: 1; display: flex; flex-direction: column;
+                align-items: center; justify-content: center; gap: 2px;
+                padding: .45rem 0 .4rem; min-height: 56px;
+                color: #8a93a2; text-decoration: none; font-size: .68rem; font-weight: 500;
+                background: none; border: 0; cursor: pointer;
+            }
+            .mbn-item i { font-size: 1.35rem; line-height: 1; }
+            .mbn-item.active { color: var(--navy); }
+            .mbn-item.active i { transform: translateY(-1px); }
+            .mbn-badge {
+                position: absolute; top: 5px; left: 50%; margin-left: 4px;
+                background: #dc3545; color: #fff; font-size: .6rem; font-weight: 700;
+                min-width: 16px; height: 16px; line-height: 16px; text-align: center;
+                border-radius: 999px; padding: 0 4px;
+            }
+
+            /* 콘텐츠/푸터가 하단 탭바에 가리지 않게 */
+            .public-content { padding: 1rem 1rem 5rem; }
+            .public-footer { margin-bottom: 3.6rem; }
+
+            /* 모바일 터치 타겟 확대 */
+            .public-content .btn { min-height: 42px; }
         }
         @media (min-width: 769px) {
             .public-topbar .hamburger { display: none; }
@@ -125,9 +167,10 @@
 {{-- 인증 사용자: 사이드바 + 메인 --}}
 <div class="public-shell">
     @include('public.partials.sidebar')
+    <div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
     <div class="public-main">
         <header class="public-topbar">
-            <button type="button" class="btn btn-sm btn-outline-secondary hamburger" onclick="document.querySelector('.public-sidebar').classList.toggle('show')">
+            <button type="button" class="btn btn-sm btn-outline-secondary hamburger" onclick="toggleMobileMenu()">
                 <i class="bi bi-list"></i>
             </button>
             <span class="user-info">
@@ -158,6 +201,8 @@
             &copy; {{ date('Y') }} BookSys · {{ setting('company_name', 'e-Learn') }}
         </footer>
     </div>
+    {{-- 모바일 하단 탭바 --}}
+    @include('public.partials.bottom_nav')
 </div>
 @else
 {{-- 비인증 사용자: 상단 헤더 + 본문 (기존 layout) --}}
@@ -195,6 +240,21 @@
 @endauth
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 모바일 메뉴(오프캔버스 사이드바) 토글 — 하단 '더보기' + 상단 햄버거 공용
+    function toggleMobileMenu() {
+        document.querySelector('.public-sidebar')?.classList.toggle('show');
+        document.querySelector('.sidebar-overlay')?.classList.toggle('show');
+    }
+    function closeMobileMenu() {
+        document.querySelector('.public-sidebar')?.classList.remove('show');
+        document.querySelector('.sidebar-overlay')?.classList.remove('show');
+    }
+    // 사이드바 내 링크 클릭 시 자동 닫기 (모바일)
+    document.querySelectorAll('.public-sidebar .nav-item').forEach(el => {
+        el.addEventListener('click', () => { if (window.innerWidth <= 768) closeMobileMenu(); });
+    });
+</script>
 @stack('scripts')
 </body>
 </html>
