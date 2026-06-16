@@ -224,9 +224,12 @@ class BookImportService
                 if (array_key_exists('series_name', $row))    $payload['series_name']    = $row['series_name'];
                 if (array_key_exists('publisher_code', $row)) $payload['publisher_code'] = $row['publisher_code'];
                 if (array_key_exists('price', $row))          $payload['price']          = (int) $row['price'];
-                if (array_key_exists('school_code', $row))    $payload['school_code']    = $row['school_code'];
-                if (array_key_exists('subject_code', $row))   $payload['subject_code']   = $row['subject_code'];
-                if (array_key_exists('status_code', $row))    $payload['status_code']    = $row['status_code'];
+                if (array_key_exists('school_code', $row))    $payload['school_code']    = $row['school_code'] ?: null;
+                if (array_key_exists('subject_code', $row))   $payload['subject_code']   = $row['subject_code'] ?: null;
+                // status_code는 NOT NULL — 빈 값이면 payload에서 제외해 기본값('selling') 적용되게 함
+                if (array_key_exists('status_code', $row) && ! empty($row['status_code'])) {
+                    $payload['status_code'] = $row['status_code'];
+                }
                 if (array_key_exists('cover_path', $row))     $payload['cover_path']     = $row['cover_path'];
                 if (array_key_exists('cover_file_name', $row))$payload['cover_file_name']= $row['cover_file_name'];
                 if (array_key_exists('spec', $row))           $payload['spec']           = $row['spec'];
@@ -254,6 +257,13 @@ class BookImportService
                         'status_code' => 'selling',
                         'source'      => 'excel',
                     ];
+                    // 이중 안전: status_code가 비어있으면 기본값 강제 (NOT NULL)
+                    if (empty($createPayload['status_code'])) {
+                        $createPayload['status_code'] = 'selling';
+                    }
+                    if (empty($createPayload['title'])) {
+                        $createPayload['title'] = $row['title'] ?? '(제목 없음)';
+                    }
                     $book = Book::create($createPayload);
                     $success++;
                 }
