@@ -78,7 +78,7 @@
                     <th style="width:60px; white-space:nowrap;">표지</th>
                     <th><x-sort-link field="title" label="제목" :sort="$sort" :dir="$dir" /></th>
                     <th><x-sort-link field="isbn" label="ISBN" :sort="$sort" :dir="$dir" /></th>
-                    <th><x-sort-link field="publisher_code" label="출판사 코드" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="publisher_code" label="코드/바코드" :sort="$sort" :dir="$dir" /></th>
                     <th><x-sort-link field="publisher_id" label="출판사" :sort="$sort" :dir="$dir" /></th>
                     <th><x-sort-link field="school_code" label="학교/과목" :sort="$sort" :dir="$dir" /></th>
                     <th class="text-end"><x-sort-link field="price" label="정가" :sort="$sort" :dir="$dir" /></th>

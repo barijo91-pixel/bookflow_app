@@ -51,8 +51,8 @@
                             <input type="text" name="isbn" id="isbn_input" class="form-control" value="{{ old('isbn') }}" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small text-muted" title="출판사 자체 도서코드 (총판 주문용)">출판사 코드</label>
-                            <input type="text" name="publisher_code" class="form-control" value="{{ old('publisher_code') }}" placeholder="예: B00150000003" maxlength="50">
+                            <label class="form-label small text-muted" title="출판사 자체 도서코드 또는 상품 바코드 (총판 주문·스캔용)">출판사코드 / 바코드</label>
+                            <input type="text" name="publisher_code" class="form-control" value="{{ old('publisher_code') }}" placeholder="예: B00150000003 또는 바코드" maxlength="50">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small text-muted">출판사</label>
