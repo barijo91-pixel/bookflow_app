@@ -76,6 +76,7 @@ class CodeTableSeeder extends Seeder
             ['school', 'middle', '중등', null, 20],
             ['school', 'high', '고등', null, 30],
             ['school', 'general', '단행본', null, 40],
+            ['school', 'adult', '성인', '성인/일반(어학·자격 등)', 50],
             // grade
             ['grade', 'pre_elem', '예비초', null, 5],
             ['grade', 'elem_1', '초1', null, 10],
@@ -90,6 +91,7 @@ class CodeTableSeeder extends Seeder
             ['grade', 'high_1', '고1', null, 100],
             ['grade', 'high_2', '고2', null, 110],
             ['grade', 'high_3', '고3', null, 120],
+            ['grade', 'adult', '성인', null, 130],
             // semester
             ['semester', 'sem_1', '1학기', null, 10],
             ['semester', 'sem_2', '2학기', null, 20],
