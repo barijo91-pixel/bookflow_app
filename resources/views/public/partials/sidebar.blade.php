@@ -69,7 +69,7 @@
                 <a href="{{ route('my.vendors.create') }}" class="nav-item {{ $is('my.vendors.create') }}">
                     <i class="bi bi-building-add"></i> 학원등록
                 </a>
-                <a href="{{ route('my.agent.student.import') }}" class="nav-item {{ $is('my.agent.student.import') }}">
+                <a href="{{ route('my.agent.student.import') }}" class="nav-item d-none d-md-flex {{ $is('my.agent.student.import') }}">
                     <i class="bi bi-people"></i> 학생등록
                 </a>
                 <a href="{{ route('my.discounts.index') }}" class="nav-item {{ $startsWith('my.discounts') }}">
