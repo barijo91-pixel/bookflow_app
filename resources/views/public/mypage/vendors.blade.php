@@ -3,19 +3,12 @@
 @section('max_width', '1100px')
 
 @section('content')
-<div class="mb-3 d-flex justify-content-between align-items-end flex-wrap gap-2">
-    <div>
-        <h1 class="h4 navy mb-1">
-            <i class="bi bi-building"></i> 거래처(학원)
-            <small class="text-muted fs-6">{{ $vendors->count() }}개</small>
-        </h1>
-        <p class="text-muted small mb-0">본인이 담당하는 학원과 적용 중인 할인율. 인라인 수정 가능.</p>
-    </div>
-    <div class="d-flex gap-2">
-        <a href="{{ route('my.discounts.index') }}" class="btn btn-sm btn-outline-navy">
-            <i class="bi bi-percent"></i> 도서별 개별 할인율 관리
-        </a>
-    </div>
+<div class="mb-3">
+    <h1 class="h4 navy mb-1">
+        <i class="bi bi-building"></i> 거래처(학원)
+        <small class="text-muted fs-6">{{ $vendors->count() }}개</small>
+    </h1>
+    <p class="text-muted small mb-0">본인이 담당하는 학원과 적용 중인 할인율. 인라인 수정 가능.</p>
 </div>
 
 @if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif
