@@ -271,6 +271,17 @@
     </div>
 </div>
 
+@push('head')
+<style>
+/* 모바일: 학생 목록 링크/삭제 버튼 — 아이콘 빼고 텍스트만 한 줄 */
+@media (max-width: 767.98px) {
+    #studentTable td:last-child .btn { white-space: nowrap; padding: .28rem .6rem; font-size: .82rem; }
+    #studentTable td:last-child .btn i { display: none; }
+    #studentTable td:last-child .d-inline-flex { flex-wrap: nowrap; }
+}
+</style>
+@endpush
+
 @push('scripts')
 <script>
 // 학급 정보 카드 접기/펼치기 (기본 접힘)
