@@ -217,9 +217,29 @@ a { color: var(--accent); }
     .admin-sidebar {
         transform: translateX(-100%);
         transition: transform .25s ease;
+        width: 260px; z-index: 1040;
+        box-shadow: 4px 0 14px rgba(0,0,0,.18);
     }
     .admin-sidebar.open { transform: translateX(0); }
     .admin-main { margin-left: 0; }
+
+    /* 사이드바 열렸을 때 배경 오버레이 */
+    .admin-sidebar.open::after {
+        content: ''; position: fixed; top: 0; left: 260px; right: 0; bottom: 0;
+        background: rgba(0,0,0,.45); z-index: -1;
+    }
+
+    /* 콘텐츠 여백 축소 (모바일 공간 확보) */
+    .admin-content { padding: 1rem .8rem 2rem !important; }
+    .admin-topbar { padding: .6rem 1rem; }
+    .page-header h1 { font-size: 1.15rem; }
+
+    /* 표 가로 스크롤 부드럽게 + 셀 패딩 축소 */
+    .table-responsive { -webkit-overflow-scrolling: touch; }
+    .admin-content .table > :not(caption) > * > * { padding: .5rem .55rem; font-size: .88rem; }
+
+    /* 카드 헤더/바디 여백 축소 */
+    .admin-content .card-body { padding: .9rem; }
 }
 
 /* Table tweaks */
