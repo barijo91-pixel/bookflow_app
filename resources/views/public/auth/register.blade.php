@@ -8,7 +8,7 @@
         <div class="text-center mb-4">
             <i class="bi bi-person-plus navy" style="font-size:2.5rem"></i>
             <h1 class="h4 navy mt-2 mb-1">회원가입</h1>
-            <p class="text-muted small mb-0">총판 / 영업자 / 학원 가입 신청</p>
+            <p class="text-muted small mb-0">영업자 / 학원 가입 신청</p>
         </div>
 
         @if ($errors->any())
@@ -27,27 +27,13 @@
             <div class="mb-3">
                 <label class="form-label small text-muted">역할 *</label>
                 <div class="btn-group w-100" role="group">
-                    <input type="radio" class="btn-check" name="role_code" id="role_distributor" value="distributor" @checked(old('role_code') === 'distributor')>
-                    <label class="btn btn-outline-secondary" for="role_distributor">총판</label>
-
                     <input type="radio" class="btn-check" name="role_code" id="role_agent" value="agent" @checked(old('role_code') === 'agent' || ! old('role_code'))>
                     <label class="btn btn-outline-secondary" for="role_agent">영업자</label>
 
                     <input type="radio" class="btn-check" name="role_code" id="role_academy" value="academy" @checked(old('role_code') === 'academy')>
                     <label class="btn btn-outline-secondary" for="role_academy">학원</label>
                 </div>
-            </div>
-
-            {{-- 영업자만 총판 선택 --}}
-            <div class="mb-3" id="distributor_select" style="display:none;">
-                <label class="form-label small text-muted">소속 총판 (선택)</label>
-                <select name="parent_user_id" class="form-select">
-                    <option value="">선택 안함 — 관리자가 배정 예정</option>
-                    @foreach($distributors as $d)
-                        <option value="{{ $d->id }}" @selected(old('parent_user_id') == $d->id)>{{ $d->name }}</option>
-                    @endforeach
-                </select>
-                <small class="text-muted">총판이 승인 후 활성화됩니다.</small>
+                <small class="text-muted">총판 계정은 관리자가 직접 등록합니다.</small>
             </div>
 
             <div class="row g-3">
@@ -107,22 +93,6 @@
 </div>
 
 <div class="alert alert-info mt-3 small">
-    <strong><i class="bi bi-info-circle"></i> 안내</strong> — 가입 후 관리자 또는 소속 총판의 승인이 있어야 로그인이 가능합니다.
+    <strong><i class="bi bi-info-circle"></i> 안내</strong> — 가입 후 관리자 승인이 있어야 로그인이 가능합니다.
 </div>
 @endsection
-
-@push('scripts')
-<script>
-(function () {
-    const sel = document.getElementById('distributor_select');
-    document.querySelectorAll('input[name="role_code"]').forEach(r => {
-        r.addEventListener('change', () => sel.style.display = (r.value === 'agent' && r.checked) ? 'block' : sel.style.display);
-        r.addEventListener('change', () => {
-            sel.style.display = document.querySelector('input[name="role_code"]:checked')?.value === 'agent' ? 'block' : 'none';
-        });
-    });
-    // initial
-    sel.style.display = document.querySelector('input[name="role_code"]:checked')?.value === 'agent' ? 'block' : 'none';
-})();
-</script>
-@endpush

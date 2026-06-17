@@ -87,11 +87,8 @@ class PublicAuthController extends Controller
         if (Auth::check()) {
             return $this->redirectAfterLogin(Auth::user());
         }
-        $distributors = User::where('role_code', 'distributor')
-            ->where('status_code', 'active')
-            ->orderBy('name')
-            ->get(['id', 'name']);
-        return view('public.auth.register', compact('distributors'));
+        // 회원가입은 영업자/학원만 — 소속 총판 배정은 관리자가 처리
+        return view('public.auth.register');
     }
 
     public function register(Request $request)
@@ -102,7 +99,7 @@ class PublicAuthController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers(), 'max:50'],
             'name'     => ['required', 'string', 'max:100'],
             'phone'    => ['required', 'string', 'max:20'],
-            'role_code'=> ['required', Rule::in(['distributor', 'agent', 'academy'])],
+            'role_code'=> ['required', Rule::in(['agent', 'academy'])], // 총판은 관리자가 직접 등록
             'parent_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'agree_terms'    => ['accepted'],
         ], [
