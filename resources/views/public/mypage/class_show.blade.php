@@ -208,10 +208,13 @@
                 </table>
             </div>
             <div class="card-footer">
-                <div class="small mb-2 navy fw-bold py-1 px-2 rounded d-inline-block" style="background:#d4e0ee; border-left:3px solid #1f3a5f;">
-                    <i class="bi bi-person-plus"></i> 학생 등록
-                </div>
-                <form method="POST" action="{{ route('my.classes.students.attach', $class->id) }}" class="row g-2">
+                <button type="button" class="small mb-2 navy fw-bold py-1 px-2 rounded d-flex align-items-center justify-content-between border-0 w-100"
+                        style="background:#d4e0ee; border-left:3px solid #1f3a5f !important; cursor:pointer;"
+                        onclick="toggleStudentForm()">
+                    <span><i class="bi bi-person-plus"></i> 학생 등록</span>
+                    <i class="bi bi-chevron-down" id="studentFormChevron"></i>
+                </button>
+                <form method="POST" action="{{ route('my.classes.students.attach', $class->id) }}" class="row g-2" id="studentAddForm" style="display:none;">
                     @csrf
                     <div class="col-md-3">
                         <input type="text" name="student_name" class="form-control form-control-sm" placeholder="학생 이름" required>
@@ -274,6 +277,16 @@
 function toggleClassInfo() {
     var b = document.getElementById('classInfoBody');
     var c = document.getElementById('classInfoChevron');
+    if (!b) return;
+    var show = b.style.display === 'none';
+    b.style.display = show ? '' : 'none';
+    if (c) { c.classList.toggle('bi-chevron-down', !show); c.classList.toggle('bi-chevron-up', show); }
+}
+
+// 학생 등록 폼 접기/펼치기 (기본 접힘)
+function toggleStudentForm() {
+    var b = document.getElementById('studentAddForm');
+    var c = document.getElementById('studentFormChevron');
     if (!b) return;
     var show = b.style.display === 'none';
     b.style.display = show ? '' : 'none';
