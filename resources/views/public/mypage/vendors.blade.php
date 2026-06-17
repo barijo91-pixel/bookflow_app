@@ -4,11 +4,10 @@
 
 @section('content')
 <div class="mb-3">
-    <h1 class="h4 navy mb-1">
+    <h1 class="h4 navy mb-0">
         <i class="bi bi-building"></i> 거래처(학원)
         <small class="text-muted fs-6">{{ $vendors->count() }}개</small>
     </h1>
-    <p class="text-muted small mb-0">본인이 담당하는 학원과 적용 중인 할인율. 인라인 수정 가능.</p>
 </div>
 
 @if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif
