@@ -59,7 +59,8 @@
 @endforeach
 
 <div class="card section-card">
-    <div class="table-responsive">
+    {{-- 데스크탑: 표 (인라인 편집) --}}
+    <div class="table-responsive d-none d-md-block">
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
@@ -153,9 +154,50 @@
             </tbody>
         </table>
     </div>
+
+    {{-- 모바일: 카드형 (정보 + 할인율 표시, 편집은 상세에서) --}}
+    <div class="d-md-none">
+        @forelse($vendors as $v)
+            <a href="{{ route('my.vendors.show', $v->id) }}" class="vendor-card-m">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="navy">{{ $v->name }}</strong>
+                    @switch($v->status_code)
+                        @case('active')     <span class="badge bg-success">정상</span> @break
+                        @case('suspended')  <span class="badge bg-secondary">일시정지</span> @break
+                        @case('terminated') <span class="badge bg-dark">거래종료</span> @break
+                        @default <span class="badge bg-light text-dark">{{ $v->status_code }}</span>
+                    @endswitch
+                </div>
+                <div class="small text-muted mb-1">
+                    @if($v->owner_name){{ $v->owner_name }} · @endif
+                    {{ trim(($v->sido_name ?? '').' '.($v->sigungu_name ?? '')) ?: '지역 미설정' }}
+                </div>
+                @if($v->mobile)
+                    <div class="small mb-1"><i class="bi bi-phone"></i> {{ format_phone($v->mobile) }}</div>
+                @endif
+                <div class="small d-flex align-items-center gap-2">
+                    <span>할인율 <strong class="navy">{{ rtrim(rtrim($v->discount_rate, '0'), '.') }}%</strong></span>
+                    @if(!$v->discount_active)<span class="badge bg-warning text-dark">매핑 비활성</span>@endif
+                    <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                </div>
+            </a>
+        @empty
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-building-x" style="font-size:2rem"></i>
+                <p class="mb-0 mt-2">
+                    @if(!empty($q)) '{{ $q }}' 검색 결과가 없습니다.
+                    @else 거래처(학원)이 없습니다. 위 '새 학원 등록'으로 추가하세요. @endif
+                </p>
+            </div>
+        @endforelse
+    </div>
 </div>
 
-<div class="alert alert-light border mt-3 small text-muted mb-0">
+<p class="text-muted small mt-2 d-md-none mb-0">
+    <i class="bi bi-info-circle"></i> 할인율 수정·거래 중단은 학원을 눌러 상세에서 변경하세요.
+</p>
+
+<div class="alert alert-light border mt-3 small text-muted mb-0 d-none d-md-block">
     <div class="mb-2"><i class="bi bi-info-circle navy"></i> <strong class="navy">안내</strong></div>
     <ul class="mb-0 ps-3">
         <li>할인율은 <strong>0.5% 단위</strong>로 조정할 수 있어요.</li>
@@ -163,6 +205,17 @@
         <li>도서마다 다른 할인율을 주려면 <a href="{{ route('my.discounts.index') }}" class="text-decoration-none">할인율 관리</a> 페이지에서 설정하세요.</li>
     </ul>
 </div>
+
+@push('head')
+<style>
+.vendor-card-m {
+    display: block; padding: .9rem 1rem; border-bottom: 1px solid #eef0f4;
+    text-decoration: none; color: #212529;
+}
+.vendor-card-m:last-child { border-bottom: 0; }
+.vendor-card-m:active { background: #f6f7fb; }
+</style>
+@endpush
 
 @push('scripts')
 <script>
