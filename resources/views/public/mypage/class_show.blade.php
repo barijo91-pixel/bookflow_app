@@ -110,9 +110,16 @@
                 </div>
                 <form method="POST" action="{{ route('my.classes.books.attach', $class->id) }}" class="row g-2">
                     @csrf
+                    <div class="col-12">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="bookSearchInput" class="form-control"
+                                   placeholder="교재 제목·ISBN 검색" autocomplete="off">
+                        </div>
+                    </div>
                     <div class="col-7">
-                        <select name="book_id" class="form-select form-select-sm" required>
-                            <option value="">교재 선택</option>
+                        <select name="book_id" id="bookSelect" class="form-select form-select-sm" required>
+                            <option value="">교재 선택 ({{ count($availableBooks) }}권)</option>
                             @foreach($availableBooks as $ab)
                                 <option value="{{ $ab->id }}">{{ \Illuminate\Support\Str::limit($ab->title, 40) }} ({{ number_format($ab->price) }}원)</option>
                             @endforeach
@@ -276,6 +283,33 @@
             if (match) visible++;
         });
         if (countEl) countEl.textContent = q ? `${visible} / ${total}` : total;
+    });
+})();
+
+// 교재 추가 — select 검색 필터 (option 재구성)
+(function () {
+    const input = document.getElementById('bookSearchInput');
+    const sel = document.getElementById('bookSelect');
+    if (!input || !sel) return;
+
+    // 원본 옵션 백업 (placeholder 제외)
+    const allOpts = Array.from(sel.options).slice(1).map(o => ({ value: o.value, text: o.text }));
+    const placeholder = sel.options[0]?.text || '교재 선택';
+
+    let timer = null;
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            const q = this.value.trim().toLowerCase();
+            const filtered = q ? allOpts.filter(o => o.text.toLowerCase().includes(q)) : allOpts;
+            // 최대 200개만 렌더 (성능)
+            const shown = filtered.slice(0, 200);
+            sel.innerHTML = '<option value="">'
+                + (q ? `검색결과 ${filtered.length}권` : placeholder) + '</option>'
+                + shown.map(o => `<option value="${o.value}">${o.text.replace(/</g,'&lt;')}</option>`).join('');
+            // 검색결과 1개면 자동 선택
+            if (q && filtered.length === 1) sel.value = filtered[0].value;
+        }, 150);
     });
 })();
 </script>
