@@ -52,15 +52,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-5">
-                            <label class="form-label small text-muted mb-1">시작일</label>
-                            <input type="date" name="started_at" class="form-control form-control-sm" value="{{ $class->started_at }}">
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label small text-muted mb-1">종료일</label>
-                            <input type="date" name="ended_at" class="form-control form-control-sm" value="{{ $class->ended_at }}">
-                        </div>
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                             <label class="form-label small text-muted mb-1">상태</label>
                             <select name="status" class="form-select form-select-sm">
                                 <option value="active" @selected($class->status === 'active')>진행중</option>
