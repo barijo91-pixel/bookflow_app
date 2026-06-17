@@ -31,7 +31,6 @@
                     <th>학년</th>
                     <th>학생 수</th>
                     <th>상태</th>
-                    <th>기간</th>
                     <th style="width:90px;" class="text-end">삭제</th>
                 </tr>
             </thead>
@@ -57,10 +56,6 @@
                                 <span class="badge bg-secondary">종료</span>
                             @endif
                         </td>
-                        <td class="small text-muted">
-                            {{ $c->started_at ? \Carbon\Carbon::parse($c->started_at)->format('Y-m-d') : '-' }}
-                            @if($c->ended_at) ~ {{ \Carbon\Carbon::parse($c->ended_at)->format('Y-m-d') }} @endif
-                        </td>
                         <td class="text-end" onclick="event.stopPropagation()">
                             <form method="POST" action="{{ route('my.classes.destroy', $c->id) }}" class="d-inline"
                                   onsubmit="return confirm('「{{ addslashes($c->name) }}」 학급을 삭제할까요?\n학생이 있으면 차단됩니다.')">
@@ -73,7 +68,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-5">
+                        <td colspan="5" class="text-center text-muted py-5">
                             <i class="bi bi-mortarboard" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">아직 학급이 없습니다.</p>
                             <p class="small">우측 상단의 "학급 추가" 버튼으로 시작하세요.</p>
@@ -108,16 +103,6 @@
                                 <option value="{{ $g->code }}">{{ $g->name }}</option>
                             @endforeach
                         </select>
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <label class="form-label small text-muted">시작일</label>
-                            <input type="date" name="started_at" id="newClassStartedAt" class="form-control" value="{{ now()->toDateString() }}">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small text-muted">종료일 <small class="text-muted">(기본 +6개월)</small></label>
-                            <input type="date" name="ended_at" id="newClassEndedAt" class="form-control" value="{{ now()->addMonths(6)->toDateString() }}">
-                        </div>
                     </div>
                     <div class="mt-3">
                         <label class="form-label small text-muted">메모</label>
