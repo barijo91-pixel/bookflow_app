@@ -38,6 +38,7 @@
                 <tr><th>이름</th><td>{{ $acc['name'] }}</td></tr>
                 <tr><th>휴대폰</th><td>{{ format_phone($acc['phone']) }}</td></tr>
                 <tr><th>초기 비밀번호</th><td><code class="text-danger fs-5">{{ $acc['password'] }}</code></td></tr>
+                <tr><th>로그인 주소</th><td><strong>{{ url('/login') }}</strong> <span class="text-muted small">(관리자 로그인 아님)</span></td></tr>
             </table>
         </div>
     </div>

@@ -24,6 +24,7 @@
             <tr><th>이름</th><td>{{ $createdUser['name'] }}</td></tr>
             <tr><th>휴대폰</th><td>{{ format_phone($createdUser['phone']) }}</td></tr>
             <tr><th>초기 비밀번호</th><td><code class="text-danger fs-5">{{ $createdUser['password'] }}</code></td></tr>
+            <tr><th>로그인 주소</th><td><strong>{{ url('/login') }}</strong></td></tr>
         </table>
         <button class="btn btn-sm btn-outline-dark mt-3" onclick="copyLogin()">
             <i class="bi bi-clipboard"></i> 로그인 정보 복사

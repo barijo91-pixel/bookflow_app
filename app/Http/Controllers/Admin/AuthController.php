@@ -44,10 +44,17 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
-        if ($user->role_code !== 'admin' || $user->status_code !== 'active') {
+        if ($user->role_code !== 'admin') {
+            Auth::logout();
+            // 학원·영업자·총판이 관리자 로그인에서 헤매지 않도록 일반 로그인으로 안내
+            return back()->withInput($request->only('login_id'))->withErrors([
+                'login_id' => '관리자 계정이 아닙니다. 학원·영업자·총판은 일반 로그인을 이용해주세요. (아래 링크)',
+            ]);
+        }
+        if ($user->status_code !== 'active') {
             Auth::logout();
             return back()->withInput($request->only('login_id'))->withErrors([
-                'login_id' => '관리자 권한이 없거나 비활성 계정입니다.',
+                'login_id' => '비활성 계정입니다. 관리자에게 문의해주세요.',
             ]);
         }
 

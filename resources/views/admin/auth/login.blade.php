@@ -44,6 +44,9 @@
             </button>
         </form>
         <div class="login-footer">
+            <a href="{{ route('public.login') }}" class="d-block small text-decoration-none mb-2">
+                <i class="bi bi-people"></i> 학원 · 영업자 · 총판이신가요? 일반 로그인 →
+            </a>
             <small class="text-muted">e-Learn · BookSys Admin</small>
         </div>
     </div>
