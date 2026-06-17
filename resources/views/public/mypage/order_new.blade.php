@@ -287,8 +287,8 @@
                             <th>도서</th>
                             <th class="text-end">정가</th>
                             <th class="text-end">할인가</th>
-                            <th class="text-center" style="width:90px">수량</th>
-                            <th class="text-center" style="width:70px">담기</th>
+                            <th class="text-center" style="width:58px">수량</th>
+                            <th class="text-center" style="width:62px">담기</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -320,7 +320,7 @@
                                         @csrf
                                         <input type="hidden" name="book_id" value="{{ $b->id }}">
                                         <input type="hidden" name="cart_key" value="{{ $cartKey }}">
-                                        <input type="number" name="qty" value="1" min="1" max="9999" class="form-control form-control-sm text-end" style="width:70px">
+                                        <input type="number" name="qty" value="1" min="1" max="9999" class="form-control form-control-sm text-end px-1" style="width:48px">
                                 </td>
                                 <td>
                                         <button class="btn btn-sm btn-outline-navy w-100"><i class="bi bi-plus"></i></button>
