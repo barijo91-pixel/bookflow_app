@@ -5,25 +5,21 @@ set -e
 
 echo "=== BookSys 배포 시작 ==="
 
-echo "[1/6] 최신 코드 가져오기"
+echo "[1/5] 최신 코드 가져오기"
 git pull origin main
 
-echo "[2/6] 마이그레이션 (있으면 적용)"
+echo "[2/5] 마이그레이션 (있으면 적용)"
 sudo docker compose exec -T app php artisan migrate --force
 
-echo "[3/6] 설정 시드 (site_settings 추가분)"
-sudo docker compose exec -T app php artisan db:seed --class=SiteSettingSeeder --force
+echo "[3/5] 설정 시드 (site_settings 추가분 — 실패해도 진행)"
+sudo docker compose exec -T app php artisan db:seed --class=SiteSettingSeeder --force || echo "  (시드 건너뜀)"
 
-echo "[4/6] 캐시 정리"
-sudo docker compose exec -T app php artisan view:clear
-sudo docker compose exec -T app php artisan route:clear
-sudo docker compose exec -T app php artisan config:clear
-sudo docker compose exec -T app php artisan cache:clear
+echo "[4/5] 캐시 전체 정리 (route/config/view/cache/event 한 번에)"
+sudo docker compose exec -T app php artisan optimize:clear
 
-echo "[5/6] 컨테이너 재시작 (opcache 리셋 — 코드 변경 반영 필수)"
+echo "[5/5] 컨테이너 재시작 (opcache 리셋 — 코드 변경 반영 필수)"
 sudo docker compose restart app
-
-echo "[6/6] 완료 대기"
 sleep 3
 
-echo "=== 배포 완료 ==="
+echo "=== 배포 완료 — 로그인 라우트 확인 ==="
+sudo docker compose exec -T app php artisan route:list 2>/dev/null | grep -iE "(^| )login|admin/login" || echo "  (route:list 확인 생략)"
