@@ -271,18 +271,6 @@
             </div>
         @endif
 
-        {{-- 모바일 앱 안내 --}}
-        <div class="card section-card info-banner">
-            <div class="card-body">
-                <div class="d-flex gap-3 align-items-center">
-                    <i class="bi bi-phone navy" style="font-size:2rem"></i>
-                    <div>
-                        <h5 class="navy mb-1">모바일 앱이 곧 출시됩니다</h5>
-                        <p class="text-muted small mb-0">바코드 스캔 주문, 푸시 알림 등 풍부한 기능을 Flutter 앱에서 사용하실 수 있습니다.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -334,4 +322,17 @@
         </div>
     @endif
 @endif
+
+{{-- 모바일 앱 안내 (맨 아래) --}}
+<div class="card section-card info-banner mt-3">
+    <div class="card-body">
+        <div class="d-flex gap-3 align-items-center">
+            <i class="bi bi-phone navy" style="font-size:2rem"></i>
+            <div>
+                <h5 class="navy mb-1">모바일 앱이 곧 출시됩니다</h5>
+                <p class="text-muted small mb-0">바코드 스캔 주문, 푸시 알림 등 풍부한 기능을 Flutter 앱에서 사용하실 수 있습니다.</p>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
