@@ -17,9 +17,10 @@ class SettingsController extends Controller
         'policy'      => '정책',
     ];
 
-    public function edit(Request $request)
+    public function edit(Request $request, ?string $group = null)
     {
-        $active = $request->query('group', 'company');
+        // 라우트가 group 을 path 파라미터(settings/{group?})로 전달 — query 가 아님
+        $active = $group ?: $request->query('group', 'company');
         if (! in_array($active, $this->groupOrder, true)) {
             $active = 'company';
         }
