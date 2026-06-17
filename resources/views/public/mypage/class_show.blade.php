@@ -122,7 +122,7 @@
                         <input type="number" name="qty" value="1" min="1" max="99" class="form-control form-control-sm">
                     </div>
                     <div class="col-2 d-grid">
-                        <button class="btn btn-sm btn-navy">추가</button>
+                        <button class="btn btn-sm btn-navy"><i class="bi bi-plus-lg"></i></button>
                     </div>
                 </form>
             </div>
@@ -217,7 +217,7 @@
                         <input type="tel" name="parent_phone" class="form-control form-control-sm" placeholder="학부모 휴대폰" required>
                     </div>
                     <div class="col-md-1 d-grid">
-                        <button class="btn btn-sm btn-navy">추가</button>
+                        <button class="btn btn-sm btn-navy"><i class="bi bi-plus-lg"></i></button>
                     </div>
                 </form>
             </div>
