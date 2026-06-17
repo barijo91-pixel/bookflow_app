@@ -56,22 +56,6 @@
                     <label class="form-label small text-muted mb-1">상세주소</label>
                     <input type="text" name="address_detail" id="addrDetailInput" class="form-control" value="{{ old('address_detail') }}" maxlength="255" placeholder="동·호수 등">
                 </div>
-                {{-- ② 시도/시군구 — 주소 검색 시 자동, 필요 시 수동 보정 --}}
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">시도 <span class="text-muted">(자동)</span></label>
-                    <select name="sido_id" id="sidoSelect" class="form-select">
-                        <option value="">선택</option>
-                        @foreach($sidos as $s)
-                            <option value="{{ $s->id }}">{{ $s->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">시군구 <span class="text-muted">(자동)</span></label>
-                    <select name="region_id" id="sigunguSelect" class="form-select" disabled>
-                        <option value="">시도 먼저 선택</option>
-                    </select>
-                </div>
                 <div class="col-md-12">
                     <label class="form-label small text-muted mb-1">메모</label>
                     <textarea name="memo" class="form-control" rows="2" maxlength="2000">{{ old('memo') }}</textarea>
@@ -194,77 +178,19 @@
 {{-- 다음 우편번호 검색 (무료, 키 X) --}}
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
-// 주소 검색 팝업 — 결과를 input + 시도/시군구 셀렉트에 자동 채움
+// 주소 검색 팝업 — 결과 도로명 주소를 input에 채움
 function openAddrSearch() {
     if (typeof daum === 'undefined') {
         alert('주소 검색 스크립트 로드 실패 — 직접 입력해주세요.');
         return;
     }
     new daum.Postcode({
-        oncomplete: async function (data) {
-            // data.roadAddress: 도로명, data.jibunAddress: 지번
-            // data.sido / data.sigungu: 시도/시군구명
-            const addr = data.roadAddress || data.jibunAddress;
-            document.getElementById('addrInput').value = addr;
+        oncomplete: function (data) {
+            document.getElementById('addrInput').value = data.roadAddress || data.jibunAddress;
             document.getElementById('addrDetailInput')?.focus();
-
-            // 시도 셀렉트에서 매칭 시도
-            const sidoSel = document.getElementById('sidoSelect');
-            const sgSel   = document.getElementById('sigunguSelect');
-            if (sidoSel && data.sido) {
-                for (const opt of sidoSel.options) {
-                    if (opt.textContent.trim() === data.sido.trim()
-                        || opt.textContent.trim().startsWith(data.sido.replace(/특별시|광역시|특별자치도|특별자치시|도/g, '').trim())) {
-                        sidoSel.value = opt.value;
-                        sidoSel.dispatchEvent(new Event('change'));
-                        // 시군구는 비동기로 로드되니 잠시 후 매칭
-                        setTimeout(() => {
-                            if (sgSel && data.sigungu) {
-                                for (const sgOpt of sgSel.options) {
-                                    if (sgOpt.textContent.trim() === data.sigungu.trim()) {
-                                        sgSel.value = sgOpt.value;
-                                        break;
-                                    }
-                                }
-                            }
-                        }, 600);
-                        break;
-                    }
-                }
-            }
         }
     }).open();
 }
-
-// 시도 → 시군구 동적 로딩
-(function() {
-    const sido = document.getElementById('sidoSelect');
-    const sg   = document.getElementById('sigunguSelect');
-    if (!sido) return;
-    sido.addEventListener('change', async () => {
-        const v = sido.value;
-        if (!v) {
-            sg.innerHTML = '<option value="">시도 먼저 선택</option>';
-            sg.disabled = true;
-            return;
-        }
-        sg.innerHTML = '<option value="">로딩 중...</option>';
-        sg.disabled = true;
-        try {
-            const res = await fetch(`{{ route('my.regions.sigungu') }}?sido_id=${v}`);
-            if (res.ok) {
-                const list = await res.json();
-                sg.innerHTML = '<option value="">선택</option>' + list.map(r =>
-                    `<option value="${r.id}">${r.name}</option>`).join('');
-                sg.disabled = false;
-            } else {
-                sg.innerHTML = '<option value="">불러올 수 없음</option>';
-            }
-        } catch (e) {
-            sg.innerHTML = '<option value="">오류</option>';
-        }
-    });
-})();
 
 // 계정 만들기 토글
 (function() {
