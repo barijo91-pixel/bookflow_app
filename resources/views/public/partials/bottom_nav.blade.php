@@ -20,6 +20,16 @@
                 ->whereNull('deleted_at')->count();
         }
     }
+
+    // 학원: 장바구니 담은 수량 (세션 cart.* 합산)
+    $cartCount = 0;
+    if ($user->role_code === 'academy') {
+        foreach (session()->all() as $k => $v) {
+            if (str_starts_with($k, 'cart.') && is_array($v)) {
+                $cartCount += array_sum($v);
+            }
+        }
+    }
 @endphp
 <nav class="mobile-bottom-nav">
     {{-- 공통: 홈 --}}
@@ -58,12 +68,13 @@
             <a href="{{ route('my.order_new') }}" class="mbn-item {{ $route === 'my.order_new' ? 'active' : '' }}">
                 <i class="bi bi-bag-plus"></i><span>주문하기</span>
             </a>
+            <a href="{{ route('my.order_new') }}#cartSection" class="mbn-item">
+                <i class="bi bi-cart"></i><span>장바구니</span>
+                @if($cartCount > 0)<span class="mbn-badge">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>@endif
+            </a>
             <a href="{{ route('my.orders.index') }}" class="mbn-item {{ $rs('my.orders') ? 'active' : '' }}">
                 <i class="bi bi-clipboard-data"></i><span>주문내역</span>
                 @if($navBadge > 0)<span class="mbn-badge">{{ $navBadge > 99 ? '99+' : $navBadge }}</span>@endif
-            </a>
-            <a href="{{ route('my.classes.index') }}" class="mbn-item {{ $rs('my.classes') ? 'active' : '' }}">
-                <i class="bi bi-mortarboard"></i><span>학급</span>
             </a>
             @break
     @endswitch
