@@ -77,7 +77,8 @@
 </form>
 
 <div class="card section-card">
-    <div class="table-responsive">
+    {{-- 데스크탑: 표 --}}
+    <div class="table-responsive d-none d-md-block">
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
@@ -133,8 +134,51 @@
             </tbody>
         </table>
     </div>
+
+    {{-- 모바일: 카드 리스트 --}}
+    <div class="d-md-none">
+        @forelse($orders as $o)
+            @php $opt = $statusOptions[$o->status_code] ?? [$o->status_code, 'bg-light text-dark']; @endphp
+            <a href="{{ route('my.orders.show', $o->id) }}" class="order-card-m">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <code class="navy fw-bold">{{ $o->order_no }}</code>
+                    <span class="badge {{ $opt[1] }}">{{ $opt[0] }}</span>
+                </div>
+                <div class="fw-bold mb-1">{{ $o->vendor_name ?? '-' }}</div>
+                <div class="d-flex justify-content-between align-items-end">
+                    <div class="small text-muted">
+                        @if($user->role_code !== 'agent' && $o->agent_name){{ $o->agent_name }} · @endif
+                        @if($user->role_code !== 'distributor' && $o->distributor_name){{ $o->distributor_name }} · @endif
+                        <span class="navy fw-bold">{{ number_format($o->total_amount) }}원</span>
+                    </div>
+                    <div class="text-muted" style="font-size:.72rem">
+                        {{ \Carbon\Carbon::parse($o->requested_at ?? $o->created_at)->format('m-d H:i') }}
+                    </div>
+                </div>
+            </a>
+        @empty
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-inbox" style="font-size:2rem"></i>
+                <p class="mb-0 mt-2">
+                    @if($status) 해당 상태의 주문이 없습니다. @else 주문 내역이 없습니다. @endif
+                </p>
+            </div>
+        @endforelse
+    </div>
+
     @if($orders->hasPages())
         <div class="card-footer">{{ $orders->links() }}</div>
     @endif
 </div>
 @endsection
+
+@push('head')
+<style>
+.order-card-m {
+    display: block; padding: .85rem 1rem; border-bottom: 1px solid #eef0f4;
+    text-decoration: none; color: #212529;
+}
+.order-card-m:last-child { border-bottom: 0; }
+.order-card-m:active { background: #f6f7fb; }
+</style>
+@endpush
