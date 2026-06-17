@@ -12,9 +12,6 @@
         <p class="text-muted small mb-0">본인이 담당하는 학원과 적용 중인 할인율. 인라인 수정 가능.</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="{{ route('my.vendors.create') }}" class="btn btn-sm btn-primary">
-            <i class="bi bi-building-add"></i> 새 학원 등록
-        </a>
         <a href="{{ route('my.discounts.index') }}" class="btn btn-sm btn-outline-navy">
             <i class="bi bi-percent"></i> 도서별 개별 할인율 관리
         </a>
@@ -146,7 +143,7 @@
                             @if(!empty($q))
                                 '<strong>{{ $q }}</strong>' 검색 결과가 없습니다.
                             @else
-                                거래처(학원)이 없습니다. 우측 상단 <strong>새 학원 등록</strong>으로 추가하세요.
+                                거래처(학원)이 없습니다. 좌측 메뉴 <strong>학원등록</strong>에서 추가하세요.
                             @endif
                         </td>
                     </tr>
@@ -186,7 +183,7 @@
                 <i class="bi bi-building-x" style="font-size:2rem"></i>
                 <p class="mb-0 mt-2">
                     @if(!empty($q)) '{{ $q }}' 검색 결과가 없습니다.
-                    @else 거래처(학원)이 없습니다. 위 '새 학원 등록'으로 추가하세요. @endif
+                    @else 거래처(학원)이 없습니다. 메뉴의 '학원등록'에서 추가하세요. @endif
                 </p>
             </div>
         @endforelse
