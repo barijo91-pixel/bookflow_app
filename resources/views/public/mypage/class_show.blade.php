@@ -122,7 +122,7 @@
                         <input type="number" name="qty" value="1" min="1" max="99" class="form-control form-control-sm">
                     </div>
                     <div class="col-2 d-grid">
-                        <button class="btn btn-sm btn-outline-navy"><i class="bi bi-plus"></i></button>
+                        <button class="btn btn-sm btn-navy"><i class="bi bi-plus-lg"></i><span class="d-md-none"> 추가</span></button>
                     </div>
                 </form>
             </div>
@@ -135,7 +135,7 @@
         <div class="card section-card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-people"></i> 학생/학부모 (<span id="studentCount">{{ $students->count() }}</span>)</strong>
-                <a href="{{ route('my.classes.students.import.show', $class->id) }}" class="btn btn-sm btn-outline-navy">
+                <a href="{{ route('my.classes.students.import.show', $class->id) }}" class="btn btn-sm btn-outline-navy d-none d-md-inline-block">
                     <i class="bi bi-file-earmark-spreadsheet"></i> 엑셀 일괄 등록
                 </a>
             </div>
@@ -217,7 +217,7 @@
                         <input type="tel" name="parent_phone" class="form-control form-control-sm" placeholder="학부모 휴대폰" required>
                     </div>
                     <div class="col-md-1 d-grid">
-                        <button class="btn btn-sm btn-outline-navy"><i class="bi bi-plus"></i></button>
+                        <button class="btn btn-sm btn-navy"><i class="bi bi-plus-lg"></i><span class="d-md-none"> 추가</span></button>
                     </div>
                 </form>
             </div>
