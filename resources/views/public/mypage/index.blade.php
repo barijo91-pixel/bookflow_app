@@ -285,10 +285,10 @@
                                 <tr>
                                     <th>주문번호</th>
                                     <th>거래처</th>
-                                    @if($user->role_code !== 'agent')<th>영업자</th>@endif
+                                    @if($user->role_code !== 'agent')<th class="d-none d-md-table-cell">영업자</th>@endif
                                     <th>상태</th>
                                     <th class="text-end">금액</th>
-                                    <th>일시</th>
+                                    <th class="d-none d-sm-table-cell">일시</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -296,7 +296,7 @@
                                     <tr>
                                         <td class="small"><code>{{ $o->order_no }}</code></td>
                                         <td class="small">{{ $o->vendor_name }}</td>
-                                        @if($user->role_code !== 'agent')<td class="small text-muted">{{ $o->agent_name }}</td>@endif
+                                        @if($user->role_code !== 'agent')<td class="small text-muted d-none d-md-table-cell">{{ $o->agent_name }}</td>@endif
                                         <td>
                                             @switch($o->status_code)
                                                 @case('requested') <span class="badge bg-warning text-dark">접수</span> @break
@@ -310,7 +310,7 @@
                                             @endswitch
                                         </td>
                                         <td class="text-end small">{{ number_format($o->total_amount) }}원</td>
-                                        <td class="text-muted small">{{ $o->requested_at ? \Carbon\Carbon::parse($o->requested_at)->format('m-d H:i') : '-' }}</td>
+                                        <td class="text-muted small d-none d-sm-table-cell">{{ $o->requested_at ? \Carbon\Carbon::parse($o->requested_at)->format('m-d H:i') : '-' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
