@@ -32,12 +32,19 @@
 <div class="row g-3">
     {{-- LEFT: 학급 정보 + 교재 --}}
     <div class="col-lg-6">
-        {{-- 학급 정보 --}}
+        {{-- 학급 정보 (기본 접힘, 헤더 클릭 시 펼침) --}}
         <div class="card section-card mb-3">
-            <div class="card-header"><strong><i class="bi bi-info-circle"></i> 학급 정보</strong></div>
+            <div class="card-header d-flex justify-content-between align-items-center" style="cursor:pointer"
+                 onclick="toggleClassInfo()">
+                <strong><i class="bi bi-info-circle"></i> 학급 정보</strong>
+                <span class="small text-muted">
+                    <span class="d-none d-sm-inline">{{ $class->name }}</span>
+                    <i class="bi bi-chevron-down" id="classInfoChevron"></i>
+                </span>
+            </div>
             <form method="POST" action="{{ route('my.classes.update', $class->id) }}">
                 @csrf @method('PUT')
-                <div class="card-body">
+                <div class="card-body" id="classInfoBody" style="display:none;">
                     <div class="row g-2">
                         <div class="col-md-7">
                             <label class="form-label small text-muted mb-1">학급명</label>
@@ -263,6 +270,25 @@
 
 @push('scripts')
 <script>
+// 학급 정보 카드 접기/펼치기 (기본 접힘)
+function toggleClassInfo() {
+    var b = document.getElementById('classInfoBody');
+    var c = document.getElementById('classInfoChevron');
+    if (!b) return;
+    var show = b.style.display === 'none';
+    b.style.display = show ? '' : 'none';
+    if (c) { c.classList.toggle('bi-chevron-down', !show); c.classList.toggle('bi-chevron-up', show); }
+}
+// 저장 검증 오류가 있으면 자동으로 펼침
+@if($errors->any())
+document.addEventListener('DOMContentLoaded', function(){
+    var b = document.getElementById('classInfoBody');
+    if (b) b.style.display = '';
+    var c = document.getElementById('classInfoChevron');
+    if (c) { c.classList.remove('bi-chevron-down'); c.classList.add('bi-chevron-up'); }
+});
+@endif
+
 // 학생 즉시 검색 (클라이언트 사이드 필터링)
 (function () {
     const input = document.getElementById('studentSearch');
