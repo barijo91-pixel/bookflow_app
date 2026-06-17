@@ -3,12 +3,19 @@
 @section('max_width', '1100px')
 
 @section('content')
-<div class="mb-3">
-    <h1 class="h4 navy mb-1"><i class="bi bi-person-badge"></i> 소속 영업자
-        <small class="text-muted fs-6">{{ $agents->count() }}명</small>
-    </h1>
-    <p class="text-muted small mb-0">본 총판 산하 영업자 목록과 활동 현황</p>
+<div class="mb-3 d-flex justify-content-between align-items-start">
+    <div>
+        <h1 class="h4 navy mb-1"><i class="bi bi-person-badge"></i> 소속 영업자
+            <small class="text-muted fs-6">{{ $agents->count() }}명</small>
+        </h1>
+        <p class="text-muted small mb-0">본 총판 산하 영업자 목록과 활동 현황</p>
+    </div>
+    <a href="{{ route('my.agents.create') }}" class="btn btn-navy btn-sm flex-shrink-0">
+        <i class="bi bi-person-plus"></i> 영업자 등록
+    </a>
 </div>
+
+@if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif
 
 <form method="GET" action="{{ route('my.agents.index') }}" class="card section-card mb-3">
     <div class="card-body py-3">
@@ -103,7 +110,9 @@
                         <td colspan="7" class="text-center text-muted py-5">
                             <i class="bi bi-person-badge" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">소속 영업자가 없습니다.</p>
-                            <p class="small">관리자에게 영업자 매핑을 요청해주세요.</p>
+                            <a href="{{ route('my.agents.create') }}" class="btn btn-sm btn-navy mt-2">
+                                <i class="bi bi-person-plus"></i> 첫 영업자 등록하기
+                            </a>
                         </td>
                     </tr>
                 @endforelse

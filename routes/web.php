@@ -104,7 +104,9 @@ Route::middleware('auth')->group(function () {
         Route::post('stocks',               [\App\Http\Controllers\MyPageController::class, 'stockStore'])->name('stocks.store');
         Route::put('stocks/{stockId}',      [\App\Http\Controllers\MyPageController::class, 'stockUpdate'])->name('stocks.update');
         Route::delete('stocks/{stockId}',   [\App\Http\Controllers\MyPageController::class, 'stockDestroy'])->name('stocks.destroy');
-        Route::get('agents',     [\App\Http\Controllers\MyPageController::class, 'agentsIndex'])->name('agents.index');
+        Route::get('agents',         [\App\Http\Controllers\MyPageController::class, 'agentsIndex'])->name('agents.index');
+        Route::get('agents/create',  [\App\Http\Controllers\Public\DistributorAgentController::class, 'create'])->name('agents.create');
+        Route::post('agents',        [\App\Http\Controllers\Public\DistributorAgentController::class, 'store'])->name('agents.store');
 
         // 영업자 전용
         Route::get('vendors',    [\App\Http\Controllers\MyPageController::class, 'vendorsIndex'])->name('vendors.index');
