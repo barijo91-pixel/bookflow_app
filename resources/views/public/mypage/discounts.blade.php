@@ -152,7 +152,7 @@
                                 </div>
                             </div>
                             <div class="col-md-2 d-grid">
-                                <button class="btn btn-sm btn-outline-navy" type="submit"><i class="bi bi-plus"></i> 추가</button>
+                                <button class="btn btn-sm btn-navy" type="submit"><i class="bi bi-plus-lg"></i></button>
                             </div>
                         </form>
                     </div>
