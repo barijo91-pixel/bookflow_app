@@ -159,14 +159,8 @@ Route::middleware('auth')->group(function () {
 
 // 관리자
 Route::prefix('admin')->name('admin.')->group(function () {
-    // 로그인 (비인증 접근 허용)
-    Route::middleware('guest')->group(function () {
-        Route::get('login',  [AuthController::class, 'showLogin'])->name('login');
-        // 관리자 로그인 POST — 브루트포스 방어 (분당 5회)
-        Route::post('login', [AuthController::class, 'login'])
-            ->middleware('throttle:5,1')
-            ->name('login.attempt');
-    });
+    // 로그인은 일반 로그인(/login)으로 통일 — 기존 /admin/login 주소는 redirect로 호환
+    Route::get('login', fn () => redirect()->route('public.login'))->name('login');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     // 관리자 전용

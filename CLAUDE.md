@@ -50,7 +50,7 @@ C:/laragon/bin/php/php-8.3.30-Win32-vs16-x64/php.exe artisan serve --host=127.0.
 
 ## 관리자 계정 (시드)
 
-- URL: `/admin/login`
+- URL: `/login` (로그인 통합 — 관리자 포함 모든 역할. 로그인 후 admin은 관리자 대시보드, 나머지는 마이페이지로 분기. 기존 `/admin/login`은 `/login`으로 redirect)
 - **로그인 ID 시스템**: 이메일 형식이 아닌 일반 아이디 (영문+숫자 6~50자)
 - 운영 admin (ProductionSeeder): `sysadmin00` / `admin1234` (첫 로그인 시 비번 변경 강제)
 - 데모 계정 8개 (DemoAccountSeeder, 전부 비번 `1234` — 약한 비번 검사 명령 대상)
@@ -240,7 +240,7 @@ php artisan migrate:fresh --seed   # 전체 재생성 + 시드
 - 코드 수정 후: `php artisan view:clear`, `config:clear`, `cache:clear`
 - 사이트 설정 반영 안 되면: `SiteSetting::flush()` 또는 `cache:clear`
 - MySQL CLI에서 한글 깨져 보이는 건 Windows 콘솔 표시 문제 (저장 데이터는 utf8mb4 정상)
-- `auth` 미들웨어가 `login` 라우트를 찾는 문제: `bootstrap/app.php`에서 `redirectGuestsTo(fn () => route('admin.login'))` 처리됨
+- `auth` 미들웨어가 `login` 라우트를 찾는 문제: `bootstrap/app.php`에서 `redirectGuestsTo(fn () => route('public.login'))` 처리됨 (관리자 포함 로그인 통합)
 
 ## 현재 진행 상황 (2026-05-22)
 

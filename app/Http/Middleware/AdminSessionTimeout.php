@@ -35,8 +35,8 @@ class AdminSessionTimeout
                         'message' => '세션이 만료되었습니다. 다시 로그인해주세요.',
                     ], 401);
                 }
-                return redirect()->route('admin.login')
-                    ->withErrors(['email' => '세션이 만료되었습니다. 다시 로그인해주세요.']);
+                return redirect()->route('public.login')
+                    ->withErrors(['login_id' => '세션이 만료되었습니다. 다시 로그인해주세요.']);
             }
 
             // 활동 시간 갱신

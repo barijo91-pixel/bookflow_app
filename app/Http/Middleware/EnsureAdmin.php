@@ -12,12 +12,12 @@ class EnsureAdmin
     {
         $user = Auth::user();
         if (! $user) {
-            return redirect()->route('admin.login');
+            return redirect()->route('public.login');
         }
         if ($user->role_code !== 'admin' || $user->status_code !== 'active') {
             Auth::logout();
-            return redirect()->route('admin.login')->withErrors([
-                'email' => '관리자 권한이 없거나 비활성 계정입니다.',
+            return redirect()->route('public.login')->withErrors([
+                'login_id' => '관리자 권한이 없거나 비활성 계정입니다.',
             ]);
         }
         return $next($request);

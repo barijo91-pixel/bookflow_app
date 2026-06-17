@@ -29,8 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*') || $request->expectsJson()) {
                 return null;
             }
-            // 관리자 영역은 관리자 로그인, 그 외는 공개 로그인으로
-            return $request->is('admin/*') ? route('admin.login') : route('public.login');
+            // 로그인은 일반 로그인(/login)으로 통일 (관리자 포함)
+            return route('public.login');
         });
         $middleware->statefulApi();
     })

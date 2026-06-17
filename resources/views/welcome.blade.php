@@ -430,8 +430,8 @@
             <a href="mailto:contact@bookflow.io" class="btn btn-light btn-lg px-4">
                 <i class="bi bi-envelope"></i> 이메일 문의
             </a>
-            <a href="{{ route('admin.login') }}" class="btn btn-outline-light btn-lg px-4">
-                <i class="bi bi-box-arrow-in-right"></i> 관리자 로그인
+            <a href="{{ route('public.login') }}" class="btn btn-outline-light btn-lg px-4">
+                <i class="bi bi-box-arrow-in-right"></i> 로그인
             </a>
         </div>
     </div>

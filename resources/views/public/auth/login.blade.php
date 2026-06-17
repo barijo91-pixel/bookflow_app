@@ -40,10 +40,6 @@
             아직 회원이 아니신가요?
             <a href="{{ route('public.register') }}" class="navy fw-bold">회원가입</a>
         </div>
-        <hr>
-        <div class="text-center small text-muted">
-            관리자이신가요? <a href="{{ route('admin.login') }}">관리자 콘솔로 이동</a>
-        </div>
     </div>
 </div>
 @endsection
