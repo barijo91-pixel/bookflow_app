@@ -42,25 +42,11 @@
                     <label class="form-label small text-muted mb-1">유선전화</label>
                     <input type="text" name="vendor_tel" class="form-control" value="{{ old('vendor_tel') }}" maxlength="20">
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">시도</label>
-                    <select name="sido_id" id="sidoSelect" class="form-select">
-                        <option value="">선택</option>
-                        @foreach($sidos as $s)
-                            <option value="{{ $s->id }}">{{ $s->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">시군구</label>
-                    <select name="region_id" id="sigunguSelect" class="form-select" disabled>
-                        <option value="">시도 먼저 선택</option>
-                    </select>
-                </div>
+                {{-- ① 주소 검색 (메인) — 검색하면 시도/시군구/도로명 자동 입력 --}}
                 <div class="col-md-8">
-                    <label class="form-label small text-muted mb-1">주소 (도로명 추천)</label>
+                    <label class="form-label small text-muted mb-1">주소 <span class="text-navy">(주소 검색 권장)</span></label>
                     <div class="input-group">
-                        <button type="button" class="btn btn-outline-navy" onclick="openAddrSearch()">
+                        <button type="button" class="btn btn-navy" onclick="openAddrSearch()">
                             <i class="bi bi-search"></i> 주소 검색
                         </button>
                         <input type="text" name="address" id="addrInput" class="form-control" value="{{ old('address') }}" maxlength="255" placeholder="검색하거나 직접 입력">
@@ -69,6 +55,22 @@
                 <div class="col-md-4">
                     <label class="form-label small text-muted mb-1">상세주소</label>
                     <input type="text" name="address_detail" id="addrDetailInput" class="form-control" value="{{ old('address_detail') }}" maxlength="255" placeholder="동·호수 등">
+                </div>
+                {{-- ② 시도/시군구 — 주소 검색 시 자동, 필요 시 수동 보정 --}}
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">시도 <span class="text-muted">(자동)</span></label>
+                    <select name="sido_id" id="sidoSelect" class="form-select">
+                        <option value="">선택</option>
+                        @foreach($sidos as $s)
+                            <option value="{{ $s->id }}">{{ $s->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">시군구 <span class="text-muted">(자동)</span></label>
+                    <select name="region_id" id="sigunguSelect" class="form-select" disabled>
+                        <option value="">시도 먼저 선택</option>
+                    </select>
                 </div>
                 <div class="col-md-12">
                     <label class="form-label small text-muted mb-1">메모</label>
