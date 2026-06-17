@@ -46,7 +46,10 @@
         <a href="{{ route('admin.regions.index') }}" class="nav-item {{ $is('admin.regions') }}">
             <i class="bi bi-geo-alt"></i> 지역
         </a>
-        <a href="{{ route('admin.notifications.templates') }}" class="nav-item {{ $is('admin.notifications') }}">
+        <a href="{{ route('admin.notifications.compose') }}" class="nav-item {{ $is('admin.notifications.compose') . $is('admin.notifications.send') }}">
+            <i class="bi bi-chat-dots"></i> 문자 발송
+        </a>
+        <a href="{{ route('admin.notifications.templates') }}" class="nav-item {{ $is('admin.notifications.templates') . $is('admin.notifications.logs') }}">
             <i class="bi bi-bell"></i> 알림 템플릿/이력
         </a>
         <a href="{{ route('admin.settings.edit') }}" class="nav-item {{ $is('admin.settings') }}">

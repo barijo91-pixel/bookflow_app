@@ -219,6 +219,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('audit-logs/{id}',   [AuditLogController::class, 'show'])->name('audit-logs.show');
 
         // 알림
+        Route::get('notifications/compose',         [NotificationController::class, 'compose'])->name('notifications.compose');
+        Route::post('notifications/send',           [NotificationController::class, 'sendManual'])->name('notifications.send');
         Route::get('notifications/templates',       [NotificationController::class, 'templates'])->name('notifications.templates');
         Route::put('notifications/templates/{id}',  [NotificationController::class, 'updateTemplate'])->name('notifications.templates.update');
         Route::get('notifications/logs',            [NotificationController::class, 'logs'])->name('notifications.logs');
