@@ -159,9 +159,32 @@
     </div>
 </div>
 
+{{-- 적용된 필터 요약 (모바일 접이식 헤더용) --}}
+@php
+    $sumParts = [];
+    if ($activeFilters['school'])   $sumParts[] = optional(collect($filterOptions['school'])->firstWhere('code', $activeFilters['school']))->name;
+    if ($activeFilters['subject'])  $sumParts[] = optional(collect($filterOptions['subject'])->firstWhere('code', $activeFilters['subject']))->name;
+    if ($activeFilters['grade'])    $sumParts[] = optional(collect($filterOptions['grade'])->firstWhere('code', $activeFilters['grade']))->name;
+    if ($activeFilters['semester']) $sumParts[] = optional(collect($filterOptions['semester'])->firstWhere('code', $activeFilters['semester']))->name;
+    $filterSummary = implode(' · ', array_filter($sumParts));
+    $hasActiveFilter = !empty($filterSummary);
+@endphp
+
 {{-- 필터 카드 - Progressive Disclosure --}}
 <div class="card section-card mb-3">
-    <div class="card-body py-3">
+    {{-- 모바일 전용 접이식 헤더 --}}
+    <div class="card-header filter-toggle d-md-none d-flex justify-content-between align-items-center" onclick="toggleFilterBody()">
+        <strong class="small">
+            <i class="bi bi-funnel"></i> 필터
+            @if($hasActiveFilter)
+                <span class="badge bg-navy ms-1">{{ $filterSummary }}</span>
+            @else
+                <span class="text-muted">전체</span>
+            @endif
+        </strong>
+        <i class="bi bi-chevron-down" id="filterChevron"></i>
+    </div>
+    <div class="card-body py-3" id="filterBody">
         {{-- 1단계: 분류 (항상 표시) --}}
         <div class="d-flex flex-wrap align-items-start mb-2 gap-2">
             <div class="text-muted small fw-bold" style="width:50px;padding-top:.35rem">분류</div>
@@ -423,6 +446,16 @@
 @push('scripts')
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <style>
+/* 모바일 필터 접이식 — 기본 접힘, 헤더 탭하면 펼침 (데스크탑은 항상 표시) */
+@media (max-width: 767.98px) {
+    #filterBody { display: none; }
+    #filterBody.show { display: block; }
+    .filter-toggle { cursor: pointer; }
+    /* 모바일에서 필터 pill 약간 컴팩트하게 */
+    #filterBody .btn { font-size: .82rem; padding: .28rem .8rem; }
+    #filterBody .d-flex > .text-muted.small.fw-bold { width: 42px !important; font-size: .72rem; }
+}
+
 /* 모바일 플로팅 장바구니 버튼 — 데스크탑(lg+)은 우측 sticky 장바구니라 숨김 */
 .cart-fab { display: none; }
 @media (max-width: 991px) {
@@ -462,6 +495,15 @@ function removeCartItem(bookId) {
     if (!confirm('장바구니에서 제거할까요?')) return;
     document.getElementById('removeBookId').value = bookId;
     document.getElementById('removeForm').submit();
+}
+
+// 모바일 필터 접기/펼치기
+function toggleFilterBody() {
+    var b = document.getElementById('filterBody');
+    var c = document.getElementById('filterChevron');
+    if (!b) return;
+    b.classList.toggle('show');
+    if (c) { c.classList.toggle('bi-chevron-down'); c.classList.toggle('bi-chevron-up'); }
 }
 
 // 바코드 스캔 → AJAX 카트 추가
