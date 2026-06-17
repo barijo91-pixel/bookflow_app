@@ -317,10 +317,15 @@
     </div>
 
     {{-- 우측: 장바구니 --}}
-    <div class="col-lg-4">
+    <div class="col-lg-4" id="cartSection">
         <div class="card section-card" style="position:sticky;top:1rem">
-            <div class="card-header">
+            <div class="card-header d-flex align-items-center">
                 <strong><i class="bi bi-cart"></i> 장바구니 ({{ $cartLines->count() }})</strong>
+                {{-- 모바일: 도서 목록으로 올라가기 --}}
+                <button type="button" class="btn btn-sm btn-link p-0 ms-auto d-lg-none text-decoration-none"
+                        onclick="window.scrollTo({top:0,behavior:'smooth'})">
+                    <i class="bi bi-arrow-up-circle"></i> 도서 담으러
+                </button>
             </div>
             <div class="card-body p-0">
                 @if($cartLines->isEmpty())
@@ -405,9 +410,40 @@
     <input type="hidden" name="book_id" id="removeBookId">
 </form>
 
+{{-- 모바일 플로팅 장바구니 버튼 (담은 게 있을 때만) --}}
+@if($cartLines->isNotEmpty())
+<button type="button" class="cart-fab" onclick="document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})">
+    <i class="bi bi-cart-fill"></i>
+    <span class="cart-fab-count">{{ $cartLines->sum('qty') }}</span>
+    <span class="cart-fab-amount">{{ number_format($subtotal) }}원</span>
+    <i class="bi bi-chevron-down small"></i>
+</button>
+@endif
+
 @push('scripts')
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <style>
+/* 모바일 플로팅 장바구니 버튼 — 데스크탑(lg+)은 우측 sticky 장바구니라 숨김 */
+.cart-fab { display: none; }
+@media (max-width: 991px) {
+    .cart-fab {
+        display: inline-flex; align-items: center; gap: 8px;
+        position: fixed; right: 14px; bottom: 20px; z-index: 140;
+        background: var(--navy); color: #fff; border: 0;
+        padding: 11px 18px; border-radius: 999px; font-weight: 700;
+        box-shadow: 0 4px 16px rgba(31,58,95,.45);
+    }
+    .cart-fab i.bi-cart-fill { font-size: 1.15rem; }
+    .cart-fab-count {
+        background: #fff; color: var(--navy); border-radius: 999px;
+        padding: 0 8px; font-size: .8rem; min-width: 22px; text-align: center;
+    }
+    .cart-fab-amount { font-size: .9rem; }
+}
+/* 모바일 하단 탭바 있을 때(≤768px) 탭바 위로 띄움 */
+@media (max-width: 768px) {
+    .cart-fab { bottom: 72px; }
+}
 .scan-camera-modal {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85);
     z-index: 10500; display: none; align-items: center; justify-content: center; padding: 16px;
