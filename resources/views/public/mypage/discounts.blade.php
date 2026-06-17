@@ -34,13 +34,13 @@
                             <form method="POST" action="{{ route('my.discounts.vendor.update', $v->avd_id) }}" class="row g-2 align-items-center">
                                 @csrf @method('PUT')
                                 <input type="hidden" name="is_active" value="1">
-                                <div class="col-5">
+                                <div class="col-12 col-sm-5 mb-2 mb-sm-0">
                                     <a href="{{ route('my.discounts.index', ['vendor_id' => $v->vendor_id]) }}"
                                        class="text-decoration-none small {{ $v->vendor_id == $selectedVendorId ? 'fw-bold navy' : '' }}">
                                         {{ $v->vendor_name }}
                                     </a>
                                 </div>
-                                <div class="col-5">
+                                <div class="col-8 col-sm-5">
                                     <div class="input-group input-group-sm rate-stepper">
                                         <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
                                         <input type="number" step="0.5" min="0" max="100" name="discount_rate"
@@ -50,7 +50,7 @@
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
-                                <div class="col-2 text-end">
+                                <div class="col-4 col-sm-2 d-grid">
                                     <button class="btn btn-sm btn-outline-navy">저장</button>
                                 </div>
                             </form>
@@ -162,6 +162,14 @@
         @endif
     </div>
 </div>
+@push('head')
+<style>
+/* 할인율 stepper — 좁은 폭에서도 한 줄 유지 (% 줄바꿈 방지) */
+.rate-stepper { flex-wrap: nowrap; }
+.rate-stepper input { min-width: 44px; }
+.rate-stepper .btn, .rate-stepper .input-group-text { padding-left: .5rem; padding-right: .5rem; }
+</style>
+@endpush
 @push('scripts')
 <script>
 // 할인율 +/- 버튼 (모바일 친화)
