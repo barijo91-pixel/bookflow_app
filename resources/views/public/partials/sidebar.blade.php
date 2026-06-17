@@ -46,11 +46,8 @@
                 <a href="{{ route('my.stocks.index') }}" class="nav-item {{ $startsWith('my.stocks') }}">
                     <i class="bi bi-box-seam"></i> 재고관리
                 </a>
-                <a href="{{ route('my.agents.index') }}" class="nav-item {{ $is('my.agents.index') }}">
-                    <i class="bi bi-person-badge"></i> 소속 영업자
-                </a>
-                <a href="{{ route('my.agents.create') }}" class="nav-item {{ $is('my.agents.create') }}">
-                    <i class="bi bi-person-plus"></i> 영업자 등록
+                <a href="{{ route('my.agents.index') }}" class="nav-item {{ $startsWith('my.agents') }}">
+                    <i class="bi bi-person-badge"></i> 영업자 관리
                 </a>
                 <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
                     <i class="bi bi-graph-up-arrow"></i> 수익 시뮬레이션

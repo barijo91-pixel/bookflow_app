@@ -1,14 +1,14 @@
 @extends('public.layouts.app')
-@section('title', '소속 영업자')
+@section('title', '영업자 관리')
 @section('max_width', '1100px')
 
 @section('content')
 <div class="mb-3 d-flex justify-content-between align-items-start">
     <div>
-        <h1 class="h4 navy mb-1"><i class="bi bi-person-badge"></i> 소속 영업자
+        <h1 class="h4 navy mb-1"><i class="bi bi-person-badge"></i> 영업자 관리
             <small class="text-muted fs-6">{{ $agents->count() }}명</small>
         </h1>
-        <p class="text-muted small mb-0">본 총판 산하 영업자 목록과 활동 현황</p>
+        <p class="text-muted small mb-0">본 총판 산하 영업자 등록·목록·활동 현황</p>
     </div>
     <a href="{{ route('my.agents.create') }}" class="btn btn-navy btn-sm flex-shrink-0">
         <i class="bi bi-person-plus"></i> 영업자 등록

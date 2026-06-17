@@ -17,6 +17,9 @@ use Laravel\Sanctum\HasApiTokens;
     'phone_verified_at', 'email_verified_at',
     'approved_by', 'approved_at', 'last_login_at',
     'password_change_required',
+    // 정산·세무 (총판 입금계좌 / 영업자 사업자·정산계좌)
+    'business_type', 'business_no', 'business_name',
+    'bank_code', 'bank_account', 'bank_holder',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
