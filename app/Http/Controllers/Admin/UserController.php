@@ -154,7 +154,10 @@ class UserController extends Controller
     // -------------------- CREATE --------------------
     public function create()
     {
-        $roleOptions = DB::table('codes')->where('group_code', 'user_role')->orderBy('sort_order')->get();
+        // 학원(academy)은 '거래처 추가'에서 거래처와 함께 등록 — 사용자 추가는 내부/파트너 계정만
+        $roleOptions = DB::table('codes')->where('group_code', 'user_role')
+            ->where('code', '!=', 'academy')
+            ->orderBy('sort_order')->get();
         $sidos       = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get();
         return view('admin.users.create', compact('roleOptions', 'sidos'));
     }
@@ -167,7 +170,8 @@ class UserController extends Controller
             'name'          => ['required', 'string', 'max:100'],
             'phone'         => ['required', 'string', 'max:20'],
             'password'      => ['required', Password::min(8)->letters()->numbers(), 'max:50'],
-            'role_code'     => ['required', Rule::in(['admin','distributor','agent','academy'])],
+            // 학원(academy)은 거래처 추가에서 등록 — 사용자 추가는 내부/파트너 계정만 허용
+            'role_code'     => ['required', Rule::in(['admin','distributor','agent'])],
             'admin_level'   => ['nullable', Rule::in(['super','staff'])],
             'region_id'     => ['nullable', 'integer', 'exists:regions,id'],
             'address'       => ['nullable', 'string', 'max:255'],

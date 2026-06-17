@@ -45,17 +45,15 @@ class VendorController extends Controller
         return view('admin.vendors.index', compact('vendors', 'typeOptions', 'statusOptions', 'type', 'status', 'q', 'sort', 'dir'));
     }
 
-    // -------------------- CREATE --------------------
+    // -------------------- CREATE (학원 원스톱: 거래처 + 로그인계정 + 담당영업자) --------------------
     public function create()
     {
         $typeOptions   = DB::table('codes')->where('group_code', 'vendor_type')->orderBy('sort_order')->get();
-        $bankOptions   = DB::table('codes')->where('group_code', 'bank')->orderBy('sort_order')->get();
-        $sidos         = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get();
         // 담당 영업자 후보 (등록 시 바로 지정)
         $agents = User::where('role_code', 'agent')
             ->where('status_code', 'active')
             ->orderBy('name')->get(['id', 'name', 'login_id']);
-        return view('admin.vendors.create', compact('typeOptions', 'bankOptions', 'sidos', 'agents'));
+        return view('admin.vendors.create', compact('typeOptions', 'agents'));
     }
 
     public function store(Request $request)
@@ -63,23 +61,48 @@ class VendorController extends Controller
         $data = $this->validatePayload($request);
         $data['status_code'] = 'active';
 
-        // 담당 영업자 (선택)
-        $agentData = $request->validate([
-            'agent_user_id' => ['nullable', 'integer', 'exists:users,id'],
-            'discount_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        // 담당 영업자 + (선택) 학원 로그인 계정
+        $extra = $request->validate([
+            'agent_user_id'  => ['nullable', 'integer', 'exists:users,id'],
+            'discount_rate'  => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'create_account' => ['nullable', 'in:0,1'],
+            'user_login_id'  => ['nullable', 'string', 'regex:/^[a-zA-Z0-9]{6,50}$/'],
+            'user_name'      => ['nullable', 'string', 'max:80'],
+            'user_phone'     => ['nullable', 'string', 'max:20'],
+            'user_email'     => ['nullable', 'email', 'max:150'],
+            'user_password'  => ['nullable', 'string', 'min:8', 'max:50'],
         ]);
 
-        $vendor = DB::transaction(function () use ($data, $agentData) {
+        $createAccount = ($extra['create_account'] ?? '0') === '1';
+
+        // 계정 생성 시 추가 필수값 + 중복 체크
+        if ($createAccount) {
+            foreach (['user_login_id', 'user_name', 'user_phone'] as $f) {
+                if (empty($extra[$f])) {
+                    return back()->withInput()->with('error', '학원 계정을 만들려면 아이디·이름·휴대폰이 필요합니다.');
+                }
+            }
+            if (DB::table('users')->where('login_id', strtolower($extra['user_login_id']))->exists()) {
+                return back()->withInput()->withErrors([
+                    'user_login_id' => "아이디 '{$extra['user_login_id']}'는 이미 사용 중입니다.",
+                ]);
+            }
+        }
+
+        $plainPw = null;
+        $createdLogin = null;
+
+        $vendor = DB::transaction(function () use ($data, $extra, $createAccount, &$plainPw, &$createdLogin) {
             $vendor = Vendor::create($data);
 
             // 담당 영업자 매핑 (선택 시)
-            if (! empty($agentData['agent_user_id'])) {
-                $agent = User::find($agentData['agent_user_id']);
+            if (! empty($extra['agent_user_id'])) {
+                $agent = User::find($extra['agent_user_id']);
                 if ($agent && $agent->role_code === 'agent') {
                     DB::table('agent_vendor_discounts')->insert([
                         'agent_user_id' => $agent->id,
                         'vendor_id'     => $vendor->id,
-                        'discount_rate' => $agentData['discount_rate'] ?? 10,
+                        'discount_rate' => $extra['discount_rate'] ?? 10,
                         'started_at'    => now()->toDateString(),
                         'is_active'     => true,
                         'created_at'    => now(),
@@ -87,10 +110,59 @@ class VendorController extends Controller
                     ]);
                 }
             }
+
+            // 학원 로그인 계정 생성 + vendor_users 매핑 (선택 시)
+            if ($createAccount) {
+                $plainPw = ! empty($extra['user_password']) ? $extra['user_password'] : $this->genPassword(8);
+                $u = User::create([
+                    'login_id'    => strtolower($extra['user_login_id']),
+                    'email'       => $extra['user_email'] ?? null,
+                    'name'        => $extra['user_name'],
+                    'phone'       => preg_replace('/[^0-9]/', '', (string) $extra['user_phone']),
+                    'password'    => $plainPw, // 모델 캐스트로 해시
+                    'password_change_required' => true,
+                    'role_code'   => 'academy',
+                    'status_code' => 'active',
+                    'region_id'   => $data['region_id'] ?? null,
+                    'address'     => $data['address'] ?? null,
+                    'address_detail' => $data['address_detail'] ?? null,
+                    'approved_by' => auth()->id(),
+                    'approved_at' => now(),
+                ]);
+                DB::table('vendor_users')->insert([
+                    'vendor_id'  => $vendor->id,
+                    'user_id'    => $u->id,
+                    'role'       => 'owner',
+                    'is_primary' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $createdLogin = [
+                    'login_id' => $u->login_id,
+                    'name'     => $u->name,
+                    'phone'    => $u->phone,
+                    'password' => $plainPw,
+                ];
+            }
             return $vendor;
         });
 
-        return redirect()->route('admin.vendors.show', $vendor)->with('success', '거래처가 등록되었습니다.');
+        $redirect = redirect()->route('admin.vendors.show', $vendor)->with('success', '거래처가 등록되었습니다.');
+        if ($createdLogin) {
+            $redirect->with('new_account', $createdLogin); // 상세에서 초기 비번 1회 표시
+        }
+        return $redirect;
+    }
+
+    /** 사람이 읽기 쉬운 임시 비밀번호 (혼동 문자 제외) */
+    private function genPassword(int $length = 8): string
+    {
+        $letters = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
+        $digits  = '23456789';
+        $half = (int) floor($length / 2);
+        $pw = substr(str_shuffle(str_repeat($letters, 4)), 0, $half)
+            . substr(str_shuffle(str_repeat($digits, 4)), 0, $length - $half);
+        return str_shuffle($pw);
     }
 
     // -------------------- SHOW (편집 + 담당자 + 영업자 할인율 + 주문) --------------------
@@ -98,7 +170,6 @@ class VendorController extends Controller
     {
         $typeOptions   = DB::table('codes')->where('group_code', 'vendor_type')->orderBy('sort_order')->get();
         $statusOptions = DB::table('codes')->where('group_code', 'vendor_status')->orderBy('sort_order')->get();
-        $bankOptions   = DB::table('codes')->where('group_code', 'bank')->orderBy('sort_order')->get();
         $sidos         = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get();
 
         // 현재 region 부모(sido) 찾기
@@ -145,7 +216,7 @@ class VendorController extends Controller
             ->orderByDesc('id')->limit(10)->get();
 
         return view('admin.vendors.show', compact(
-            'vendor','typeOptions','statusOptions','bankOptions','sidos','currentSidoId','sigungus',
+            'vendor','typeOptions','statusOptions','sidos','currentSidoId','sigungus',
             'staffs','candidateStaffs','agentLinks','candidateAgents','recentOrders'
         ));
     }
@@ -295,10 +366,8 @@ class VendorController extends Controller
             'region_id'      => ['nullable', 'integer', 'exists:regions,id'],
             'address'        => ['nullable', 'string', 'max:255'],
             'address_detail' => ['nullable', 'string', 'max:255'],
-            'bank_code'      => ['nullable', 'string', 'max:10'],
-            'bank_account'   => ['nullable', 'string', 'max:50'],
-            'bank_holder'    => ['nullable', 'string', 'max:50'],
             'memo'           => ['nullable', 'string', 'max:2000'],
         ]);
+        // 정산 계좌는 거래처(학원)에서 받지 않음 — 수금은 총판 계좌로 일원화
     }
 }

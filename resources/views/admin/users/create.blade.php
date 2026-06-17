@@ -53,6 +53,7 @@
                             <option value="{{ $r->code }}" @selected(old('role_code') === $r->code)>{{ $r->name }}</option>
                         @endforeach
                     </select>
+                    <small class="text-muted">학원 계정은 <a href="{{ route('admin.vendors.create') }}">거래처 추가</a>에서 거래처와 함께 등록하세요.</small>
                 </div>
                 <div class="col-md-4" id="admin_level_wrap" style="display:none">
                     <label class="form-label small text-muted">관리자 권한</label>

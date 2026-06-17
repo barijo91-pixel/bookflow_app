@@ -22,6 +22,27 @@
     </div>
 @endif
 
+@if(session('new_account'))
+    @php($acc = session('new_account'))
+    <div class="card border-warning mb-3">
+        <div class="card-header bg-warning text-dark">
+            <strong><i class="bi bi-key"></i> 학원 로그인 계정 초기 비밀번호 (1회만 표시)</strong>
+        </div>
+        <div class="card-body bg-warning-subtle">
+            <p class="small mb-3">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                <strong>이 비밀번호는 지금 한 번만 표시됩니다.</strong> 학원에 안전하게 전달하세요. 첫 로그인 시 변경이 강제됩니다.
+            </p>
+            <table class="table table-sm mb-0" style="max-width:480px">
+                <tr><th style="width:120px">로그인 아이디</th><td><code>{{ $acc['login_id'] }}</code></td></tr>
+                <tr><th>이름</th><td>{{ $acc['name'] }}</td></tr>
+                <tr><th>휴대폰</th><td>{{ format_phone($acc['phone']) }}</td></tr>
+                <tr><th>초기 비밀번호</th><td><code class="text-danger fs-5">{{ $acc['password'] }}</code></td></tr>
+            </table>
+        </div>
+    </div>
+@endif
+
 <div class="row g-3">
     {{-- LEFT: 기본 정보 편집 폼 --}}
     <div class="col-lg-7">
@@ -100,27 +121,6 @@
                         <div class="col-md-12">
                             <label class="form-label small text-muted">상세주소</label>
                             <input type="text" name="address_detail" class="form-control" value="{{ old('address_detail', $vendor->address_detail) }}">
-                        </div>
-                    </div>
-
-                    <h6 class="text-muted mt-4 mb-3"><i class="bi bi-bank"></i> 정산 계좌</h6>
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted">은행</label>
-                            <select name="bank_code" class="form-select">
-                                <option value="">선택</option>
-                                @foreach($bankOptions as $b)
-                                    <option value="{{ $b->code }}" @selected(old('bank_code', $vendor->bank_code) === $b->code)>{{ $b->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label small text-muted">계좌번호</label>
-                            <input type="text" name="bank_account" class="form-control" value="{{ old('bank_account', $vendor->bank_account) }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted">예금주</label>
-                            <input type="text" name="bank_holder" class="form-control" value="{{ old('bank_holder', $vendor->bank_holder) }}">
                         </div>
                     </div>
 
