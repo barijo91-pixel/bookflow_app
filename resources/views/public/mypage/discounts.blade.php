@@ -5,7 +5,7 @@
 @section('content')
 <div class="mb-3">
     <h1 class="h4 navy mb-1"><i class="bi bi-percent"></i> 할인율 관리</h1>
-    <p class="text-muted small mb-0">학원별 일반 할인율 + 도서별 개별 할인율 (개별 설정이 있으면 우선 적용)</p>
+    <p class="text-muted small mb-0">학원·도서별 할인율 설정 (개별 설정 우선)</p>
 </div>
 
 @if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif
@@ -34,9 +34,14 @@
                             <form method="POST" action="{{ route('my.discounts.vendor.update', $v->avd_id) }}" class="row g-2 align-items-center">
                                 @csrf @method('PUT')
                                 <input type="hidden" name="is_active" value="1">
-                                <div class="col-12 col-sm-5 mb-2 mb-sm-0">
+                                <div class="col-12 col-sm-5 mb-1 mb-sm-0">
                                     <a href="{{ route('my.discounts.index', ['vendor_id' => $v->vendor_id]) }}"
-                                       class="text-decoration-none small {{ $v->vendor_id == $selectedVendorId ? 'fw-bold navy' : '' }}">
+                                       class="text-decoration-none d-block py-1 navy {{ $v->vendor_id == $selectedVendorId ? 'fw-bold' : '' }}">
+                                        @if($v->vendor_id == $selectedVendorId)
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        @else
+                                            <i class="bi bi-circle text-muted"></i>
+                                        @endif
                                         {{ $v->vendor_name }}
                                     </a>
                                 </div>
@@ -115,7 +120,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="text-center text-muted py-3 small">개별 할인율 설정된 도서가 없습니다. (모두 일반 할인율 적용)</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-3 small">개별 설정된 도서 없음 · 일반 할인율 적용</td></tr>
                             @endforelse
                         </tbody>
                     </table>
