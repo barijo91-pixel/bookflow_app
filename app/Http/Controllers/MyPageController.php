@@ -792,8 +792,8 @@ class MyPageController extends Controller
     {
         $user = Auth::user();
         $status   = $request->query('status');
-        // 디폴트: 어제 ~ 오늘 (최근 주문 위주로 표시)
-        $dateFrom = $request->query('date_from') ?: now()->subDay()->format('Y-m-d');
+        // 디폴트: 최근 30일 (출고·완료 등 지난 주문도 보이도록)
+        $dateFrom = $request->query('date_from') ?: now()->subDays(30)->format('Y-m-d');
         $dateTo   = $request->query('date_to')   ?: now()->format('Y-m-d');
         $q        = trim((string) $request->query('q'));
 
@@ -842,13 +842,15 @@ class MyPageController extends Controller
 
         $orders = $query->orderByDesc('o.id')->paginate(20)->withQueryString();
 
-        // 상태별 카운트 (필터 UI용)
+        // 상태별 카운트 (필터 UI용) — 목록과 동일한 날짜 범위 적용 (카운트=목록 일치)
         $statusBaseQuery = DB::table('orders')->whereNull('deleted_at');
         switch ($user->role_code) {
             case 'agent':       $statusBaseQuery->where('agent_user_id', $user->id); break;
             case 'distributor': $statusBaseQuery->where('distributor_user_id', $user->id); break;
             case 'academy':     $statusBaseQuery->whereIn('vendor_id', DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id')); break;
         }
+        if ($dateFrom) $statusBaseQuery->whereDate('created_at', '>=', $dateFrom);
+        if ($dateTo)   $statusBaseQuery->whereDate('created_at', '<=', $dateTo);
         $statusCounts = $statusBaseQuery->select('status_code', DB::raw('count(*) as cnt'))
             ->groupBy('status_code')->pluck('cnt', 'status_code');
 
