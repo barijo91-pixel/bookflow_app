@@ -1251,7 +1251,13 @@ class MyPageController extends Controller
     {
         $user = Auth::user();
         if ($user->role_code !== 'academy') {
-            abort(403, '학원만 주문할 수 있습니다.');
+            // 주문 생성은 학원만. 영업자/총판은 주문 목록으로, 그 외는 대시보드로 안내
+            if (in_array($user->role_code, ['agent', 'distributor'])) {
+                return redirect()->route('my.orders.index')
+                    ->with('info', '도서 주문은 학원 계정에서 올립니다. 영업자/총판은 올라온 주문을 확인·처리하세요.');
+            }
+            return redirect()->route('mypage')
+                ->with('info', '도서 주문은 학원 계정에서만 가능합니다.');
         }
 
         // 1. 학원의 vendor 찾기 (첫 번째 매핑)
