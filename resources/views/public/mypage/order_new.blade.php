@@ -174,12 +174,12 @@
 <div class="card section-card mb-3">
     {{-- 모바일 전용 접이식 헤더 --}}
     <div class="card-header filter-toggle d-md-none d-flex justify-content-between align-items-center" onclick="toggleFilterBody()">
-        <strong class="small">
-            <i class="bi bi-funnel"></i> 필터
+        <strong>
+            <i class="bi bi-funnel"></i> 검색옵션
             @if($hasActiveFilter)
                 <span class="badge bg-navy ms-1">{{ $filterSummary }}</span>
             @else
-                <span class="text-muted">전체</span>
+                <span class="text-muted fw-normal">전체</span>
             @endif
         </strong>
         <i class="bi bi-chevron-down" id="filterChevron"></i>
@@ -451,9 +451,21 @@
     #filterBody { display: none; }
     #filterBody.show { display: block; }
     .filter-toggle { cursor: pointer; }
-    /* 모바일에서 필터 pill 약간 컴팩트하게 */
-    #filterBody .btn { font-size: .82rem; padding: .28rem .8rem; }
-    #filterBody .d-flex > .text-muted.small.fw-bold { width: 42px !important; font-size: .72rem; }
+    .filter-toggle strong { font-size: 1rem; }
+
+    /* 행 라벨(분류/과목/학년/학기) 폰트 키움 */
+    #filterBody .text-muted.small.fw-bold { font-size: .9rem !important; }
+
+    /* 선택지 칩 — 테두리 제거, 연한 배경 / 선택 시 네이비 */
+    #filterBody .btn { font-size: .92rem; padding: .4rem 1rem; border: 0; }
+    #filterBody .btn-outline-secondary {
+        background: #eef1f5; color: #44515f;
+    }
+    #filterBody .btn-outline-secondary:hover,
+    #filterBody .btn-outline-secondary:focus {
+        background: #e2e6ec; color: #1f2d3d;
+    }
+    #filterBody .btn-navy { background: var(--navy); color: #fff; }
 }
 
 /* 모바일 플로팅 장바구니 버튼 — 데스크탑(lg+)은 우측 sticky 장바구니라 숨김 */
