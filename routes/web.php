@@ -160,7 +160,8 @@ Route::middleware('auth')->group(function () {
 // 관리자
 Route::prefix('admin')->name('admin.')->group(function () {
     // 로그인은 일반 로그인(/login)으로 통일 — 기존 /admin/login 주소는 redirect로 호환
-    Route::get('login', fn () => redirect()->route('public.login'))->name('login');
+    // (클로저 대신 Route::redirect 사용 — route:cache 100% 호환)
+    Route::redirect('login', '/login')->name('login');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     // 관리자 전용
