@@ -84,7 +84,8 @@
                     @endif
                     @if($user->role_code === 'academy' && in_array($order->status_code, ['requested','confirmed','accepted','shipped']))
                         <a href="{{ route('my.orders.payment.create', $order->id) }}" class="btn btn-warning w-100 mb-2">
-                            <i class="bi bi-chat-dots-fill"></i> 교재비 결제
+                            <i class="bi bi-chat-dots-fill"></i>
+                            {{ ($vendor->trade_type ?? 'retail') === 'wholesale' ? '교재비 결제' : '학부모에게 결제 요청' }}
                         </a>
                     @endif
                     @if($canConfirm)
