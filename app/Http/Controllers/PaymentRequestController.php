@@ -15,6 +15,53 @@ use Illuminate\Support\Str;
 class PaymentRequestController extends Controller
 {
     /**
+     * 도매 학원 — 학원이 주문 금액을 직접 결제 (학부모 거치지 않음).
+     * PortOne 키 미설정 시 mock 즉시 완료. 키 설정 후 실 PortOne 결제창 연동은 #91에서.
+     */
+    public function payDirect(Request $request, $orderId)
+    {
+        $user = Auth::user();
+        if (! $user || $user->role_code !== 'academy') abort(403);
+
+        $order = \App\Models\Order::findOrFail($orderId);
+        $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
+        if (! $vendorIds->contains($order->vendor_id)) abort(403, '본인 학원 주문이 아닙니다.');
+
+        $vendor = DB::table('vendors')->find($order->vendor_id);
+        if (! $vendor || ($vendor->trade_type ?? 'retail') !== 'wholesale') {
+            return back()->with('error', '도매 학원만 직접 결제할 수 있습니다.');
+        }
+
+        // 중복 결제 방지
+        if (DB::table('payment_requests')->where('order_id', $order->id)->where('status', 'paid')->exists()) {
+            return redirect()->route('my.orders.show', $order->id)->with('info', '이미 결제 완료된 주문입니다.');
+        }
+
+        // mock 결제 (PortOne 키 미설정 시 즉시 완료). 키 설정 시 실결제 연동은 #91.
+        DB::table('payment_requests')->insert([
+            'token'        => Str::random(40),
+            'order_id'     => $order->id,
+            'vendor_id'    => $order->vendor_id,
+            'parent_name'  => $vendor->name,
+            'student_name' => '(학원 일괄 결제)',
+            'amount'       => $order->total_amount,
+            'status'       => 'paid',
+            'paid_at'      => now(),
+            'created_by'   => $user->id,
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
+
+        AuditLog::log('payment_requests', $order->id, 'wholesale_direct_pay', null, [
+            'vendor' => $vendor->name, 'amount' => $order->total_amount, 'mock' => ! PortOneService::isActive(),
+        ]);
+
+        $note = PortOneService::isActive() ? '' : ' (테스트 결제 — PG 연동 시 실결제로 전환)';
+        return redirect()->route('my.orders.show', $order->id)
+            ->with('success', '교재비 결제가 완료되었습니다.'.$note);
+    }
+
+    /**
      * 학원이 주문에서 학부모에게 결제요청 보내기 — 폼 진입
      * /mypage/orders/{id}/payment-requests/create
      */

@@ -83,10 +83,21 @@
                         </a>
                     @endif
                     @if($user->role_code === 'academy' && in_array($order->status_code, ['requested','confirmed','accepted','shipped']))
-                        <a href="{{ route('my.orders.payment.create', $order->id) }}" class="btn btn-warning w-100 mb-2">
-                            <i class="bi bi-chat-dots-fill"></i>
-                            {{ ($vendor->trade_type ?? 'retail') === 'wholesale' ? '교재비 결제' : '학부모에게 결제 요청' }}
-                        </a>
+                        @if(($vendor->trade_type ?? 'retail') === 'wholesale')
+                            {{-- 도매: 학원이 직접 결제 (학부모 거치지 않음) --}}
+                            <form method="POST" action="{{ route('my.orders.pay_direct', $order->id) }}"
+                                  onsubmit="return confirm('교재비 {{ number_format($order->total_amount) }}원을 결제할까요?')">
+                                @csrf
+                                <button class="btn btn-warning w-100 mb-2 text-dark fw-bold">
+                                    <i class="bi bi-credit-card"></i> 교재비 결제 ({{ number_format($order->total_amount) }}원)
+                                </button>
+                            </form>
+                        @else
+                            {{-- 소매: 학부모에게 결제 요청 --}}
+                            <a href="{{ route('my.orders.payment.create', $order->id) }}" class="btn btn-warning w-100 mb-2">
+                                <i class="bi bi-chat-dots-fill"></i> 학부모에게 결제 요청
+                            </a>
+                        @endif
                     @endif
                     @if($canConfirm)
                         <form method="POST" action="{{ route('my.orders.transition', $order->id) }}" class="mb-2"

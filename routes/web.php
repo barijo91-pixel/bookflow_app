@@ -91,6 +91,9 @@ Route::middleware('auth')->group(function () {
             [\App\Http\Controllers\PaymentRequestController::class, 'create'])->name('orders.payment.create');
         Route::post('orders/{id}/payment-requests',
             [\App\Http\Controllers\PaymentRequestController::class, 'store'])->name('orders.payment.store');
+        // 도매 학원 — 학원 직접 결제 (학부모 거치지 않음)
+        Route::post('orders/{id}/pay-direct',
+            [\App\Http\Controllers\PaymentRequestController::class, 'payDirect'])->name('orders.pay_direct');
         Route::get('classes/{classId}/students-with-parents',
             [\App\Http\Controllers\PaymentRequestController::class, 'studentsWithParents'])->name('classes.students_parents');
 
