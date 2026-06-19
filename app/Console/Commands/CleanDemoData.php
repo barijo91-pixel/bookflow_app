@@ -15,15 +15,13 @@ use Illuminate\Support\Facades\DB;
 class CleanDemoData extends Command
 {
     protected $signature = 'booksys:clean-demo
-                            {--confirm : 실제 삭제 실행 (이 옵션 없으면 dry-run)}
-                            {--keep-admin : 관리자 계정(sysadmin00) 보존}';
+                            {--confirm : 실제 삭제 실행 (이 옵션 없으면 dry-run)}';
 
     protected $description = '시드된 데모 사용자/주문/도서를 정리합니다 (운영 진입 전 사용)';
 
     public function handle(): int
     {
         $dryRun = ! $this->option('confirm');
-        $keepAdmin = $this->option('keep-admin');
 
         $this->info('=== BookSys 데모 데이터 정리 ===');
         $this->newLine();
@@ -33,15 +31,17 @@ class CleanDemoData extends Command
             $this->newLine();
         }
 
-        // 1. 데모 사용자 식별 (login_id 패턴)
-        $demoUserQuery = DB::table('users')->where(function ($q) use ($keepAdmin) {
-            $q->where('login_id', 'like', 'dist%')
-              ->orWhere('login_id', 'like', 'agent%')
-              ->orWhere('login_id', 'like', 'academy%');
-            if (! $keepAdmin) {
-                $q->orWhere('login_id', 'sysadmin00');
-            }
-        })->whereNull('deleted_at');
+        // 1. 데모 사용자 식별 (login_id 패턴) — 관리자(admin)는 절대 삭제하지 않음
+        $demoUserQuery = DB::table('users')
+            ->where(function ($q) {
+                $q->where('login_id', 'like', 'dist%')
+                  ->orWhere('login_id', 'like', 'agent%')
+                  ->orWhere('login_id', 'like', 'academy%');
+            })
+            ->where('role_code', '!=', 'admin')   // ★ 관리자 계정(sysadmin00 등)은 항상 보호
+            ->whereNull('deleted_at');
+
+        $this->warn('주의: login_id가 dist*/agent*/academy* 패턴인 계정이 대상입니다. 운영 실계정이 같은 패턴이면 함께 삭제될 수 있으니 아래 목록을 반드시 확인하세요.');
 
         $demoUsers = $demoUserQuery->get(['id', 'login_id', 'name', 'role_code']);
         $demoUserIds = $demoUsers->pluck('id')->toArray();
