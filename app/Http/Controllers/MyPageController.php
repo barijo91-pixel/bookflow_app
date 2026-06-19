@@ -427,9 +427,15 @@ class MyPageController extends Controller
 
         $canEdit = $this->canEditOrder($order, $user);
 
+        // 이 주문으로 결제요청된 구매 학부모 (소매 — 결제요청 단계에서 연결됨)
+        $payers = DB::table('payment_requests')
+            ->where('order_id', $order->id)
+            ->orderBy('id')
+            ->get(['student_name', 'parent_name', 'parent_phone', 'amount', 'status', 'paid_at']);
+
         return view('public.mypage.order_show', compact(
             'user', 'order', 'vendor', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
-            'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit'
+            'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit', 'payers'
         ));
     }
 

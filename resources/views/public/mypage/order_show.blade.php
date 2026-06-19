@@ -325,6 +325,36 @@
             </div>
         </div>
 
+        @if($payers->isNotEmpty())
+        <div class="card section-card mb-3">
+            <div class="card-header"><strong><i class="bi bi-people"></i> 구매 학부모 ({{ $payers->count() }})</strong></div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                        <tr><th>학생</th><th>학부모</th><th>연락처</th><th class="text-end">금액</th><th>상태</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach($payers as $p)
+                            <tr>
+                                <td class="small">{{ $p->student_name ?? '-' }}</td>
+                                <td class="small">{{ $p->parent_name ?? '-' }}</td>
+                                <td class="small text-muted">{{ $p->parent_phone ? format_phone($p->parent_phone) : '-' }}</td>
+                                <td class="text-end small">{{ number_format($p->amount) }}원</td>
+                                <td>
+                                    @if($p->status === 'paid' || $p->paid_at)
+                                        <span class="badge bg-success">결제완료</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark">대기</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
         <div class="card section-card">
             <div class="card-header"><strong><i class="bi bi-clock-history"></i> 주문현황</strong></div>
             <div class="card-body">
