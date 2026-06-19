@@ -241,8 +241,14 @@
                     <div class="col-md-3">
                         <input type="tel" name="parent_phone" class="form-control form-control-sm" placeholder="학부모 휴대폰" required>
                     </div>
-                    <div class="col-md-1 d-grid">
-                        <button class="btn btn-sm btn-navy"><i class="bi bi-plus-lg"></i></button>
+                    <div class="col-md-5">
+                        <input type="text" name="parent_address" class="form-control form-control-sm" placeholder="학부모 주소 (소매 배송지 — 선택)">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" name="parent_address_detail" class="form-control form-control-sm" placeholder="상세주소">
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button class="btn btn-sm btn-navy"><i class="bi bi-plus-lg"></i> 학생 추가</button>
                     </div>
                 </form>
             </div>

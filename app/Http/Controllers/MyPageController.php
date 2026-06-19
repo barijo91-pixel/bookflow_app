@@ -1843,6 +1843,8 @@ class MyPageController extends Controller
             'grade_code'   => ['nullable', 'string', 'max:30'],
             'parent_name'  => ['required', 'string', 'max:80'],
             'parent_phone' => ['required', 'string', 'max:20'],
+            'parent_address'        => ['nullable', 'string', 'max:255'],
+            'parent_address_detail' => ['nullable', 'string', 'max:100'],
             'memo'         => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -1856,8 +1858,17 @@ class MyPageController extends Controller
                 $parentId = DB::table('parents')->insertGetId([
                     'name'       => $data['parent_name'],
                     'phone'      => $phone,
+                    'address'        => $data['parent_address'] ?? null,
+                    'address_detail' => $data['parent_address_detail'] ?? null,
                     'created_at' => $now,
                     'updated_at' => $now,
+                ]);
+            } elseif (! empty($data['parent_address'])) {
+                // 기존 학부모 — 주소가 입력됐으면 갱신
+                DB::table('parents')->where('id', $parentId)->update([
+                    'address'        => $data['parent_address'],
+                    'address_detail' => $data['parent_address_detail'] ?? null,
+                    'updated_at'     => $now,
                 ]);
             }
             DB::table('students')->insert([

@@ -22,12 +22,15 @@ class StudentImportService
         '학부모폰'        => 'parent_phone',
         '학부모전화'      => 'parent_phone',
         '학부모이메일'    => 'parent_email',
+        '학부모주소'      => 'parent_address',
+        '주소'            => 'parent_address',
+        '상세주소'        => 'parent_address_detail',
         '메모'            => 'memo',
         '비고'            => 'memo',
     ];
 
     public const TEMPLATE_HEADERS = [
-        '학생이름', '학년', '학급명', '학부모이름', '학부모휴대폰', '학부모이메일', '메모',
+        '학생이름', '학년', '학급명', '학부모이름', '학부모휴대폰', '학부모이메일', '학부모주소', '상세주소', '메모',
     ];
 
     /** 학년 코드 매핑 (한글명 → code) */
@@ -232,18 +235,29 @@ class StudentImportService
                         ->value('id');
                     if (! $parentId) {
                         $parentId = DB::table('parents')->insertGetId([
-                            'name'       => $row['parent_name'],
-                            'phone'      => $row['parent_phone'],
-                            'email'      => $row['parent_email'] ?? null,
+                            'name'           => $row['parent_name'],
+                            'phone'          => $row['parent_phone'],
+                            'email'          => $row['parent_email'] ?? null,
+                            'address'        => $row['parent_address'] ?? null,
+                            'address_detail' => $row['parent_address_detail'] ?? null,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
                     } else {
-                        // 기존 부모인데 이름/이메일이 다르면 기존값 유지 (혼선 방지)
+                        // 기존 부모: 비어있는 항목만 채움 (혼선 방지)
                         if (! empty($row['parent_email'])) {
                             DB::table('parents')->where('id', $parentId)->whereNull('email')->update([
                                 'email' => $row['parent_email'], 'updated_at' => now(),
                             ]);
+                        }
+                        if (! empty($row['parent_address'])) {
+                            DB::table('parents')->where('id', $parentId)
+                                ->where(function ($w) { $w->whereNull('address')->orWhere('address', ''); })
+                                ->update([
+                                    'address'        => $row['parent_address'],
+                                    'address_detail' => $row['parent_address_detail'] ?? null,
+                                    'updated_at'     => now(),
+                                ]);
                         }
                     }
 
