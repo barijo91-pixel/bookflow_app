@@ -25,6 +25,7 @@ class CodeTableSeeder extends Seeder
             ['subject', '과목분류', '국어/영어/수학 등', true],
             // 거래처
             ['vendor_type', '거래처구분', '학원/일반 등', true],
+            ['vendor_trade_type', '거래유형', '소매/도매', true],
             ['vendor_status', '거래처상태', '정상/일시정지/거래종료', true],
             // 주문
             ['order_status', '주문상태', '접수→완료', true],
@@ -118,6 +119,9 @@ class CodeTableSeeder extends Seeder
             // vendor_type
             ['vendor_type', 'academy', '학원', null, 10],
             ['vendor_type', 'general', '일반', null, 20],
+            // vendor_trade_type (거래유형: 소매/도매)
+            ['vendor_trade_type', 'retail', '소매', null, 10],
+            ['vendor_trade_type', 'wholesale', '도매', null, 20],
             // vendor_status
             ['vendor_status', 'active', '정상', null, 10],
             ['vendor_status', 'suspended', '일시정지', null, 20],

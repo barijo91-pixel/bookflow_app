@@ -359,6 +359,7 @@ class VendorController extends Controller
             'owner_name'     => ['nullable', 'string', 'max:100'],
             'business_no'    => ['nullable', 'string', 'max:20'],
             'type_code'      => ['required', 'string', 'max:30'],
+            'trade_type'     => ['nullable', 'in:retail,wholesale'],
             'biz_type'       => ['nullable', 'string', 'max:100'],
             'biz_item'       => ['nullable', 'string', 'max:100'],
             'mobile'         => ['nullable', 'string', 'max:20'],
