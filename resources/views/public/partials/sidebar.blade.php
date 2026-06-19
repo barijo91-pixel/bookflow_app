@@ -22,6 +22,13 @@
                 ->whereNull('deleted_at')->count();
         }
     }
+
+    // 학원 거래구분 (도매면 학급/학생 메뉴 숨김 — 소매 B2C 전용)
+    $academyTradeType = null;
+    if ($user->role_code === 'academy') {
+        $vid = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
+        if ($vid) $academyTradeType = DB::table('vendors')->where('id', $vid)->value('trade_type');
+    }
 @endphp
 <aside class="public-sidebar">
     <div class="public-sidebar-brand">
@@ -95,9 +102,11 @@
                     <i class="bi bi-clipboard-data"></i> 주문내역
                     @if($orderBadge > 0)<span class="badge bg-secondary ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
+                @if($academyTradeType !== 'wholesale')
                 <a href="{{ route('my.classes.index') }}" class="nav-item {{ $startsWith('my.classes') }}">
                     <i class="bi bi-mortarboard"></i> 학급/학생
                 </a>
+                @endif
                 @break
         @endswitch
 
