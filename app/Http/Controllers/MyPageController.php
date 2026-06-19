@@ -815,7 +815,7 @@ class MyPageController extends Controller
                 'o.shipped_at', 'o.completed_at', 'o.created_at',
                 'v.name as vendor_name', 'v.trade_type',
                 'ag.name as agent_name', 'ag.login_id as agent_login_id',
-                'ds.name as distributor_name'
+                DB::raw("COALESCE(NULLIF(ds.business_name, ''), ds.name) as distributor_name")
             );
 
         // 역할별 필터 (자기 데이터만)
