@@ -37,6 +37,19 @@
                             <label class="form-label small text-muted">학원명 *</label>
                             <input type="text" name="name" class="form-control" value="{{ old('name', $vendor->name) }}" required maxlength="150">
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">거래구분 *</label>
+                            <div class="d-flex gap-3 pt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="trade_type" id="tradeRetail" value="retail" @checked(old('trade_type', $vendor->trade_type ?? 'retail') === 'retail')>
+                                    <label class="form-check-label" for="tradeRetail"><strong>소매</strong> <span class="text-muted small">학생별·학부모 결제</span></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="trade_type" id="tradeWholesale" value="wholesale" @checked(old('trade_type', $vendor->trade_type ?? 'retail') === 'wholesale')>
+                                    <label class="form-check-label" for="tradeWholesale"><strong>도매</strong> <span class="text-muted small">묶음·학원 일괄</span></label>
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-md-3">
                             <label class="form-label small text-muted">대표자</label>
                             <input type="text" name="owner_name" class="form-control" value="{{ old('owner_name', $vendor->owner_name) }}" maxlength="100">
