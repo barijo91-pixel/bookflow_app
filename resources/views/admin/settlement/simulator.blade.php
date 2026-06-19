@@ -10,9 +10,10 @@
     <i class="bi bi-info-circle"></i>
     <strong>유통 단계별 공급율</strong>:
     출판사 → 총판 <code>55%</code> ·
-    총판 → 사입자 <code>63%</code> (도도매 마진 <strong>8%p</strong>) ·
-    사입자 → 학원 <code>70%</code> (도매 마진 <strong>7%p</strong>) ·
+    총판 → 사입자 <code>63%</code> ·
+    사입자 → 학원 <code>70%</code> (학원 도매가) ·
     B2C 소매 <code>90%</code> (도서정가제 -10%)
+    <span class="text-muted">— 전체 마진(학원 결제 − 출판사 매입)을 총판 : 사입자 비율로 분배</span>
 </div>
 
 {{-- 입력 폼 --}}
@@ -96,24 +97,16 @@
                 <hr class="my-2">
                 <div class="small">
                     <div class="d-flex justify-content-between py-1">
-                        <span class="text-muted">도도매 마진 풀 (8%p)</span>
-                        <strong>{{ number_format($b2b['pool_dist_agent']) }}원</strong>
+                        <span class="text-muted">전체 마진 (학원 결제 − 출판사 매입)</span>
+                        <strong>{{ number_format($b2b['margin_pool']) }}원</strong>
                     </div>
                     <div class="d-flex justify-content-between py-1">
                         <span>총판 마진 ({{ $b2b['split_ratio'] }})</span>
                         <strong class="navy">{{ number_format($b2b['dist_margin']) }}원</strong>
                     </div>
-                    <div class="d-flex justify-content-between py-1">
-                        <span>사입자 도도매 마진 분배</span>
-                        <span>{{ number_format($b2b['agent_split_margin']) }}원</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-1">
-                        <span>사입자 영업 마진 (학원 협상)</span>
-                        <span class="{{ $b2b['agent_negotiation'] < 0 ? 'text-danger' : '' }}">{{ number_format($b2b['agent_negotiation']) }}원</span>
-                    </div>
                     <div class="d-flex justify-content-between py-2 border-top mt-2">
-                        <strong>사입자 총 수수료 (세전)</strong>
-                        <strong class="text-success">{{ number_format($b2b['agent_total_margin']) }}원</strong>
+                        <strong>사입자 마진 (세전)</strong>
+                        <strong class="text-success">{{ number_format($b2b['agent_margin']) }}원</strong>
                     </div>
                 </div>
                 {{-- 세무 적용 결과 --}}
@@ -258,7 +251,7 @@
                     <tr class="{{ $inputs['split_ratio'] === $key ? 'table-info' : '' }}">
                         <th class="text-start">{{ $splitOptions[$key]['label'] }}</th>
                         <td>{{ number_format($data['b2b']['dist_margin']) }}원</td>
-                        <td>{{ number_format($data['b2b']['agent_total_margin']) }}원</td>
+                        <td>{{ number_format($data['b2b']['agent_margin']) }}원</td>
                         <td>{{ number_format($data['b2c']['dist_net']) }}원</td>
                         <td>{{ number_format($data['b2c']['agent_net']) }}원</td>
                     </tr>
@@ -277,9 +270,8 @@
                 <h6 class="mb-2">B2B 정산 흐름</h6>
                 <ol class="mb-0 ps-3">
                     <li>학원이 사입자에게 결제 (할인율 적용)</li>
-                    <li>사입자가 총판에 도도매가(63%) 송금</li>
                     <li>총판이 출판사에 매입가(55%) 송금</li>
-                    <li>사입자 마진: 도도매 분배 + 학원 영업 마진</li>
+                    <li>전체 마진(학원 결제 − 출판사 매입)을 총판 : 사입자로 분배 (예: 6:4)</li>
                     <li>비사업자는 3.3% 원천징수, 사업자는 부가세 처리</li>
                 </ol>
             </div>

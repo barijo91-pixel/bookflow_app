@@ -323,7 +323,7 @@ class MyPageController extends Controller
         $b2c = \App\Services\SettlementService::calcB2C($unitPrice, $qty, 0, $splitRatio);
 
         $businessType = $user->business_type ?? 'none';
-        $b2bTax = \App\Services\TaxService::calc($businessType, max(0, $b2b['agent_total_margin']));
+        $b2bTax = \App\Services\TaxService::calc($businessType, max(0, $b2b['agent_margin']));
         $b2cTax = \App\Services\TaxService::calc($businessType, max(0, $b2c['agent_net']));
 
         return view('public.mypage.income_simulator', [

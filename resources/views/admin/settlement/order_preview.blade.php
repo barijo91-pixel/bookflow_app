@@ -47,7 +47,7 @@
         <div class="card">
             <div class="card-body text-center">
                 <div class="text-muted small">사입자 마진 (세전)</div>
-                <div class="h5 mb-0 text-success">{{ number_format($totalB2b['agent_total_margin']) }}원</div>
+                <div class="h5 mb-0 text-success">{{ number_format($totalB2b['agent_margin']) }}원</div>
             </div>
         </div>
     </div>
@@ -79,7 +79,7 @@
                         <td class="text-end">{{ number_format($b['academy_paid']) }}원</td>
                         <td class="text-end text-danger">-{{ number_format($b['publisher_cost']) }}원</td>
                         <td class="text-end navy">{{ number_format($b['dist_margin']) }}원</td>
-                        <td class="text-end text-success">{{ number_format($b['agent_total_margin']) }}원</td>
+                        <td class="text-end text-success">{{ number_format($b['agent_margin']) }}원</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -89,7 +89,7 @@
                     <th class="text-end">{{ number_format($totalB2b['academy_paid']) }}원</th>
                     <th class="text-end text-danger">-{{ number_format($totalB2b['publisher_cost']) }}원</th>
                     <th class="text-end navy">{{ number_format($totalB2b['dist_margin']) }}원</th>
-                    <th class="text-end text-success">{{ number_format($totalB2b['agent_total_margin']) }}원</th>
+                    <th class="text-end text-success">{{ number_format($totalB2b['agent_margin']) }}원</th>
                 </tr>
             </tfoot>
         </table>

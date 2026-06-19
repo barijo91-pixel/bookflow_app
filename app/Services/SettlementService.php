@@ -6,16 +6,15 @@ namespace App\Services;
  * 정산 분배 계산 서비스 — 계획서 5장 (마진 구조), 7장 (정산 흐름)
  *
  * 유통 단계별 공급율 (정가 기준):
- *  - 출판사 → 총판:       55% (총판 매입가)
- *  - 총판 → 사입자(도도매): 63% (총판 단계 마진 8%p)
- *  - 사입자 → 학원(도매):  70% (사입자 단계 마진 7%p)
- *  - B2C 학부모(소매):    90% (도서정가제 10% 할인)
- *  - 전체 마진 풀:         15%p (출판사→학원)
+ *  - 출판사 → 총판:   55% (총판 매입가)
+ *  - 총판 → 사입자:   63% (중간 공급가 — 참고 표시용)
+ *  - 사입자 → 학원:   70% (학원 도매가)
+ *  - B2C 학부모(소매): 90% (도서정가제 10% 할인)
  *
- * 분배 비율 (8%p 도도매 마진 풀 기준):
- *  - 7:3 (총판 유리)
- *  - 6:4 (현실적 균형, 기본값)
- *  - 5:5 (사입자 모집 유리)
+ * 마진 분배 (도매):
+ *  - 전체 마진 = 학원 결제액 − 출판사 매입가(55%)
+ *  - 이 전체 마진을 총판 : 사입자 비율로 나눈다 (중간 단계 마진을 따로 쪼개지 않음)
+ *  - 7:3 (총판 유리) · 6:4 (현실적 균형, 기본값) · 5:5 (사입자 모집 유리)
  */
 class SettlementService
 {
@@ -41,9 +40,13 @@ class SettlementService
     /**
      * B2B 학원 도매 주문 정산
      *
+     * 전체 마진(학원 결제액 − 출판사 매입가 55%)을
+     * 총판 : 사입자 비율(6:4 등)로 분배한다. 중간 공급가(63%)는 참고 표시용일 뿐
+     * 분배 계산에는 쓰지 않는다.
+     *
      * @param int $unitPrice     정가
      * @param int $qty           수량
-     * @param float $discountRate 학원 할인율 % (0~30 등)
+     * @param float $discountRate 학원 할인율 % (예: 30 → 학원이 정가의 70%에 매입)
      * @param string $splitRatio  '7:3' | '6:4' | '5:5'
      */
     public static function calcB2B(int $unitPrice, int $qty, float $discountRate = 30.0, string $splitRatio = '6:4'): array
@@ -52,36 +55,29 @@ class SettlementService
 
         $gross         = $unitPrice * $qty;                                  // 정가 합계
         $academyPaid   = (int) round($gross * (1 - $discountRate / 100));    // 학원이 실제 결제 (할인 적용)
-        $publisherCost = (int) round($gross * self::RATE_PUBLISHER_TO_DIST); // 총판 매입 원가 (55%)
-        $distToAgent   = (int) round($gross * self::RATE_DIST_TO_AGENT);     // 총판 → 사입자 공급가 (63%)
-        $agentToAcademy= (int) round($gross * self::RATE_AGENT_TO_ACADEMY);  // 사입자 → 학원 공급가 (70%)
+        $publisherCost = (int) round($gross * self::RATE_PUBLISHER_TO_DIST); // 출판사 매입 원가 (55%)
+        $distToAgent   = (int) round($gross * self::RATE_DIST_TO_AGENT);     // 총판 → 사입자 공급가 (63%, 참고 표시용)
+        $agentToAcademy= (int) round($gross * self::RATE_AGENT_TO_ACADEMY);  // 사입자 → 학원 공급가 (70%, 참고 표시용)
 
-        // 마진 분배 (8%p 도도매 마진을 분배 비율로 나눔)
-        $totalDistAgentPool = $distToAgent - $publisherCost;                  // 8%p (정가의 8%)
-        $distMargin         = (int) round($totalDistAgentPool * $split['dist']);  // 총판 분배
-        $agentSplitMargin   = (int) round($totalDistAgentPool * $split['agent']); // 사입자 도도매 분배
-
-        // 사입자 영업 마진 (학원 협상으로 발생 — 70% 기준 vs 실제 할인율)
-        $agentNegotiationMargin = $academyPaid - $distToAgent;  // 음수일 수도 (학원 할인율 따라)
-
-        $agentTotalMargin = $agentSplitMargin + $agentNegotiationMargin;
+        // 전체 마진 = 학원 결제액 − 출판사 매입가. 이를 총판:사입자 비율로 분배
+        $marginPool  = $academyPaid - $publisherCost;
+        $distMargin  = (int) round($marginPool * $split['dist']);
+        $agentMargin = $marginPool - $distMargin;   // 잔여 = 사입자 (반올림 오차 흡수)
 
         return [
-            'gross'                  => $gross,
-            'academy_paid'           => $academyPaid,
-            'publisher_cost'         => $publisherCost,
-            'dist_to_agent'          => $distToAgent,
-            'agent_to_academy'       => $agentToAcademy,
+            'gross'           => $gross,
+            'academy_paid'    => $academyPaid,
+            'publisher_cost'  => $publisherCost,
+            'dist_to_agent'   => $distToAgent,      // 참고 표시값
+            'agent_to_academy'=> $agentToAcademy,   // 참고 표시값
             // 마진 분배
-            'pool_dist_agent'        => $totalDistAgentPool,
-            'dist_margin'            => $distMargin,
-            'agent_split_margin'     => $agentSplitMargin,
-            'agent_negotiation'      => $agentNegotiationMargin,
-            'agent_total_margin'     => $agentTotalMargin,
+            'margin_pool'     => $marginPool,
+            'dist_margin'     => $distMargin,
+            'agent_margin'    => $agentMargin,
             // 비율 정보
-            'split_ratio'            => $splitRatio,
-            'split_label'            => $split['label'],
-            'discount_rate'          => $discountRate,
+            'split_ratio'     => $splitRatio,
+            'split_label'     => $split['label'],
+            'discount_rate'   => $discountRate,
         ];
     }
 
@@ -111,7 +107,7 @@ class SettlementService
         // 전체 마진 풀 (학부모 매출 - 출판사 매입 - 배송비 - PG - BookSys 수수료)
         $netMarginPool = $retailSale - $publisherCost - $pgFee - $bookSysFee;
 
-        // 사입자 마진 (도도매 마진 분배 비율 기준)
+        // 사입자 마진 (분배 비율 기준) — ※ 소매 로직은 추후 확정 예정
         $distAgentPool      = (int) round($gross * (self::RATE_DIST_TO_AGENT - self::RATE_PUBLISHER_TO_DIST));
         $agentMargin        = (int) round($distAgentPool * $split['agent']);
 

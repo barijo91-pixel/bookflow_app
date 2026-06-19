@@ -69,19 +69,9 @@
                                 <td class="text-end fw-bold">{{ number_format($b2b['academy_paid']) }}원</td>
                             </tr>
                             @if($user->role_code === 'agent')
-                                <tr>
-                                    <th>내 도도매 마진</th>
-                                    <td class="text-end">{{ number_format($b2b['agent_split_margin']) }}원</td>
-                                </tr>
-                                <tr>
-                                    <th>내 영업 마진</th>
-                                    <td class="text-end {{ $b2b['agent_negotiation'] < 0 ? 'text-danger' : '' }}">
-                                        {{ number_format($b2b['agent_negotiation']) }}원
-                                    </td>
-                                </tr>
                                 <tr class="border-top">
-                                    <th class="text-success">내 총 수수료 (세전)</th>
-                                    <td class="text-end fw-bold text-success">{{ number_format($b2b['agent_total_margin']) }}원</td>
+                                    <th class="text-success">내 마진 (세전)</th>
+                                    <td class="text-end fw-bold text-success">{{ number_format($b2b['agent_margin']) }}원</td>
                                 </tr>
                                 @if($b2bTax['withholding_tax'] > 0)
                                     <tr>
@@ -107,9 +97,9 @@
                             @endif
                         </tbody>
                     </table>
-                    @if($user->role_code === 'agent' && $b2b['agent_total_margin'] > 0)
+                    @if($user->role_code === 'agent' && $b2b['agent_margin'] > 0)
                         <div class="alert alert-success small mb-0">
-                            <strong>권당 수익: {{ number_format(round($b2b['agent_total_margin'] / max(1,$qty))) }}원</strong>
+                            <strong>권당 수익: {{ number_format(round($b2b['agent_margin'] / max(1,$qty))) }}원</strong>
                         </div>
                     @endif
                 </div>

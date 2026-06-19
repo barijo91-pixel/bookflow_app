@@ -46,7 +46,7 @@ class SettlementController extends Controller
 
         // B2B (학원 도매) 정산
         $b2b = SettlementService::calcB2B($unitPrice, $qty, $discountRate, $splitRatio);
-        $b2bAgentTax = TaxService::calc($businessType, max(0, $b2b['agent_total_margin']));
+        $b2bAgentTax = TaxService::calc($businessType, max(0, $b2b['agent_margin']));
 
         // B2C (학부모 결제) 정산
         $parcelInfo = DeliveryService::calcParcelFee($qty);
@@ -96,7 +96,7 @@ class SettlementController extends Controller
         $itemBreakdown = [];
         $totalB2b = [
             'gross' => 0, 'academy_paid' => 0, 'publisher_cost' => 0,
-            'dist_margin' => 0, 'agent_total_margin' => 0,
+            'dist_margin' => 0, 'agent_margin' => 0,
         ];
 
         foreach ($order->items as $item) {
@@ -117,7 +117,7 @@ class SettlementController extends Controller
         }
 
         $businessType = $order->agent?->business_type ?? 'none';
-        $agentTax = TaxService::calc($businessType, max(0, $totalB2b['agent_total_margin']));
+        $agentTax = TaxService::calc($businessType, max(0, $totalB2b['agent_margin']));
 
         return view('admin.settlement.order_preview', [
             'order' => $order,
