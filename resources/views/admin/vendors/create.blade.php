@@ -41,8 +41,8 @@
                 <div class="col-md-3">
                     <label class="form-label small text-muted">거래유형 *</label>
                     <select name="trade_type" class="form-select" required>
-                        <option value="retail" @selected(old('trade_type', 'retail') === 'retail')>소매 (학생별·학부모 결제)</option>
-                        <option value="wholesale" @selected(old('trade_type') === 'wholesale')>도매 (묶음·학원 일괄)</option>
+                        <option value="retail" @selected(old('trade_type', 'retail') === 'retail')>소매</option>
+                        <option value="wholesale" @selected(old('trade_type') === 'wholesale')>도매</option>
                     </select>
                 </div>
                 <div class="col-md-3">

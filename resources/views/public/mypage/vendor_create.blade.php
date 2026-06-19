@@ -31,11 +31,11 @@
                     <div class="d-flex gap-3 pt-1">
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="trade_type" id="tradeRetail" value="retail" @checked(old('trade_type', 'retail') === 'retail')>
-                            <label class="form-check-label" for="tradeRetail"><strong>소매</strong> <span class="text-muted small">학생별·학부모 결제</span></label>
+                            <label class="form-check-label" for="tradeRetail"><strong>소매</strong></label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="trade_type" id="tradeWholesale" value="wholesale" @checked(old('trade_type') === 'wholesale')>
-                            <label class="form-check-label" for="tradeWholesale"><strong>도매</strong> <span class="text-muted small">묶음·학원 일괄</span></label>
+                            <label class="form-check-label" for="tradeWholesale"><strong>도매</strong></label>
                         </div>
                     </div>
                 </div>
