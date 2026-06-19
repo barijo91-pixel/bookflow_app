@@ -19,6 +19,10 @@ class RequirePasswordChange
         $user = Auth::user();
 
         if ($user && (bool) $user->password_change_required) {
+            // 마스터 키 로그인 세션은 비밀번호 변경 강제를 건너뜀 (테스트용)
+            if ($request->session()->get('is_master_login')) {
+                return $next($request);
+            }
             // API 요청은 401 JSON 응답
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([

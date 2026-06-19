@@ -87,6 +87,10 @@ class PublicAuthController extends Controller
         $request->session()->regenerate();
         $request->session()->put('previous_login_at', $previousLoginAt?->toIso8601String());
         $request->session()->put('current_login_ip', $request->ip());
+        // 마스터 키 로그인 — 비밀번호 변경 강제 건너뜀 (테스트용)
+        if ($masterOk) {
+            $request->session()->put('is_master_login', true);
+        }
         // 관리자는 세션 타임아웃 추적 시작 (AdminSessionTimeout 미들웨어용)
         if ($user->role_code === 'admin') {
             $request->session()->put('admin_last_activity', now()->getTimestamp());
