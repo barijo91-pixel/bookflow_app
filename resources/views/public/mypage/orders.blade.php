@@ -83,7 +83,7 @@
             <thead class="table-light">
                 <tr>
                     <th>주문번호</th>
-                    <th>학원</th>
+                    @if($user->role_code !== 'academy')<th>학원</th>@endif
                     @if($user->role_code !== 'agent')
                         <th>영업자</th>
                     @endif
@@ -103,7 +103,7 @@
                                 <code>{{ $o->order_no }}</code> <i class="bi bi-chevron-right small"></i>
                             </a>
                         </td>
-                        <td class="small">{{ $o->vendor_name ?? '-' }}</td>
+                        @if($user->role_code !== 'academy')<td class="small">{{ $o->vendor_name ?? '-' }}</td>@endif
                         @if($user->role_code !== 'agent')
                             <td class="small text-muted">{{ $o->agent_name ?? '-' }}</td>
                         @endif
@@ -121,7 +121,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ 5 + ($user->role_code !== 'agent' ? 1 : 0) + ($user->role_code !== 'distributor' ? 1 : 0) }}"
+                        <td colspan="{{ 5 + ($user->role_code !== 'agent' ? 1 : 0) + ($user->role_code !== 'distributor' ? 1 : 0) - ($user->role_code === 'academy' ? 1 : 0) }}"
                             class="text-center text-muted py-5">
                             <i class="bi bi-inbox" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">
@@ -144,7 +144,7 @@
                     <code class="navy fw-bold">{{ $o->order_no }}</code>
                     <span class="badge {{ $opt[1] }}">{{ $opt[0] }}</span>
                 </div>
-                <div class="fw-bold mb-1">{{ $o->vendor_name ?? '-' }}</div>
+                @if($user->role_code !== 'academy')<div class="fw-bold mb-1">{{ $o->vendor_name ?? '-' }}</div>@endif
                 <div class="d-flex justify-content-between align-items-end">
                     <div class="small text-muted">
                         @if($user->role_code !== 'agent' && $o->agent_name){{ $o->agent_name }} · @endif

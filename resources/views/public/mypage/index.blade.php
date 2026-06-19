@@ -235,7 +235,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>주문번호</th>
-                                    <th>거래처</th>
+                                    @if($user->role_code !== 'academy')<th>거래처</th>@endif
                                     @if($user->role_code !== 'agent')<th class="d-none d-md-table-cell">영업자</th>@endif
                                     <th>상태</th>
                                     <th class="text-end">금액</th>
@@ -246,7 +246,7 @@
                                 @foreach($recent_orders as $o)
                                     <tr>
                                         <td class="small"><code>{{ $o->order_no }}</code></td>
-                                        <td class="small">{{ $o->vendor_name }}</td>
+                                        @if($user->role_code !== 'academy')<td class="small">{{ $o->vendor_name }}</td>@endif
                                         @if($user->role_code !== 'agent')<td class="small text-muted d-none d-md-table-cell">{{ $o->agent_name }}</td>@endif
                                         <td>
                                             @switch($o->status_code)
