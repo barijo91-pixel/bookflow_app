@@ -45,19 +45,9 @@
             </div>
 
             <div class="card section-card mb-3" id="studentsCard" style="display:none;">
-                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <strong>2. 학생/학부모 선택 + 1인당 금액</strong>
-                    <div class="d-flex gap-2 align-items-center">
-                        @if($recommendedAmount > 0)
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="applyRecommended()"
-                                title="도서 1세트 정가 {{ number_format($setListPrice) }}원의 90% (도서정가제 소매가)">
-                                <i class="bi bi-magic"></i> 권장 {{ number_format($recommendedAmount) }}원 적용
-                            </button>
-                        @endif
-                        <input type="number" id="bulkAmount" min="0" step="100" class="form-control form-control-sm text-end"
-                               style="width:120px" placeholder="직접 금액">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="applyBulk()">적용</button>
-                    </div>
+                <div class="card-header">
+                    <strong>2. 학생/학부모 선택</strong>
+                    <span class="text-muted small ms-2">금액은 자동 산정 (수정 불가)</span>
                 </div>
                 @if($recommendedAmount > 0)
                     <div class="card-body py-2 small text-muted border-bottom">
@@ -212,7 +202,8 @@ classSel?.addEventListener('change', async () => {
                 <td>
                     <input type="hidden" name="recipients[${idx}][student_id]" value="${s.student_id}" disabled>
                     <input type="number" name="recipients[${idx}][amount]" min="0" step="100"
-                           class="form-control form-control-sm text-end row-amount" value="0" disabled>
+                           class="form-control form-control-sm text-end row-amount bg-light"
+                           value="{{ (int) ($recommendedAmount ?? 0) }}" readonly disabled>
                 </td>
             `;
             tbody.appendChild(tr);
