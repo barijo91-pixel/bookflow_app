@@ -118,17 +118,25 @@
                 <form method="POST" action="{{ route('my.classes.books.attach', $class->id) }}" class="row g-2">
                     @csrf
                     <div class="col-12">
+                        <select id="bookPublisher" class="form-select form-select-sm">
+                            <option value="">전체 출판사</option>
+                            @foreach($publisherOptions as $po)
+                                <option value="{{ $po->id }}">{{ $po->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
                             <input type="text" id="bookSearchInput" class="form-control"
-                                   placeholder="교재 제목·ISBN 검색" autocomplete="off">
+                                   placeholder="교재 제목 검색" autocomplete="off">
                         </div>
                     </div>
                     <div class="col-7">
                         <select name="book_id" id="bookSelect" class="form-select form-select-sm" required>
                             <option value="">교재 선택 ({{ count($availableBooks) }}권)</option>
                             @foreach($availableBooks as $ab)
-                                <option value="{{ $ab->id }}">{{ \Illuminate\Support\Str::limit($ab->title, 40) }} ({{ number_format($ab->price) }}원)</option>
+                                <option value="{{ $ab->id }}" data-publisher="{{ $ab->publisher_id }}">{{ \Illuminate\Support\Str::limit($ab->title, 40) }} ({{ number_format($ab->price) }}원)</option>
                             @endforeach
                         </select>
                     </div>
@@ -336,31 +344,35 @@ document.addEventListener('DOMContentLoaded', function(){
     });
 })();
 
-// 교재 추가 — select 검색 필터 (option 재구성)
+// 교재 추가 — 출판사 + 제목 검색 필터 (option 재구성)
 (function () {
     const input = document.getElementById('bookSearchInput');
     const sel = document.getElementById('bookSelect');
+    const pub = document.getElementById('bookPublisher');
     if (!input || !sel) return;
 
-    // 원본 옵션 백업 (placeholder 제외)
-    const allOpts = Array.from(sel.options).slice(1).map(o => ({ value: o.value, text: o.text }));
+    // 원본 옵션 백업 (placeholder 제외) — 출판사 id 포함
+    const allOpts = Array.from(sel.options).slice(1).map(o => ({
+        value: o.value, text: o.text, pub: o.dataset.publisher || ''
+    }));
     const placeholder = sel.options[0]?.text || '교재 선택';
 
+    function apply() {
+        const q = input.value.trim().toLowerCase();
+        const pv = pub ? pub.value : '';
+        let filtered = allOpts;
+        if (pv) filtered = filtered.filter(o => o.pub === pv);
+        if (q)  filtered = filtered.filter(o => o.text.toLowerCase().includes(q));
+        const shown = filtered.slice(0, 200); // 성능: 최대 200개
+        sel.innerHTML = '<option value="">'
+            + ((q || pv) ? `검색결과 ${filtered.length}권` : placeholder) + '</option>'
+            + shown.map(o => `<option value="${o.value}" data-publisher="${o.pub}">${o.text.replace(/</g,'&lt;')}</option>`).join('');
+        if (filtered.length === 1) sel.value = filtered[0].value; // 1개면 자동 선택
+    }
+
     let timer = null;
-    input.addEventListener('input', function () {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            const q = this.value.trim().toLowerCase();
-            const filtered = q ? allOpts.filter(o => o.text.toLowerCase().includes(q)) : allOpts;
-            // 최대 200개만 렌더 (성능)
-            const shown = filtered.slice(0, 200);
-            sel.innerHTML = '<option value="">'
-                + (q ? `검색결과 ${filtered.length}권` : placeholder) + '</option>'
-                + shown.map(o => `<option value="${o.value}">${o.text.replace(/</g,'&lt;')}</option>`).join('');
-            // 검색결과 1개면 자동 선택
-            if (q && filtered.length === 1) sel.value = filtered[0].value;
-        }, 150);
-    });
+    input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(apply, 150); });
+    if (pub) pub.addEventListener('change', apply);
 })();
 </script>
 @endpush

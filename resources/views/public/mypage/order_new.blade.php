@@ -37,6 +37,7 @@
             'subject'  => $activeFilters['subject'] ?: null,
             'grade'    => $activeFilters['grade'] ?: null,
             'semester' => $activeFilters['semester'] ?: null,
+            'publisher' => $activeFilters['publisher'] ?: null,
             'agent_id' => $selectedAgent->id ?? null,
         ], fn ($v) => $v !== null && $v !== '');
         foreach ($override as $k => $v) {
@@ -54,7 +55,7 @@
     <div class="card-body py-3">
         <form method="GET" action="{{ route('my.order_new') }}" class="row g-2 align-items-end">
             {{-- 영업자 --}}
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">영업자 (담당)</label>
                 <select name="agent_id" class="form-select form-select-sm" onchange="this.form.submit()">
                     @foreach($agents as $a)
@@ -64,8 +65,18 @@
                     @endforeach
                 </select>
             </div>
+            {{-- 출판사 --}}
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">출판사</label>
+                <select name="publisher" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">전체 출판사</option>
+                    @foreach($filterOptions['publisher'] as $o)
+                        <option value="{{ $o->code }}" @selected($activeFilters['publisher'] == $o->code)>{{ $o->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             {{-- 검색 --}}
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label class="form-label small text-muted mb-1">도서 검색</label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>

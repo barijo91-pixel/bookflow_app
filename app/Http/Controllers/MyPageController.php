@@ -1296,6 +1296,7 @@ class MyPageController extends Controller
         $subject  = $request->query('subject');    // 과목 (korean/english/math/science/social)
         $grade    = $request->query('grade');      // 학년 (pre_elem/elem_1~6/mid_1~3/high_1~3)
         $semester = $request->query('semester');   // 학기 (sem_1/sem_2)
+        $publisher = $request->query('publisher');  // 출판사 id
 
         $booksQuery = DB::table('books')
             ->whereNull('books.deleted_at')
@@ -1312,6 +1313,7 @@ class MyPageController extends Controller
         }
         if ($school)   $booksQuery->where('books.school_code', $school);
         if ($subject)  $booksQuery->where('books.subject_code', $subject);
+        if ($publisher) $booksQuery->where('books.publisher_id', $publisher);
         // 학년/학기는 book_targets (M:N) 조회
         if ($grade) {
             $booksQuery->whereExists(function ($q) use ($grade) {
@@ -1355,8 +1357,14 @@ class MyPageController extends Controller
             'subject'  => DB::table('codes')->where('group_code', 'subject')->orderBy('sort_order')->get(['code','name']),
             'grade'    => $filteredGrades,
             'semester' => DB::table('codes')->where('group_code', 'semester')->orderBy('sort_order')->get(['code','name']),
+            'publisher' => DB::table('publishers as p')
+                ->whereIn('p.id', function ($sq) {
+                    $sq->select('publisher_id')->from('books')
+                       ->whereNull('deleted_at')->where('status_code', 'selling')->whereNotNull('publisher_id');
+                })
+                ->orderBy('p.sort_order')->orderBy('p.name')->get(['p.id as code', 'p.name']),
         ];
-        $activeFilters = compact('school','subject','grade','semester','q');
+        $activeFilters = compact('school','subject','grade','semester','q','publisher');
         $showSubFilters = (bool) $school; // 분류 선택 시에만 하위 필터 표시
         $showGradeRow   = $school && $school !== 'general'; // 단행본은 학년 의미 없음
         $showSemesterRow= $school && $school !== 'general'; // 단행본은 학기 의미 없음
@@ -1759,12 +1767,23 @@ class MyPageController extends Controller
             ->get();
 
         $grades = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get();
-        $availableBooks = DB::table('books')
-            ->whereNull('deleted_at')->where('status_code', 'selling')
-            ->orderBy('title')->get(['id', 'title', 'isbn', 'price']);
+        $availableBooks = DB::table('books as b')
+            ->leftJoin('publishers as p', 'p.id', '=', 'b.publisher_id')
+            ->whereNull('b.deleted_at')->where('b.status_code', 'selling')
+            ->orderBy('b.title')
+            ->get(['b.id', 'b.title', 'b.isbn', 'b.price', 'b.publisher_id', 'p.name as publisher_name']);
+
+        // 출판사 필터 옵션 (판매중 도서를 보유한 출판사만)
+        $publisherOptions = DB::table('publishers as p')
+            ->whereIn('p.id', function ($q) {
+                $q->select('publisher_id')->from('books')
+                  ->whereNull('deleted_at')->where('status_code', 'selling')->whereNotNull('publisher_id');
+            })
+            ->orderBy('p.sort_order')->orderBy('p.name')
+            ->get(['p.id', 'p.name']);
 
         return view('public.mypage.class_show', compact(
-            'user', 'class', 'students', 'books', 'shareLinks', 'grades', 'availableBooks'
+            'user', 'class', 'students', 'books', 'shareLinks', 'grades', 'availableBooks', 'publisherOptions'
         ));
     }
 
