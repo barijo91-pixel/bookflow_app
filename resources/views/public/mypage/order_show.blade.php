@@ -84,7 +84,7 @@
                     @endif
                     @if($user->role_code === 'academy' && in_array($order->status_code, ['requested','confirmed','accepted','shipped']))
                         <a href="{{ route('my.orders.payment.create', $order->id) }}" class="btn btn-warning w-100 mb-2">
-                            <i class="bi bi-chat-dots-fill"></i> 학부모에게 결제 요청
+                            <i class="bi bi-chat-dots-fill"></i> 교재비 결제
                         </a>
                     @endif
                     @if($canConfirm)
@@ -325,7 +325,7 @@
         </div>
 
         <div class="card section-card">
-            <div class="card-header"><strong><i class="bi bi-clock-history"></i> 상태 이력</strong></div>
+            <div class="card-header"><strong><i class="bi bi-clock-history"></i> 주문현황</strong></div>
             <div class="card-body">
                 @if($statusLogs->isEmpty())
                     <div class="empty-state small">
