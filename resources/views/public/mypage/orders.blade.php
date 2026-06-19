@@ -61,10 +61,20 @@
                 <label class="form-label small text-muted mb-1">주문일자 To</label>
                 <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-{{ $user->role_code !== 'academy' ? '2' : '4' }}">
                 <label class="form-label small text-muted mb-1">검색 (주문번호 / 학원명)</label>
-                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="예: BF20260520 또는 학원명">
+                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="주문번호·학원명">
             </div>
+            @if($user->role_code !== 'academy')
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">거래구분</label>
+                <select name="trade_type" class="form-select form-select-sm">
+                    <option value="">전체</option>
+                    <option value="retail" @selected($tradeType === 'retail')>소매</option>
+                    <option value="wholesale" @selected($tradeType === 'wholesale')>도매</option>
+                </select>
+            </div>
+            @endif
             <div class="col-md-2 d-flex gap-1">
                 <button class="btn btn-sm btn-navy flex-grow-1"><i class="bi bi-search"></i> 조회</button>
                 <a href="{{ route('my.orders.index') }}" class="btn btn-sm btn-outline-secondary" title="초기화">
@@ -83,7 +93,7 @@
             <thead class="table-light">
                 <tr>
                     <th>주문번호</th>
-                    @if($user->role_code !== 'academy')<th>학원</th>@endif
+                    @if($user->role_code !== 'academy')<th>학원</th><th>구분</th>@endif
                     @if($user->role_code !== 'agent')
                         <th>영업자</th>
                     @endif
@@ -103,7 +113,10 @@
                                 <code>{{ $o->order_no }}</code> <i class="bi bi-chevron-right small"></i>
                             </a>
                         </td>
-                        @if($user->role_code !== 'academy')<td class="small">{{ $o->vendor_name ?? '-' }}</td>@endif
+                        @if($user->role_code !== 'academy')
+                            <td class="small">{{ $o->vendor_name ?? '-' }}</td>
+                            <td><span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span></td>
+                        @endif
                         @if($user->role_code !== 'agent')
                             <td class="small text-muted">{{ $o->agent_name ?? '-' }}</td>
                         @endif
@@ -121,7 +134,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ 5 + ($user->role_code !== 'agent' ? 1 : 0) + ($user->role_code !== 'distributor' ? 1 : 0) - ($user->role_code === 'academy' ? 1 : 0) }}"
+                        <td colspan="{{ 5 + ($user->role_code !== 'agent' ? 1 : 0) + ($user->role_code !== 'distributor' ? 1 : 0) - ($user->role_code === 'academy' ? 1 : 0) + ($user->role_code !== 'academy' ? 1 : 0) }}"
                             class="text-center text-muted py-5">
                             <i class="bi bi-inbox" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">
@@ -144,7 +157,11 @@
                     <code class="navy fw-bold">{{ $o->order_no }}</code>
                     <span class="badge {{ $opt[1] }}">{{ $opt[0] }}</span>
                 </div>
-                @if($user->role_code !== 'academy')<div class="fw-bold mb-1">{{ $o->vendor_name ?? '-' }}</div>@endif
+                @if($user->role_code !== 'academy')
+                    <div class="fw-bold mb-1">{{ $o->vendor_name ?? '-' }}
+                        <span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span>
+                    </div>
+                @endif
                 <div class="d-flex justify-content-between align-items-end">
                     <div class="small text-muted">
                         @if($user->role_code !== 'agent' && $o->agent_name){{ $o->agent_name }} · @endif

@@ -796,6 +796,7 @@ class MyPageController extends Controller
         $dateFrom = $request->query('date_from') ?: now()->subDays(30)->format('Y-m-d');
         $dateTo   = $request->query('date_to')   ?: now()->format('Y-m-d');
         $q        = trim((string) $request->query('q'));
+        $tradeType = $request->query('trade_type'); // retail/wholesale 필터 (영업자·총판용)
 
         $query = DB::table('orders as o')
             ->leftJoin('vendors as v', 'v.id', '=', 'o.vendor_id')
@@ -806,7 +807,7 @@ class MyPageController extends Controller
                 'o.id', 'o.order_no', 'o.status_code', 'o.total_amount',
                 'o.requested_at', 'o.confirmed_at', 'o.accepted_at',
                 'o.shipped_at', 'o.completed_at', 'o.created_at',
-                'v.name as vendor_name',
+                'v.name as vendor_name', 'v.trade_type',
                 'ag.name as agent_name', 'ag.login_id as agent_login_id',
                 'ds.name as distributor_name'
             );
@@ -831,6 +832,7 @@ class MyPageController extends Controller
         }
 
         if ($status)   $query->where('o.status_code', $status);
+        if ($tradeType) $query->where('v.trade_type', $tradeType);
         if ($dateFrom) $query->whereDate('o.created_at', '>=', $dateFrom);
         if ($dateTo)   $query->whereDate('o.created_at', '<=', $dateTo);
         if ($q !== '') {
@@ -862,6 +864,7 @@ class MyPageController extends Controller
             'dateFrom' => $dateFrom,
             'dateTo'   => $dateTo,
             'q'        => $q,
+            'tradeType' => $tradeType,
             'statusCounts' => $statusCounts,
         ]);
     }
