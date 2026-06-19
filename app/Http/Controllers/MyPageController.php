@@ -47,7 +47,7 @@ class MyPageController extends Controller
                     ->where('r.child_user_id', $user->id)
                     ->where('r.relation_type', 'distributor_agent')
                     ->where('r.status', 'active')
-                    ->select('u.id', 'u.name')->get();
+                    ->select('u.id', DB::raw("COALESCE(NULLIF(u.business_name,''), u.name) as name"))->get();
 
                 // 사입자 온보딩 체크리스트 (계획서 8장)
                 $hasBusinessType = ($user->business_type ?? 'none') !== 'none';
