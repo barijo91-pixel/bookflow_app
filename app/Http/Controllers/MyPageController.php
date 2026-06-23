@@ -302,20 +302,22 @@ class MyPageController extends Controller
                 ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
                 ->where('avd.agent_user_id', $user->id)
                 ->where('avd.is_active', true)
-                ->select('v.id', 'v.name', 'avd.discount_rate')
+                ->select('v.id', 'v.name', 'v.trade_type', 'avd.discount_rate')
                 ->orderBy('v.name')->get();
         } else {
-            $vendors = DB::table('vendors')->select('id', 'name')
+            $vendors = DB::table('vendors')->select('id', 'name', 'trade_type')
                 ->selectRaw('30 as discount_rate')
                 ->orderBy('name')->get();
         }
 
-        // 선택된 학원의 할인율 사용 (없으면 30%)
+        // 선택된 학원의 할인율 + 거래구분 (도매=할인율 정산 / 소매=소개료 정산)
         $discountRate = 30.0;
+        $selectedTradeType = null;
         if ($vendorId) {
             $found = $vendors->firstWhere('id', (int) $vendorId);
             if ($found) {
                 $discountRate = (float) $found->discount_rate;
+                $selectedTradeType = $found->trade_type ?? 'retail';
             }
         }
 
@@ -333,6 +335,7 @@ class MyPageController extends Controller
             'qty'          => $qty,
             'discountRate' => $discountRate,
             'vendorId'     => $vendorId,
+            'selectedTradeType' => $selectedTradeType,
             'b2b'          => $b2b,
             'b2c'          => $b2c,
             'b2bTax'       => $b2bTax,

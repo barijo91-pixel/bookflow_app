@@ -10,8 +10,9 @@
 
     <div class="alert alert-light border small mb-3">
         <i class="bi bi-info-circle"></i>
-        실제 거래처 할인율 + 본인 사업자 유형({{ \App\Services\TaxService::TYPES[$businessType] }}) 자동 적용.
-        분배 비율 <strong>{{ $splitRatio }}</strong> 기준.
+        학원의 <strong>거래구분(도매/소매)</strong>에 따라 정산 방식이 달라집니다 —
+        <strong>도매</strong>는 할인율 기반, <strong>소매</strong>는 학원 소개료 모델.
+        본인 사업자 유형({{ \App\Services\TaxService::TYPES[$businessType] }}) · 분배 <strong>{{ $splitRatio }}</strong> 적용.
     </div>
 
     {{-- 입력 폼 --}}
@@ -19,12 +20,12 @@
         <div class="card-body">
             <form method="GET" class="row g-2 align-items-end">
                 <div class="col-md-4">
-                    <label class="small mb-1">담당 학원 선택 (할인율 자동 적용)</label>
+                    <label class="small mb-1">담당 학원 선택 (거래구분 자동 적용)</label>
                     <select name="vendor_id" class="form-select form-select-sm">
-                        <option value="">학원 선택 안함 (할인율 30% 가정)</option>
+                        <option value="">학원 선택 안함 (도매·소매 모두 표시)</option>
                         @foreach($vendors as $v)
                             <option value="{{ $v->id }}" @selected($vendorId == $v->id)>
-                                {{ $v->name }} (할인 {{ $v->discount_rate }}%)
+                                {{ $v->name }} @if(($v->trade_type ?? 'retail') === 'wholesale')(도매 · 할인 {{ (int) $v->discount_rate }}%)@else(소매)@endif
                             </option>
                         @endforeach
                     </select>
@@ -43,7 +44,12 @@
             </form>
             @if($vendorId)
                 <div class="small mt-2 text-success">
-                    <i class="bi bi-check-circle"></i> 적용 할인율: <strong>{{ $discountRate }}%</strong>
+                    <i class="bi bi-check-circle"></i>
+                    @if($selectedTradeType === 'wholesale')
+                        도매 학원 · 적용 할인율 <strong>{{ (int) $discountRate }}%</strong>
+                    @else
+                        소매 학원 · <strong>소개료 모델</strong> (할인율 미적용)
+                    @endif
                 </div>
             @endif
         </div>
@@ -51,8 +57,9 @@
 
     {{-- 결과 카드 --}}
     <div class="row g-3 mb-3">
-        {{-- B2B 학원 도매 --}}
-        <div class="col-md-6">
+        {{-- B2B 학원 도매 — 도매 학원이거나 미선택 시 --}}
+        @if(!$vendorId || $selectedTradeType === 'wholesale')
+        <div class="{{ $vendorId ? 'col-12' : 'col-md-6' }}">
             <div class="card h-100">
                 <div class="card-header bg-light">
                     <strong><i class="bi bi-building"></i> 학원 도매 (B2B)</strong>
@@ -105,9 +112,11 @@
                 </div>
             </div>
         </div>
+        @endif
 
-        {{-- B2C 학부모 결제 --}}
-        <div class="col-md-6">
+        {{-- B2C 학부모 결제 — 소매 학원이거나 미선택 시 --}}
+        @if(!$vendorId || $selectedTradeType === 'retail')
+        <div class="{{ $vendorId ? 'col-12' : 'col-md-6' }}">
             <div class="card h-100">
                 <div class="card-header bg-light">
                     <strong><i class="bi bi-people"></i> 학부모 결제 (B2C)</strong>
@@ -163,19 +172,24 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
-    {{-- 월 수익 예측 --}}
-    @if($user->role_code === 'agent' && $b2bTax['net'] > 0)
+    {{-- 월 수익 예측 — 선택 학원 거래구분 기준 (미선택 시 도매) --}}
+    @php
+        $simNet   = ($selectedTradeType === 'retail') ? $b2cTax['net'] : $b2bTax['net'];
+        $simLabel = ($selectedTradeType === 'retail') ? '소매(B2C)' : '도매(B2B)';
+    @endphp
+    @if($user->role_code === 'agent' && $simNet > 0)
         <div class="card">
-            <div class="card-header bg-light"><strong><i class="bi bi-calendar-check"></i> 월 수익 예측 (B2B 기준)</strong></div>
+            <div class="card-header bg-light"><strong><i class="bi bi-calendar-check"></i> 월 수익 예측 ({{ $simLabel }} 기준)</strong></div>
             <div class="card-body">
                 <div class="row text-center g-2">
                     @foreach([1 => '한 학원', 3 => '3개 학원', 5 => '5개 학원', 10 => '10개 학원'] as $multiplier => $label)
                         <div class="col-md-3 col-6">
                             <div class="border rounded p-2">
                                 <div class="small text-muted">{{ $label }}</div>
-                                <div class="h6 mb-0 text-success">{{ number_format($b2bTax['net'] * $multiplier) }}원</div>
+                                <div class="h6 mb-0 text-success">{{ number_format($simNet * $multiplier) }}원</div>
                             </div>
                         </div>
                     @endforeach
