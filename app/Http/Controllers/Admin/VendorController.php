@@ -102,7 +102,8 @@ class VendorController extends Controller
                     DB::table('agent_vendor_discounts')->insert([
                         'agent_user_id' => $agent->id,
                         'vendor_id'     => $vendor->id,
-                        'discount_rate' => $extra['discount_rate'] ?? 10,
+                        // 도매=30%(정가 70% 매입) / 소매=10%(소개료 모델이라 미사용)
+                        'discount_rate' => $extra['discount_rate'] ?? ($vendor->trade_type === 'wholesale' ? 30 : 10),
                         'started_at'    => now()->toDateString(),
                         'is_active'     => true,
                         'created_at'    => now(),

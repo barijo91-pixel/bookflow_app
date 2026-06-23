@@ -385,7 +385,7 @@ class UserController extends Controller
             ->join('vendors as v', 'v.id', '=', 'vu.vendor_id')
             ->where('vu.user_id', $user->id)
             ->whereNull('v.deleted_at')
-            ->select('v.id')->first();
+            ->select('v.id', 'v.trade_type')->first();
         if (! $vendor) {
             return back()->with('error', '먼저 학원명을 입력하고 저장하세요. (거래처가 생성되어야 영업자를 지정할 수 있습니다)');
         }
@@ -395,7 +395,8 @@ class UserController extends Controller
             return back()->withErrors(['agent_user_id' => '유효한 영업자가 아닙니다.']);
         }
 
-        $rate = $data['discount_rate'] ?? 10;
+        // 도매=30%(정가 70% 매입) / 소매=10%(소개료 모델이라 미사용)
+        $rate = $data['discount_rate'] ?? (($vendor->trade_type ?? 'retail') === 'wholesale' ? 30 : 10);
 
         DB::transaction(function () use ($vendor, $agent, $rate) {
             // 기존 active 영업자 매핑 비활성화

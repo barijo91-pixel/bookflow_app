@@ -30,11 +30,11 @@
                     <label class="form-label small text-muted mb-1">거래구분 <span class="text-danger">*</span></label>
                     <div class="d-flex gap-3 pt-1">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="trade_type" id="tradeRetail" value="retail" @checked(old('trade_type', 'retail') === 'retail')>
+                            <input class="form-check-input" type="radio" name="trade_type" id="tradeRetail" value="retail" @checked(old('trade_type', 'retail') === 'retail') onchange="var d=document.querySelector('[name=discount_rate]'); if(d) d.value=10;">
                             <label class="form-check-label" for="tradeRetail"><strong>소매</strong></label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="trade_type" id="tradeWholesale" value="wholesale" @checked(old('trade_type') === 'wholesale')>
+                            <input class="form-check-input" type="radio" name="trade_type" id="tradeWholesale" value="wholesale" @checked(old('trade_type') === 'wholesale') onchange="var d=document.querySelector('[name=discount_rate]'); if(d) d.value=30;">
                             <label class="form-check-label" for="tradeWholesale"><strong>도매</strong></label>
                         </div>
                     </div>

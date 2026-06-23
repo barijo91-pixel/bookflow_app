@@ -40,7 +40,8 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-muted">거래유형 *</label>
-                    <select name="trade_type" class="form-select" required>
+                    <select name="trade_type" class="form-select" required
+                            onchange="var d=this.form.querySelector('[name=discount_rate]'); if(d) d.value=(this.value==='wholesale'?30:10);">
                         <option value="retail" @selected(old('trade_type', 'retail') === 'retail')>소매</option>
                         <option value="wholesale" @selected(old('trade_type') === 'wholesale')>도매</option>
                     </select>
@@ -146,7 +147,7 @@
                 <div class="col-md-3">
                     <label class="form-label small text-muted">할인율 (%)</label>
                     <input type="number" name="discount_rate" class="form-control" value="{{ old('discount_rate', 10) }}" min="0" max="100" step="0.5">
-                    <small class="text-muted">학원 도매 할인율</small>
+                    <small class="text-muted">도매 기본 30% · 소매는 미사용(소개료)</small>
                 </div>
             </div>
 
