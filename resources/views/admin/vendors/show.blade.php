@@ -75,7 +75,8 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small text-muted">거래유형 *</label>
-                            <select name="trade_type" class="form-select" required>
+                            <select name="trade_type" class="form-select" required
+                                    onchange="var d=document.getElementById('addAgentDefaultRate'); if(d) d.value=(this.value==='wholesale'?30:10);">
                                 <option value="retail" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'retail')>소매</option>
                                 <option value="wholesale" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'wholesale')>도매</option>
                             </select>
@@ -281,7 +282,7 @@
                         </div>
                         <div class="col-3">
                             <label class="form-label small text-muted mb-1">기본 할인율(%)</label>
-                            <input type="number" step="0.5" min="0" max="100" name="discount_rate" class="form-control form-control-sm text-end" value="30" required>
+                            <input type="number" step="0.5" min="0" max="100" name="discount_rate" id="addAgentDefaultRate" class="form-control form-control-sm text-end" value="{{ ($vendor->trade_type ?? 'retail') === 'wholesale' ? 30 : 10 }}" required>
                         </div>
                         <div class="col-2">
                             <button class="btn btn-sm btn-outline-primary w-100">매핑</button>
