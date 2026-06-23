@@ -54,6 +54,11 @@ class SiteSettingSeeder extends Seeder
             ['app', 'app_download_android_version', '', 'text', 'Android 버전', '예: 1.0.0', 50],
             ['app', 'app_download_ios_url', '', 'text', 'iOS 다운로드 URL', 'App Store 또는 TestFlight 링크', 60],
             ['app', 'app_download_ios_version', '', 'text', 'iOS 버전', '예: 1.0.0', 70],
+
+            // 정산 (소매 B2C) — 도매는 코드 상수, 소매만 설정값
+            ['settlement', 'b2c_pub_rate', '55', 'number', '출판사→총판 공급율 (%)', '소매 마진풀 계산의 매입 기준율', 10],
+            ['settlement', 'b2c_sell_rate', '90', 'number', '학부모 판매율 (%)', '도서정가제 — 보통 90% (정가 -10%)', 20],
+            ['settlement', 'b2c_referral_rate', '20', 'number', '학원 소개료율 (%)', '마진풀 대비 비율. 3.3% 원천징수 후 학원에 지급', 30],
         ];
 
         foreach ($settings as [$group, $key, $value, $type, $label, $desc, $sort]) {

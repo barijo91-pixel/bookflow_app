@@ -116,7 +116,7 @@
                     <table class="table table-sm mb-2">
                         <tbody>
                             <tr>
-                                <th class="text-muted" style="width:55%;">학부모 매출 (90%)</th>
+                                <th class="text-muted" style="width:55%;">학부모 판매가</th>
                                 <td class="text-end">{{ number_format($b2c['retail_sale']) }}원</td>
                             </tr>
                             <tr class="table-info">
@@ -124,20 +124,16 @@
                                 <td class="text-end fw-bold">{{ number_format($b2c['parent_paid']) }}원</td>
                             </tr>
                             <tr>
-                                <th class="text-muted">PG 수수료 + BookSys 중계</th>
-                                <td class="text-end text-danger">-{{ number_format($b2c['pg_fee'] + $b2c['booksys_fee']) }}원</td>
+                                <th class="text-muted">마진풀 (− 총판 매입)</th>
+                                <td class="text-end">{{ number_format($b2c['margin_pool']) }}원</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">학원 소개료</th>
+                                <td class="text-end text-warning">-{{ number_format($b2c['referral_gross']) }}원</td>
                             </tr>
                             @if($user->role_code === 'agent')
-                                <tr>
-                                    <th>내 명목 마진</th>
-                                    <td class="text-end">{{ number_format($b2c['agent_margin']) }}원</td>
-                                </tr>
-                                <tr>
-                                    <th class="text-muted">학원 도매 우대 차감</th>
-                                    <td class="text-end text-danger">-{{ number_format($b2c['academy_bonus']) }}원</td>
-                                </tr>
                                 <tr class="border-top">
-                                    <th class="text-success">내 실 마진 (세전)</th>
+                                    <th class="text-success">내 마진 (세전)</th>
                                     <td class="text-end fw-bold text-success">{{ number_format($b2c['agent_net']) }}원</td>
                                 </tr>
                                 @if($b2cTax['withholding_tax'] > 0)

@@ -30,6 +30,14 @@ class SettlementService
     /** BookSys B2C 중계수수료 (계획서 12장) */
     public const BOOKSYS_FEE_RATE_B2C = 0.005;
 
+    /** 학원 소개료 원천징수 (3.3%) — 소매 B2C */
+    public const REFERRAL_TAX = 0.033;
+
+    /** 소매 B2C 기본값 (사이트 설정 미입력 시 폴백, % 정수) */
+    public const B2C_DEFAULT_PUB_RATE      = 55;  // 출판사→총판 공급율
+    public const B2C_DEFAULT_SELL_RATE     = 90;  // 학부모 판매율(도서정가제)
+    public const B2C_DEFAULT_REFERRAL_RATE = 20;  // 학원 소개료율(마진풀 대비)
+
     /** 분배 비율 시나리오 — [총판 비율, 사입자 비율] */
     public const SPLIT_SCENARIOS = [
         '7:3' => ['dist' => 0.7, 'agent' => 0.3, 'label' => '7:3 (총판 유리)'],
@@ -82,59 +90,82 @@ class SettlementService
     }
 
     /**
-     * B2C 학부모 결제 정산 (계획서 7-2장)
+     * B2C 학부모 결제(소매) 정산 — 학원 "소개료" 모델
      *
-     * 수금 주체: 총판 PG 계좌
-     * 차감 순서: 출판사 매입(55%) → 배송비 → PG 수수료 → BookSys 중계수수료
-     *           → 사입자 마진 → 학원 도매 단가 우대
+     * 출판사 → 총판 → 학부모(직배송). 학원은 매입하지 않고 학부모를 소개만 하며,
+     * 마진풀의 일정 비율을 소개료로 받는다(3.3% 원천징수 후 지급).
+     * 배송비는 실비라 분배에서 제외(학부모 결제 총액 표시용으로만 더함).
+     *
+     *   마진풀  = 학부모 판매가 − 총판 매입가
+     *   소개료  = 마진풀 × 소개료율 → 3.3% 원천징수 후 학원 지급
+     *   잔여마진 = 마진풀 − 소개료(공제 전) → 총판 : 사입자 분배
+     *
+     * 공급율·판매율·소개료율은 사이트 설정(정산 그룹)에서 조정. 미지정 시 기본값.
      *
      * @param int $unitPrice    정가
      * @param int $qty          수량
-     * @param int $shippingFee  배송비 (0 = 무료)
-     * @param string $splitRatio
+     * @param int $shippingFee  배송비 (실비 — 분배 제외, 결제 총액 표시용)
+     * @param string $splitRatio 총판:사입자 분배
+     * @param float|null $pubRate      출판사→총판 공급율 (0~1, null=설정값)
+     * @param float|null $sellRate     학부모 판매율 (0~1, null=설정값)
+     * @param float|null $referralRate 학원 소개료율 (0~1, null=설정값)
      */
-    public static function calcB2C(int $unitPrice, int $qty, int $shippingFee = 0, string $splitRatio = '6:4'): array
-    {
+    public static function calcB2C(
+        int $unitPrice,
+        int $qty,
+        int $shippingFee = 0,
+        string $splitRatio = '6:4',
+        ?float $pubRate = null,
+        ?float $sellRate = null,
+        ?float $referralRate = null
+    ): array {
         $split = self::SPLIT_SCENARIOS[$splitRatio] ?? self::SPLIT_SCENARIOS['6:4'];
 
-        $gross         = $unitPrice * $qty;                                  // 정가
-        $retailSale    = (int) round($gross * self::RATE_B2C_RETAIL);        // 학부모 매출 (90%)
-        $parentPaid    = $retailSale + $shippingFee;                          // 학부모 결제 총액
-        $publisherCost = (int) round($gross * self::RATE_PUBLISHER_TO_DIST); // 출판사 매입 (55%)
-        $pgFee         = (int) round($parentPaid * self::PG_FEE_RATE);       // PG 수수료
-        $bookSysFee    = (int) round($retailSale * self::BOOKSYS_FEE_RATE_B2C); // BookSys 중계 (매출 0.5%)
+        // 설정값 (% 정수 저장 → 0~1 변환). 미지정 시 사이트 설정 → 기본값
+        $pubRate      = $pubRate      ?? ((float) setting('b2c_pub_rate', (string) self::B2C_DEFAULT_PUB_RATE) / 100);
+        $sellRate     = $sellRate     ?? ((float) setting('b2c_sell_rate', (string) self::B2C_DEFAULT_SELL_RATE) / 100);
+        $referralRate = $referralRate ?? ((float) setting('b2c_referral_rate', (string) self::B2C_DEFAULT_REFERRAL_RATE) / 100);
 
-        // 전체 마진 풀 (학부모 매출 - 출판사 매입 - 배송비 - PG - BookSys 수수료)
-        $netMarginPool = $retailSale - $publisherCost - $pgFee - $bookSysFee;
+        $gross         = $unitPrice * $qty;                       // 정가 합계
+        $retailSale    = (int) round($gross * $sellRate);         // 학부모 판매가
+        $parentPaid    = $retailSale + $shippingFee;              // 학부모 결제 총액 (배송 별도 실비)
+        $publisherCost = (int) round($gross * $pubRate);          // 총판 매입가
 
-        // 사입자 마진 (분배 비율 기준) — ※ 소매 로직은 추후 확정 예정
-        $distAgentPool      = (int) round($gross * (self::RATE_DIST_TO_AGENT - self::RATE_PUBLISHER_TO_DIST));
-        $agentMargin        = (int) round($distAgentPool * $split['agent']);
+        // 마진풀 = 학부모 판매가 − 총판 매입가 (배송 제외)
+        $marginPool    = $retailSale - $publisherCost;
 
-        // 학원 도매 단가 우대 (B2C 시 학원 간접 혜택 — 도매 70% 기준 차액의 일부)
-        // 계획서 기준: 학원에 도매 단가로 우대 처리 → 일종의 "수수료 환급" 효과
-        // 시뮬레이션: 사입자 마진의 30% 정도를 학원 우대로 추정 (협상 가능)
-        $academyBonus = (int) round($agentMargin * 0.3);
-        $agentNet = $agentMargin - $academyBonus;
+        // 학원 소개료 = 마진풀 × 소개료율 → 3.3% 원천징수 후 지급
+        $referralGross = (int) round($marginPool * $referralRate);
+        $referralNet   = (int) round($referralGross * (1 - self::REFERRAL_TAX));
 
-        // 총판 순이익
-        $distNet = $netMarginPool - $agentMargin;
+        // 잔여마진 = 마진풀 − 소개료(공제 전) → 총판 : 사입자 분배
+        $remain   = $marginPool - $referralGross;
+        $distNet  = (int) round($remain * $split['dist']);
+        $agentNet = $remain - $distNet;   // 잔여 = 사입자 (반올림 오차 흡수)
 
         return [
             'gross'           => $gross,
             'retail_sale'     => $retailSale,
-            'shipping_fee'    => $shippingFee,
             'parent_paid'     => $parentPaid,
+            'shipping_fee'    => $shippingFee,
             'publisher_cost'  => $publisherCost,
-            'pg_fee'          => $pgFee,
-            'booksys_fee'     => $bookSysFee,
-            'net_margin_pool' => $netMarginPool,
-            'agent_margin'    => $agentMargin,
-            'agent_net'       => $agentNet,
-            'academy_bonus'   => $academyBonus,
+            'margin_pool'     => $marginPool,
+            // 학원 소개료
+            'referral_gross'  => $referralGross,    // 공제 전
+            'referral_net'    => $referralNet,      // 3.3% 공제 후 실지급
+            'referral_rate'   => $referralRate,
+            // 분배
+            'remain'          => $remain,
             'dist_net'        => $distNet,
+            'agent_net'       => $agentNet,
             'split_ratio'     => $splitRatio,
             'split_label'     => $split['label'],
+            // 설정값(표시용)
+            'pub_rate'        => $pubRate,
+            'sell_rate'       => $sellRate,
+            // 호환 키 (createFromPaymentRequest / 기존 화면)
+            'agent_margin'    => $agentNet,
+            'academy_bonus'   => $referralNet,
         ];
     }
 
@@ -171,9 +202,9 @@ class SettlementService
         $totalGross = 0;
         $totalRetail = 0;
         $totalPublisherCost = 0;
-        $totalAgentMargin = 0;
-        $totalAgentNet = 0;
-        $totalAcademyBonus = 0;
+        $totalReferral = 0;     // 학원 소개료 (3.3% 공제 후 실지급)
+        $totalAgentNet = 0;     // 사입자
+        $totalDistNet = 0;      // 총판
         $totalShippingFee = 0;
         $breakdown = [];
 
@@ -192,23 +223,26 @@ class SettlementService
                     'qty'       => (int) $item->qty,
                     'gross'     => $b2c['gross'],
                     'retail'    => $b2c['retail_sale'],
+                    'referral'  => $b2c['referral_gross'],
+                    'dist_net'  => $b2c['dist_net'],
                     'agent_net' => $b2c['agent_net'],
                 ];
                 $totalGross += $b2c['gross'];
                 $totalRetail += $b2c['retail_sale'];
                 $totalPublisherCost += $b2c['publisher_cost'];
-                $totalAgentMargin += $b2c['agent_margin'];
+                $totalReferral += $b2c['referral_gross']; // 학원 소개료 (공제 전 = 마진풀 차감액)
                 $totalAgentNet += $b2c['agent_net'];
-                $totalAcademyBonus += $b2c['academy_bonus'];
+                $totalDistNet += $b2c['dist_net'];
             }
             $totalShippingFee = $shippingFee;
         }
 
         // 학부모 실제 결제 금액 (배송비 포함)
         $parentPaid = (int) $pr->amount;
-        $pgFee = (int) round($parentPaid * self::PG_FEE_RATE);
-        $bookSysFee = (int) round($totalRetail * self::BOOKSYS_FEE_RATE_B2C);
-        $distNet = $parentPaid - $totalPublisherCost - $pgFee - $bookSysFee - $totalAgentMargin - $totalShippingFee;
+        // 소매 정산: PG/중계 수수료는 분배에서 제외(실제 PG 연동 시 별도 반영) → 0
+        $pgFee = 0;
+        $bookSysFee = 0;
+        $distNet = $totalDistNet;
 
         // 사입자 정보 + 세무
         $agent = $order ? \App\Models\User::find($order->agent_user_id) : null;
@@ -243,9 +277,9 @@ class SettlementService
             'booksys_fee'          => $bookSysFee,
             'shipping_fee'         => $totalShippingFee,
 
-            'agent_margin'         => $totalAgentMargin,
+            'agent_margin'         => $totalAgentNet,
             'agent_net'            => $totalAgentNet,
-            'academy_bonus'        => $totalAcademyBonus,
+            'academy_bonus'        => $totalReferral,
             'dist_net'             => $distNet,
 
             'agent_business_type'  => $businessType,

@@ -151,12 +151,12 @@
                             <td class="text-end">{{ number_format($b2c['gross']) }}원</td>
                         </tr>
                         <tr>
-                            <th class="text-muted">학부모 매출 (90%, 도서정가제)</th>
+                            <th class="text-muted">학부모 판매가 ({{ round($b2c['sell_rate']*100) }}%, 도서정가제)</th>
                             <td class="text-end">{{ number_format($b2c['retail_sale']) }}원</td>
                         </tr>
                         @if($b2c['shipping_fee'] > 0)
                             <tr>
-                                <th class="text-muted">배송비 (구매자 부담)</th>
+                                <th class="text-muted">배송비 (실비 — 분배 제외)</th>
                                 <td class="text-end">+{{ number_format($b2c['shipping_fee']) }}원</td>
                             </tr>
                         @endif
@@ -165,40 +165,36 @@
                             <td class="text-end fw-bold">{{ number_format($b2c['parent_paid']) }}원</td>
                         </tr>
                         <tr>
-                            <th class="text-muted">출판사 매입 (55%)</th>
+                            <th class="text-muted">총판 매입가 ({{ round($b2c['pub_rate']*100) }}%)</th>
                             <td class="text-end text-danger">-{{ number_format($b2c['publisher_cost']) }}원</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">PG 수수료 (2%)</th>
-                            <td class="text-end text-danger">-{{ number_format($b2c['pg_fee']) }}원</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">BookSys 중계 (매출 0.5%)</th>
-                            <td class="text-end text-danger">-{{ number_format($b2c['booksys_fee']) }}원</td>
                         </tr>
                     </tbody>
                 </table>
                 <hr class="my-2">
                 <div class="small">
                     <div class="d-flex justify-content-between py-1">
-                        <span>순 마진 풀</span>
-                        <strong>{{ number_format($b2c['net_margin_pool']) }}원</strong>
+                        <span>마진풀 (판매가 − 매입가)</span>
+                        <strong>{{ number_format($b2c['margin_pool']) }}원</strong>
                     </div>
                     <div class="d-flex justify-content-between py-1">
-                        <span>사입자 마진 (분배 {{ $b2c['split_ratio'] }})</span>
-                        <span>{{ number_format($b2c['agent_margin']) }}원</span>
+                        <span>학원 소개료 ({{ round($b2c['referral_rate']*100) }}%)</span>
+                        <span class="text-warning">-{{ number_format($b2c['referral_gross']) }}원</span>
                     </div>
                     <div class="d-flex justify-content-between py-1">
-                        <span class="text-muted">└ 학원 도매 단가 우대 (30%)</span>
-                        <span class="text-muted">-{{ number_format($b2c['academy_bonus']) }}원</span>
+                        <span class="text-muted">└ 학원 실지급 (3.3% 원천징수 후)</span>
+                        <span class="text-muted">{{ number_format($b2c['referral_net']) }}원</span>
                     </div>
                     <div class="d-flex justify-content-between py-1">
-                        <strong>사입자 실 마진</strong>
-                        <strong class="text-success">{{ number_format($b2c['agent_net']) }}원</strong>
+                        <span class="text-muted">잔여마진</span>
+                        <span class="text-muted">{{ number_format($b2c['remain']) }}원</span>
                     </div>
-                    <div class="d-flex justify-content-between py-2 border-top mt-2">
-                        <strong class="navy">총판 순이익</strong>
+                    <div class="d-flex justify-content-between py-1 border-top mt-1">
+                        <strong class="navy">총판 ({{ $b2c['split_ratio'] }})</strong>
                         <strong class="navy">{{ number_format($b2c['dist_net']) }}원</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                        <strong class="text-success">사입자</strong>
+                        <strong class="text-success">{{ number_format($b2c['agent_net']) }}원</strong>
                     </div>
                 </div>
                 {{-- 세무 적용 결과 --}}
@@ -276,13 +272,13 @@
                 </ol>
             </div>
             <div class="col-md-6">
-                <h6 class="mb-2">B2C 정산 흐름 (학부모 결제)</h6>
+                <h6 class="mb-2">B2C 정산 흐름 (학부모 결제 · 소개료 모델)</h6>
                 <ol class="mb-0 ps-3">
-                    <li>학부모가 총판 PG 계좌로 결제 (소매 90%)</li>
-                    <li>PG 수수료(2%) + BookSys 중계(0.5%) 차감</li>
-                    <li>총판이 출판사 매입(55%) 처리</li>
-                    <li>사입자 마진 정산 (학원 우대분 제외)</li>
-                    <li>1권 배송비 4,000원, 2권+ 무료, 클래스 묶음 무료</li>
+                    <li>학원이 학부모를 소개 → 학부모가 총판 PG로 직접 결제</li>
+                    <li>마진풀 = 학부모 판매가 − 총판 매입가(출판사 매입)</li>
+                    <li>학원 소개료 = 마진풀 × 소개료율 (3.3% 원천징수 후 지급)</li>
+                    <li>잔여마진을 총판 : 사입자 6:4 분배</li>
+                    <li>배송비는 실비(분배 제외) · 공급율·판매율·소개료율은 사이트 설정</li>
                 </ol>
             </div>
         </div>

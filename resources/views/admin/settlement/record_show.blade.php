@@ -133,26 +133,22 @@
                             <td class="text-end fw-bold">{{ number_format($record->parent_paid) }}원</td>
                         </tr>
                         <tr>
-                            <th class="text-muted">출판사 매입 (55%)</th>
+                            <th class="text-muted">출판사 매입</th>
                             <td class="text-end text-danger">-{{ number_format($record->publisher_cost) }}원</td>
                         </tr>
                         <tr>
-                            <th class="text-muted">PG 수수료 (2%)</th>
-                            <td class="text-end text-danger">-{{ number_format($record->pg_fee) }}원</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">BookSys 중계</th>
-                            <td class="text-end text-danger">-{{ number_format($record->booksys_fee) }}원</td>
+                            <th class="text-muted">학원 소개료 (공제 전)</th>
+                            <td class="text-end text-danger">-{{ number_format($record->academy_bonus) }}원</td>
                         </tr>
                         @if($record->shipping_fee > 0)
                             <tr>
-                                <th class="text-muted">배송비</th>
-                                <td class="text-end text-danger">-{{ number_format($record->shipping_fee) }}원</td>
+                                <th class="text-muted">배송비 (실비 — 분배 제외)</th>
+                                <td class="text-end text-muted">{{ number_format($record->shipping_fee) }}원</td>
                             </tr>
                         @endif
                         <tr>
                             <th class="text-muted">사입자 마진</th>
-                            <td class="text-end">-{{ number_format($record->agent_margin) }}원</td>
+                            <td class="text-end">-{{ number_format($record->agent_net) }}원</td>
                         </tr>
                         <tr class="border-top">
                             <th class="navy">총판 순이익</th>
@@ -170,15 +166,7 @@
                 <table class="table table-sm mb-0">
                     <tbody>
                         <tr>
-                            <th class="text-muted">사입자 마진 (명목)</th>
-                            <td class="text-end">{{ number_format($record->agent_margin) }}원</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">학원 도매 우대 차감</th>
-                            <td class="text-end text-danger">-{{ number_format($record->academy_bonus) }}원</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">사입자 실 마진</th>
+                            <th class="text-muted">사입자 마진 (세전)</th>
                             <td class="text-end">{{ number_format($record->agent_net) }}원</td>
                         </tr>
                         @if($record->agent_withholding_tax > 0)
