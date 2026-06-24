@@ -11,7 +11,7 @@
     </div>
     <nav class="admin-nav">
         <a href="{{ route('admin.dashboard') }}" class="nav-item {{ $is('admin.dashboard') }}">
-            <i class="bi bi-speedometer2"></i> 대시보드
+            <i class="bi bi-speedometer2"></i> 종합현황
         </a>
         <div class="nav-section">거래·도서</div>
         <a href="{{ route('admin.orders.index') }}" class="nav-item {{ $is('admin.orders') }}">

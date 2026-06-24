@@ -25,7 +25,7 @@
             {{ $description ?? '이 기능은 곧 제공됩니다.' }}
         </p>
         <a href="{{ route('mypage') }}" class="btn btn-outline-navy">
-            <i class="bi bi-arrow-left"></i> 대시보드로
+            <i class="bi bi-arrow-left"></i> 종합현황으로
         </a>
     </div>
 </div>

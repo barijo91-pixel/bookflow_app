@@ -40,7 +40,7 @@
 
     <nav class="public-nav">
         <a href="{{ route('mypage') }}" class="nav-item {{ $is('mypage') }}">
-            <i class="bi bi-speedometer2"></i> 대시보드
+            <i class="bi bi-speedometer2"></i> 종합현황
         </a>
 
         @switch($user->role_code)

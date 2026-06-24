@@ -1,5 +1,5 @@
 @extends('admin.layouts.admin')
-@section('title', '대시보드')
+@section('title', '종합현황')
 
 @section('content')
 @php
@@ -8,7 +8,7 @@
     $currentIp = session('current_login_ip');
 @endphp
 <div class="page-header">
-    <h1 class="h4 mb-0">대시보드</h1>
+    <h1 class="h4 mb-0">종합현황</h1>
     <div class="text-muted small text-end">
         <div>{{ now()->format('Y-m-d (D) H:i') }}</div>
         @if($prevLoginText)
