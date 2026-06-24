@@ -305,9 +305,12 @@ class MyPageController extends Controller
                 ->select('v.id', 'v.name', 'v.trade_type', 'avd.discount_rate')
                 ->orderBy('v.name')->get();
         } else {
-            $vendors = DB::table('vendors')->select('id', 'name', 'trade_type')
-                ->selectRaw('30 as discount_rate')
-                ->orderBy('name')->get();
+            // 총판: 각 학원의 실제 할인율(담당 영업자 매핑값) — 없으면 거래구분 기본(도매 30 / 소매 10)
+            $vendors = DB::table('vendors as v')
+                ->whereNull('v.deleted_at')
+                ->select('v.id', 'v.name', 'v.trade_type')
+                ->selectRaw("COALESCE((SELECT discount_rate FROM agent_vendor_discounts WHERE vendor_id = v.id AND is_active = 1 ORDER BY id LIMIT 1), CASE WHEN v.trade_type = 'wholesale' THEN 30 ELSE 10 END) as discount_rate")
+                ->orderBy('v.name')->get();
         }
 
         // 선택된 학원의 할인율 + 거래구분 (도매=할인율 정산 / 소매=소개료 정산)
