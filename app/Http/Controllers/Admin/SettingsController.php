@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 
 class SettingsController extends Controller
 {
-    private array $groupOrder = ['company', 'app', 'integration', 'settlement', 'seo', 'policy'];
+    private array $groupOrder = ['company', 'app', 'integration', 'settlement', 'ai', 'seo', 'policy'];
     private array $groupLabels = [
         'company'     => '회사 정보',
         'app'         => '앱 다운로드',
         'integration' => '외부 연동',
         'settlement'  => '정산',
+        'ai'          => 'AI 인식',
         'seo'         => 'SEO',
         'policy'      => '정책',
     ];

@@ -59,6 +59,12 @@ class SiteSettingSeeder extends Seeder
             ['settlement', 'b2c_pub_rate', '55', 'number', '출판사→총판 공급율 (%)', '소매 마진풀 계산의 매입 기준율', 10],
             ['settlement', 'b2c_sell_rate', '90', 'number', '학부모 판매율 (%)', '도서정가제 — 보통 90% (정가 -10%)', 20],
             ['settlement', 'b2c_referral_rate', '20', 'number', '학원 소개료율 (%)', '마진풀 대비 비율. 3.3% 원천징수 후 학원에 지급', 30],
+
+            // AI 인식 (Claude Vision — 책 표지 사진 인식)
+            ['ai', 'anthropic_api_key', '', 'password', 'Claude API Key', '책 사진 인식용 (sk-ant-...). 미입력 시 기능 비활성', 10],
+            ['ai', 'ai_vision_model', 'claude-haiku-4-5', 'text', '인식 모델', 'claude-haiku-4-5(저렴·기본) / claude-sonnet-4-6(정확)', 20],
+            ['ai', 'ai_usd_to_krw', '1400', 'number', '환율 (USD→KRW)', '비용 추정용', 30],
+            ['ai', 'ai_book_recognition_monthly_limit', '100', 'number', '사용자당 월 인식 한도', '0 = 무제한', 40],
         ];
 
         foreach ($settings as [$group, $key, $value, $type, $label, $desc, $sort]) {
