@@ -56,6 +56,9 @@
                 <a href="{{ route('my.agents.index') }}" class="nav-item {{ $startsWith('my.agents') }}">
                     <i class="bi bi-person-badge"></i> 영업자 관리
                 </a>
+                <a href="{{ route('my.academies.index') }}" class="nav-item {{ $startsWith('my.academies') }}">
+                    <i class="bi bi-building"></i> 학원 목록
+                </a>
                 <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
                     <i class="bi bi-graph-up-arrow"></i> 수익 시뮬레이션
                 </a>

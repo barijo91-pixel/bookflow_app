@@ -123,6 +123,86 @@ class DistributorAgentController extends Controller
         ]);
     }
 
+    /** 본 총판 산하 영업자인지 확인 */
+    private function authorizeOwnedAgent(User $agent): User
+    {
+        $dist = $this->authorizeDistributor();
+        $owned = DB::table('user_relations')
+            ->where('parent_user_id', $dist->id)
+            ->where('child_user_id', $agent->id)
+            ->where('relation_type', 'distributor_agent')
+            ->where('status', 'active')->exists();
+        if (! $owned || $agent->role_code !== 'agent') {
+            abort(403, '본 총판 산하 영업자가 아닙니다.');
+        }
+        return $dist;
+    }
+
+    /** 영업자 정보 수정 폼 */
+    public function edit(User $user)
+    {
+        $this->authorizeOwnedAgent($user);
+        $bankOptions = DB::table('codes')->where('group_code', 'bank')->orderBy('sort_order')->get();
+        return view('public.mypage.agent_edit', [
+            'user'        => Auth::user(),
+            'agent'       => $user,
+            'bankOptions' => $bankOptions,
+        ]);
+    }
+
+    /** 영업자 정보 수정 저장 (로그인 아이디는 변경 불가) */
+    public function update(Request $request, User $user)
+    {
+        $this->authorizeOwnedAgent($user);
+
+        $data = $request->validate([
+            'user_name'     => ['required', 'string', 'max:80'],
+            'user_phone'    => ['required', 'string', 'max:20'],
+            'user_email'    => ['nullable', 'email', 'max:150'],
+            'status_code'   => ['required', 'in:active,suspended'],
+            'business_type' => ['nullable', 'in:none,individual_simple,individual_general,corporate'],
+            'business_no'   => ['nullable', 'string', 'max:20'],
+            'business_name' => ['nullable', 'string', 'max:100'],
+            'bank_code'     => ['nullable', 'string', 'max:10'],
+            'bank_account'  => ['nullable', 'string', 'max:50'],
+            'bank_holder'   => ['nullable', 'string', 'max:50'],
+        ], [], ['user_name' => '이름', 'user_phone' => '휴대폰']);
+
+        $before = $user->only(['name', 'phone', 'email', 'status_code', 'business_type']);
+        $user->update([
+            'name'          => $data['user_name'],
+            'phone'         => preg_replace('/[^0-9]/', '', (string) $data['user_phone']),
+            'email'         => $data['user_email'] ?? null,
+            'status_code'   => $data['status_code'],
+            'business_type' => $data['business_type'] ?? 'none',
+            'business_no'   => $data['business_no'] ?? null,
+            'business_name' => $data['business_name'] ?? null,
+            'bank_code'     => $data['bank_code'] ?? null,
+            'bank_account'  => $data['bank_account'] ?? null,
+            'bank_holder'   => $data['bank_holder'] ?? null,
+        ]);
+
+        AuditLog::log('users', $user->id, 'distributor_update_agent', $before,
+            $user->only(['name', 'phone', 'email', 'status_code', 'business_type']));
+
+        return redirect()->route('my.agents.index')
+            ->with('success', $user->name . ' 영업자 정보가 수정되었습니다.');
+    }
+
+    /** 영업자 비밀번호 초기화 (임시 비번 발급) */
+    public function resetPassword(User $user)
+    {
+        $this->authorizeOwnedAgent($user);
+
+        $plainPw = $this->genPassword(8);
+        $user->update(['password' => $plainPw, 'password_change_required' => true]);
+
+        AuditLog::log('users', $user->id, 'distributor_reset_agent_pw', null, ['by' => Auth::id()]);
+
+        return redirect()->route('my.agents.index')
+            ->with('success', $user->name . ' 비밀번호를 초기화했습니다 → ' . $plainPw . ' (1회 표시 — 영업자에게 안전하게 전달하세요)');
+    }
+
     /** 사람이 읽기 쉬운 임시 비밀번호 (혼동 문자 제외) */
     private function genPassword(int $length = 8): string
     {

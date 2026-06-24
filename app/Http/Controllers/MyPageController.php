@@ -1079,6 +1079,52 @@ class MyPageController extends Controller
         ));
     }
 
+    /** 총판 산하 학원 목록 (소속 영업자들이 관리하는 학원) */
+    public function academiesIndex(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'distributor') {
+            abort(403, '총판만 접근 가능합니다.');
+        }
+
+        $q = trim((string) $request->query('q'));
+
+        // 산하 영업자 ids
+        $agentIds = DB::table('user_relations')
+            ->where('parent_user_id', $user->id)
+            ->where('relation_type', 'distributor_agent')
+            ->where('status', 'active')
+            ->pluck('child_user_id');
+
+        $academies = collect();
+        if ($agentIds->isNotEmpty()) {
+            $query = DB::table('agent_vendor_discounts as avd')
+                ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
+                ->join('users as au', 'au.id', '=', 'avd.agent_user_id')
+                ->leftJoin('regions as rg', 'rg.id', '=', 'v.region_id')
+                ->leftJoin('regions as p', 'p.id', '=', 'rg.parent_id')
+                ->whereIn('avd.agent_user_id', $agentIds)
+                ->where('avd.is_active', true)
+                ->whereNull('v.deleted_at')
+                ->select(
+                    'v.id', 'v.name', 'v.trade_type', 'v.status_code', 'v.owner_name', 'v.mobile',
+                    'avd.discount_rate',
+                    'au.name as agent_name',
+                    'rg.name as sigungu_name', 'p.name as sido_name'
+                );
+            if ($q !== '') {
+                $query->where(function ($w) use ($q) {
+                    $w->where('v.name', 'like', "%{$q}%")
+                      ->orWhere('au.name', 'like', "%{$q}%")
+                      ->orWhere('v.owner_name', 'like', "%{$q}%");
+                });
+            }
+            $academies = $query->orderBy('v.name')->get();
+        }
+
+        return view('public.mypage.academies', compact('user', 'academies', 'q'));
+    }
+
     /** 담당 학원 (영업자) */
     public function vendorsIndex(Request $request)
     {

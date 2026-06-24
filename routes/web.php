@@ -110,6 +110,11 @@ Route::middleware('auth')->group(function () {
         Route::get('agents',         [\App\Http\Controllers\MyPageController::class, 'agentsIndex'])->name('agents.index');
         Route::get('agents/create',  [\App\Http\Controllers\Public\DistributorAgentController::class, 'create'])->name('agents.create');
         Route::post('agents',        [\App\Http\Controllers\Public\DistributorAgentController::class, 'store'])->name('agents.store');
+        Route::get('agents/{user}/edit', [\App\Http\Controllers\Public\DistributorAgentController::class, 'edit'])->name('agents.edit');
+        Route::put('agents/{user}',  [\App\Http\Controllers\Public\DistributorAgentController::class, 'update'])->name('agents.update');
+        Route::post('agents/{user}/reset-password', [\App\Http\Controllers\Public\DistributorAgentController::class, 'resetPassword'])->name('agents.reset_password');
+        // 총판 산하 학원 목록 (소속 영업자들의 학원)
+        Route::get('academies',      [\App\Http\Controllers\MyPageController::class, 'academiesIndex'])->name('academies.index');
 
         // 영업자 전용
         Route::get('vendors',    [\App\Http\Controllers\MyPageController::class, 'vendorsIndex'])->name('vendors.index');

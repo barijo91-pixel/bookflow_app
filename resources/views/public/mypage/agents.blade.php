@@ -64,6 +64,7 @@
                     <th class="text-end">주문 누계</th>
                     <th>최근 로그인</th>
                     <th>상태</th>
+                    <th class="text-end">관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -104,10 +105,13 @@
                                 @default <span class="badge bg-light text-dark">{{ $a->status_code }}</span>
                             @endswitch
                         </td>
+                        <td class="text-end">
+                            <a href="{{ route('my.agents.edit', $a->id) }}" class="btn btn-sm btn-outline-secondary" title="정보 수정"><i class="bi bi-pencil"></i></a>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
+                        <td colspan="8" class="text-center text-muted py-5">
                             <i class="bi bi-person-badge" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">소속 영업자가 없습니다.</p>
                             <a href="{{ route('my.agents.create') }}" class="btn btn-sm btn-navy mt-2">
