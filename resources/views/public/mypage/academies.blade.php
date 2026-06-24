@@ -1,10 +1,10 @@
 @extends('public.layouts.app')
-@section('title', '학원 목록')
+@section('title', '거래처(학원)')
 @section('max_width', '1100px')
 
 @section('content')
 <div class="mb-3">
-    <h1 class="h4 navy mb-1"><i class="bi bi-building"></i> 학원 목록
+    <h1 class="h4 navy mb-1"><i class="bi bi-building"></i> 거래처(학원)
         <small class="text-muted fs-6">{{ $academies->count() }}곳</small>
     </h1>
     <p class="text-muted small mb-0">본 총판 산하 영업자들이 관리하는 학원(거래처) 전체</p>
