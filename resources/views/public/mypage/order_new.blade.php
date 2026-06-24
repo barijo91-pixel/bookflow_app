@@ -125,6 +125,15 @@
             </button>
         </div>
 
+        {{-- AI 표지 인식 (바코드가 없거나 안 읽히는 책) --}}
+        <div class="mt-2 pt-2 border-top">
+            <label for="visionFileInput" class="btn btn-sm btn-outline-primary w-100 mb-0">
+                <i class="bi bi-camera-fill"></i> 바코드가 없어요 — 표지 사진으로 찾기 (AI)
+            </label>
+            <input type="file" id="visionFileInput" accept="image/*" capture="environment" style="display:none">
+            <div id="visionResult" class="small mt-2"></div>
+        </div>
+
         {{-- 카메라 스캔 모달 (풀스크린) --}}
         <div id="scanCameraModal" class="scan-camera-modal" role="dialog" aria-modal="true">
             <div class="scan-camera-box">
@@ -954,6 +963,86 @@ function toggleFilterBody() {
         if (barcodeCard.style.display === 'none') showBarcode(); else hideBarcode();
     });
     closeBarcodeBtn?.addEventListener('click', hideBarcode);
+})();
+
+// 📚 AI 표지 인식 → cart.recognize (바코드 없는 책 보완)
+(function () {
+    const fileInput = document.getElementById('visionFileInput');
+    const resultEl  = document.getElementById('visionResult');
+    if (!fileInput) return;
+
+    const recognizeUrl = @json(route('my.cart.recognize'));
+    const scanUrl      = @json(route('my.cart.scan'));
+    const cartKey      = @json($cartKey);
+    const csrf = '{{ csrf_token() }}';
+
+    function resizeImage(file, maxPx) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            const img = new Image();
+            reader.onload = e => { img.src = e.target.result; };
+            reader.onerror = reject;
+            img.onload = () => {
+                let w = img.width, h = img.height;
+                if (w > maxPx || h > maxPx) { const r = Math.min(maxPx / w, maxPx / h); w = Math.round(w * r); h = Math.round(h * r); }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function addByIsbn(isbn) {
+        const r = await fetch(scanUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+            body: JSON.stringify({ isbn: isbn, cart_key: cartKey, qty: 1 }),
+        });
+        return r.json();
+    }
+
+    fileInput.addEventListener('change', async function () {
+        const file = this.files[0];
+        if (!file) return;
+        resultEl.innerHTML = '<span class="text-muted"><i class="bi bi-hourglass-split"></i> 표지 인식 중... (몇 초 걸려요)</span>';
+        try {
+            const dataUrl = await resizeImage(file, 1600);
+            const res = await fetch(recognizeUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                body: JSON.stringify({ image: dataUrl, cart_key: cartKey, qty: 1 }),
+            });
+            const j = await res.json();
+            if (j.ok) {
+                resultEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> ' + j.msg + '</span>';
+                setTimeout(() => location.reload(), 900);
+            } else if (j.candidates && j.candidates.length) {
+                let html = '<div class="text-warning mb-1">' + j.msg + '</div>';
+                j.candidates.forEach(b => {
+                    html += '<button type="button" class="btn btn-sm btn-outline-secondary d-block w-100 text-start mb-1 vision-pick" data-isbn="' + (b.isbn || '') + '">'
+                          + b.title + ' <span class="text-muted">' + Number(b.price).toLocaleString() + '원</span></button>';
+                });
+                resultEl.innerHTML = html;
+                resultEl.querySelectorAll('.vision-pick').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const isbn = btn.dataset.isbn;
+                        if (!isbn) { resultEl.innerHTML = '<span class="text-danger">이 후보는 ISBN이 없어 직접 검색해 주세요.</span>'; return; }
+                        const jj = await addByIsbn(isbn);
+                        if (jj.ok) { resultEl.innerHTML = '<span class="text-success">' + jj.msg + '</span>'; setTimeout(() => location.reload(), 900); }
+                        else { resultEl.innerHTML = '<span class="text-danger">' + jj.msg + '</span>'; }
+                    });
+                });
+            } else {
+                resultEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> ' + j.msg + '</span>';
+            }
+        } catch (e) {
+            resultEl.innerHTML = '<span class="text-danger">인식 요청 실패: ' + (e.message || e) + '</span>';
+        }
+        this.value = '';
+    });
 })();
 </script>
 @endpush

@@ -1524,6 +1524,79 @@ class MyPageController extends Controller
         ]);
     }
 
+    /**
+     * 책 표지 사진 → Claude Vision 인식 → 장바구니 추가 (바코드 없는 책 보완)
+     * - ISBN이 인식되면 바로 담기, 제목만 인식되면 후보 도서 반환(JS에서 선택)
+     */
+    public function cartRecognizeAdd(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'academy') {
+            return response()->json(['ok' => false, 'msg' => '학원만 사용 가능합니다.'], 403);
+        }
+
+        $data = $request->validate([
+            'image'    => ['required', 'string'],   // base64 (data URL 허용)
+            'cart_key' => ['required', 'string'],
+            'qty'      => ['nullable', 'integer', 'min:1', 'max:99'],
+        ]);
+
+        // data URL(data:image/jpeg;base64,...) → media_type + base64 분리
+        $raw = $data['image'];
+        $mediaType = 'image/jpeg';
+        if (preg_match('#^data:(image/[a-zA-Z+.\-]+);base64,(.+)$#s', $raw, $m)) {
+            $mediaType = $m[1];
+            $raw = $m[2];
+        }
+
+        $result = \App\Services\BookVisionService::recognize($raw, $mediaType, $user->id);
+        if (! $result['ok']) {
+            return response()->json(['ok' => false, 'msg' => $result['reason'] ?? 'AI 인식에 실패했습니다.'], 422);
+        }
+
+        $info  = $result['data'] ?? [];
+        $isbn  = preg_replace('/[^0-9Xx]/', '', (string) ($info['isbn'] ?? ''));
+        $title = trim((string) ($info['title'] ?? ''));
+
+        // 1) ISBN 매칭 → 바로 담기
+        if (strlen($isbn) === 13 || strlen($isbn) === 10) {
+            $book = DB::table('books')->whereNull('deleted_at')
+                ->where('isbn', $isbn)->where('status_code', 'selling')
+                ->select('id', 'isbn', 'title', 'price')->first();
+            if ($book) {
+                $qty = (int) ($data['qty'] ?? 1);
+                $cart = $request->session()->get($data['cart_key'], []);
+                $cart[$book->id] = ($cart[$book->id] ?? 0) + $qty;
+                $request->session()->put($data['cart_key'], $cart);
+                return response()->json([
+                    'ok' => true, 'matched' => 'isbn', 'book' => $book,
+                    'qty' => $cart[$book->id], 'recognized' => $info,
+                    'msg' => "{$book->title} 인식 — 장바구니에 담았습니다.",
+                    'cart_count' => count($cart), 'cart_total_qty' => array_sum($cart),
+                ]);
+            }
+        }
+
+        // 2) 제목으로 후보 검색 (JS에서 선택 → cart.scan)
+        $candidates = collect();
+        if ($title !== '') {
+            $candidates = DB::table('books')->whereNull('deleted_at')
+                ->where('status_code', 'selling')
+                ->where('title', 'like', '%' . $title . '%')
+                ->select('id', 'isbn', 'title', 'price')->limit(8)->get();
+        }
+
+        return response()->json([
+            'ok' => false, 'matched' => 'none', 'recognized' => $info,
+            'candidates' => $candidates,
+            'msg' => $candidates->isNotEmpty()
+                ? '표지에서 "' . $title . '" 인식 — 아래 후보에서 선택하세요.'
+                : ($title !== ''
+                    ? '"' . $title . '"(으)로 등록된 도서를 찾지 못했습니다. 직접 검색해 주세요.'
+                    : '표지에서 책 정보를 읽지 못했습니다. 더 또렷한 사진으로 시도해 주세요.'),
+        ]);
+    }
+
     /** 장바구니 - 추가 */
     public function cartAdd(Request $request)
     {
