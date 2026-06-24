@@ -48,7 +48,7 @@
                     @if($selectedTradeType === 'wholesale')
                         도매 학원 · 적용 할인율 <strong>{{ (int) $discountRate }}%</strong>
                     @else
-                        소매 학원 · <strong>소개료 모델</strong> (할인율 미적용)
+                        소매 학원 · 학부모 할인율 <strong>{{ (int) $discountRate }}%</strong> (정가의 {{ 100 - (int) $discountRate }}% 판매)
                     @endif
                 </div>
             @endif
@@ -125,7 +125,7 @@
                     <table class="table table-sm mb-2">
                         <tbody>
                             <tr>
-                                <th class="text-muted" style="width:55%;">학부모 판매가</th>
+                                <th class="text-muted" style="width:55%;">학부모 판매가 ({{ round((1 - $b2c['sell_rate']) * 100) }}% 할인)</th>
                                 <td class="text-end">{{ number_format($b2c['retail_sale']) }}원</td>
                             </tr>
                             <tr class="table-info">

@@ -322,7 +322,9 @@ class MyPageController extends Controller
         }
 
         $b2b = \App\Services\SettlementService::calcB2B($unitPrice, $qty, $discountRate, $splitRatio);
-        $b2c = \App\Services\SettlementService::calcB2C($unitPrice, $qty, 0, $splitRatio);
+        // 소매: 학원 할인율 = 학부모 할인율(공급 비율) → 판매율에 반영 (10% 고정 아님, 학원별 가변)
+        $b2cSellRate = ($selectedTradeType === 'retail') ? max(0, (100 - $discountRate) / 100) : null;
+        $b2c = \App\Services\SettlementService::calcB2C($unitPrice, $qty, 0, $splitRatio, null, $b2cSellRate, null);
 
         $businessType = $user->business_type ?? 'none';
         $b2bTax = \App\Services\TaxService::calc($businessType, max(0, $b2b['agent_margin']));
