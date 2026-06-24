@@ -86,10 +86,6 @@
             </div>
             <div class="col-md-2 d-flex gap-1">
                 <button type="submit" class="btn btn-sm btn-navy flex-grow-1"><i class="bi bi-search"></i> 검색</button>
-                <button type="button" class="btn btn-sm btn-warning" id="toggleBarcodeBtn"
-                        title="바코드 스캔 열기/닫기">
-                    <i class="bi bi-upc-scan"></i>
-                </button>
             </div>
             {{-- 현재 필터 hidden (필터 유지) --}}
             @if($activeFilters['school'])   <input type="hidden" name="school"   value="{{ $activeFilters['school'] }}"> @endif
@@ -100,7 +96,28 @@
     </div>
 </div>
 
-{{-- 바코드 스캔 입력 — 검색 옆 [📷] 버튼으로 토글 (기본 접힘) --}}
+{{-- ★ AI 책 사진 인식 (메인) — 표지를 찍으면 자동으로 찾아 담기 --}}
+<div class="card section-card mb-3" style="border-left:4px solid #0d6efd !important;">
+    <div class="card-body py-3">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <strong><i class="bi bi-camera-fill text-primary fs-5"></i> 책 사진으로 찾기</strong>
+            <span class="badge bg-primary">AI</span>
+            <span class="small text-muted d-none d-md-inline">표지를 찍으면 책을 자동으로 찾아 담아요 (바코드 없어도 OK)</span>
+        </div>
+        <label for="visionFileInput" class="btn btn-primary w-100">
+            <i class="bi bi-camera-fill"></i> 책 표지 사진 찍기 / 선택
+        </label>
+        <input type="file" id="visionFileInput" accept="image/*" capture="environment" style="display:none">
+        <div id="visionResult" class="small mt-2"></div>
+        <div class="mt-2 text-end">
+            <button type="button" class="btn btn-sm btn-link text-muted p-0" id="toggleBarcodeBtn">
+                <i class="bi bi-upc-scan"></i> 바코드로 스캔 (보조)
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- 바코드 스캔 (보조 — 기본 숨김, 위 "바코드로 스캔" 링크로 토글) --}}
 <div class="card section-card mb-3" id="barcodeCard" style="display:none; border-left:4px solid #ffc107 !important;">
     <div class="card-body py-3">
         <div class="d-flex align-items-center gap-2 mb-2">
@@ -123,15 +140,6 @@
             <button type="button" id="scanAddBtn" class="btn btn-warning">
                 <i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">담기</span>
             </button>
-        </div>
-
-        {{-- AI 표지 인식 (바코드가 없거나 안 읽히는 책) --}}
-        <div class="mt-2 pt-2 border-top">
-            <label for="visionFileInput" class="btn btn-sm btn-outline-primary w-100 mb-0">
-                <i class="bi bi-camera-fill"></i> 바코드가 없어요 — 표지 사진으로 찾기 (AI)
-            </label>
-            <input type="file" id="visionFileInput" accept="image/*" capture="environment" style="display:none">
-            <div id="visionResult" class="small mt-2"></div>
         </div>
 
         {{-- 카메라 스캔 모달 (풀스크린) --}}
