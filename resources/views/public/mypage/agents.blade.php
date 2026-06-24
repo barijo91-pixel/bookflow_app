@@ -106,7 +106,7 @@
                             @endswitch
                         </td>
                         <td class="text-end">
-                            <a href="{{ route('my.agents.edit', $a->id) }}" class="btn btn-sm btn-outline-secondary" title="정보 수정"><i class="bi bi-pencil"></i></a>
+                            <a href="{{ route('my.agents.edit', $a->id) }}" class="btn btn-sm btn-primary" title="정보 수정"><i class="bi bi-pencil"></i> 수정</a>
                         </td>
                     </tr>
                 @empty
