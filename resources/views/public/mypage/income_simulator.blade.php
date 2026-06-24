@@ -1,10 +1,10 @@
 @extends('public.layouts.app')
-@section('title', '수익 시뮬레이션')
+@section('title', '예상 수익보기')
 
 @section('content')
 <div class="container py-3">
     <h1 class="h5 mb-3">
-        <i class="bi bi-graph-up-arrow"></i> 수익 시뮬레이션
+        <i class="bi bi-graph-up-arrow"></i> 예상 수익보기
         <small class="text-muted fs-6">내 거래처 기준 예상 수익 계산</small>
     </h1>
 
