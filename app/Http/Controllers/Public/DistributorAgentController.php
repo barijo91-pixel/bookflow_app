@@ -31,8 +31,17 @@ class DistributorAgentController extends Controller
         $user = $this->authorizeDistributor();
 
         $bankOptions = DB::table('codes')->where('group_code', 'bank')->orderBy('sort_order')->get();
+        [$sidos, $sigungus] = $this->regionOptions();
 
-        return view('public.mypage.agent_create', compact('user', 'bankOptions'));
+        return view('public.mypage.agent_create', compact('user', 'bankOptions', 'sidos', 'sigungus'));
+    }
+
+    /** 지역 선택 옵션 (시도 전체 + 시군구 전체 — 폼에서 JS로 시도별 필터) */
+    private function regionOptions(): array
+    {
+        $sidos = DB::table('regions')->where('level', 'sido')->orderBy('sort_order')->get(['id', 'name']);
+        $sigungus = DB::table('regions')->where('level', 'sigungu')->orderBy('sort_order')->get(['id', 'name', 'parent_id']);
+        return [$sidos, $sigungus];
     }
 
     /** 영업자 계정 생성 + 본 총판 산하로 매핑 */
@@ -46,6 +55,7 @@ class DistributorAgentController extends Controller
             'user_phone'    => ['required', 'string', 'max:20'],
             'user_email'    => ['nullable', 'email', 'max:150'],
             'user_password' => ['nullable', 'string', 'min:8', 'max:50'],
+            'region_id'     => ['nullable', 'integer', 'exists:regions,id'],
             // 정산·세무 정보 (선택 — 영업자 본인이 추후 정보수정에서 보완 가능)
             'business_type' => ['nullable', 'in:none,individual_simple,individual_general,corporate'],
             'business_no'   => ['nullable', 'string', 'max:20'],
@@ -82,6 +92,7 @@ class DistributorAgentController extends Controller
                 'password'    => $plainPw, // 모델 캐스트로 해시
                 'password_change_required' => true,
                 'role_code'   => 'agent',
+                'region_id'   => $data['region_id'] ?? null,
                 'status_code' => 'active',
                 'approved_by' => $user->id,
                 'approved_at' => now(),
@@ -143,10 +154,17 @@ class DistributorAgentController extends Controller
     {
         $this->authorizeOwnedAgent($user);
         $bankOptions = DB::table('codes')->where('group_code', 'bank')->orderBy('sort_order')->get();
+        [$sidos, $sigungus] = $this->regionOptions();
+        $currentSido = $user->region_id
+            ? DB::table('regions')->where('id', $user->region_id)->value('parent_id')
+            : null;
         return view('public.mypage.agent_edit', [
             'user'        => Auth::user(),
             'agent'       => $user,
             'bankOptions' => $bankOptions,
+            'sidos'       => $sidos,
+            'sigungus'    => $sigungus,
+            'currentSido' => $currentSido,
         ]);
     }
 
@@ -160,6 +178,7 @@ class DistributorAgentController extends Controller
             'user_phone'    => ['required', 'string', 'max:20'],
             'user_email'    => ['nullable', 'email', 'max:150'],
             'status_code'   => ['required', 'in:active,suspended'],
+            'region_id'     => ['nullable', 'integer', 'exists:regions,id'],
             'business_type' => ['nullable', 'in:none,individual_simple,individual_general,corporate'],
             'business_no'   => ['nullable', 'string', 'max:20'],
             'business_name' => ['nullable', 'string', 'max:100'],
@@ -174,6 +193,7 @@ class DistributorAgentController extends Controller
             'phone'         => preg_replace('/[^0-9]/', '', (string) $data['user_phone']),
             'email'         => $data['user_email'] ?? null,
             'status_code'   => $data['status_code'],
+            'region_id'     => $data['region_id'] ?? null,
             'business_type' => $data['business_type'] ?? 'none',
             'business_no'   => $data['business_no'] ?? null,
             'business_name' => $data['business_name'] ?? null,

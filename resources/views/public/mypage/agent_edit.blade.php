@@ -43,6 +43,20 @@
                         <option value="suspended" @selected(old('status_code', $agent->status_code) === 'suspended')>정지</option>
                     </select>
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">활동 지역 — 시도</label>
+                    <select name="region_sido" id="agentSido" class="form-select" onchange="filterAgentSigungu()">
+                        <option value="">선택 안함</option>
+                        @foreach($sidos as $s)<option value="{{ $s->id }}" @selected(old('region_sido', $currentSido) == $s->id)>{{ $s->name }}</option>@endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">시군구</label>
+                    <select name="region_id" id="agentSigungu" class="form-select">
+                        <option value="">선택 안함</option>
+                        @foreach($sigungus as $sg)<option value="{{ $sg->id }}" data-parent="{{ $sg->parent_id }}" @selected(old('region_id', $agent->region_id) == $sg->id)>{{ $sg->name }}</option>@endforeach
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -113,4 +127,19 @@
         </form>
     </div>
 </div>
+
+<script>
+function filterAgentSigungu(){
+    var sido = document.getElementById('agentSido').value;
+    var sg = document.getElementById('agentSigungu');
+    if (!sg) return;
+    for (var i = 0; i < sg.options.length; i++) {
+        var o = sg.options[i];
+        if (!o.value) continue;
+        o.hidden = (String(o.dataset.parent) !== String(sido));
+    }
+    if (sg.selectedOptions[0] && sg.selectedOptions[0].hidden) sg.value = '';
+}
+document.addEventListener('DOMContentLoaded', filterAgentSigungu);
+</script>
 @endsection

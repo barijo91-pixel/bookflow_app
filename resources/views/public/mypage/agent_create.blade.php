@@ -38,6 +38,20 @@
                     <label class="form-label small text-muted mb-1">이메일 <small class="text-muted">(선택)</small></label>
                     <input type="email" name="user_email" class="form-control" value="{{ old('user_email') }}" maxlength="150">
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">활동 지역 — 시도 <small class="text-muted">(선택)</small></label>
+                    <select name="region_sido" id="agentSido" class="form-select" onchange="filterAgentSigungu()">
+                        <option value="">선택 안함</option>
+                        @foreach($sidos as $s)<option value="{{ $s->id }}" @selected(old('region_sido') == $s->id)>{{ $s->name }}</option>@endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">시군구</label>
+                    <select name="region_id" id="agentSigungu" class="form-select">
+                        <option value="">선택 안함</option>
+                        @foreach($sigungus as $sg)<option value="{{ $sg->id }}" data-parent="{{ $sg->parent_id }}" @selected(old('region_id') == $sg->id)>{{ $sg->name }}</option>@endforeach
+                    </select>
+                </div>
                 <div class="col-md-12">
                     <label class="form-label small text-muted mb-1">초기 비밀번호 <small class="text-muted">(선택 — 비우면 자동 생성)</small></label>
                     <input type="text" name="user_password" class="form-control" minlength="8" maxlength="50" placeholder="비워두면 8자 자동 생성" autocomplete="off">
@@ -111,4 +125,19 @@
         </button>
     </div>
 </form>
+
+<script>
+function filterAgentSigungu(){
+    var sido = document.getElementById('agentSido').value;
+    var sg = document.getElementById('agentSigungu');
+    if (!sg) return;
+    for (var i = 0; i < sg.options.length; i++) {
+        var o = sg.options[i];
+        if (!o.value) continue;
+        o.hidden = (String(o.dataset.parent) !== String(sido));
+    }
+    if (sg.selectedOptions[0] && sg.selectedOptions[0].hidden) sg.value = '';
+}
+document.addEventListener('DOMContentLoaded', filterAgentSigungu);
+</script>
 @endsection
