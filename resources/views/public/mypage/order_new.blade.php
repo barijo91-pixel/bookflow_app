@@ -102,7 +102,7 @@
         <div class="d-flex align-items-center gap-2 mb-2">
             <strong><i class="bi bi-camera-fill text-primary fs-5"></i> 책 사진으로 찾기</strong>
             <span class="badge bg-primary">AI</span>
-            <span class="small text-muted d-none d-md-inline">표지를 찍으면 책을 자동으로 찾아 담아요 (바코드 없어도 OK)</span>
+            <span class="small text-muted">표지를 찍으면 책을 자동으로 찾아 담아요 · <strong class="text-primary">실제 적용은 7월부터예요</strong></span>
         </div>
         <label for="visionFileInput" class="btn btn-primary w-100">
             <i class="bi bi-camera-fill"></i> 책 표지 사진 찍기 / 선택
