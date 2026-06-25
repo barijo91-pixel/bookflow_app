@@ -102,18 +102,31 @@
             </div>
         @endif
 
-        {{-- 학원: 내 거래처(학원) --}}
-        @if($user->role_code === 'academy' && isset($my_academies) && $my_academies->count())
+        {{-- 학원: 담당 영업자 (내 학원 자리로 이동) --}}
+        @if($user->role_code === 'academy' && isset($my_agents))
             <div class="card section-card mb-3">
-                <div class="card-header"><strong><i class="bi bi-building"></i> 내 학원</strong></div>
-                <ul class="list-group list-group-flush">
-                    @foreach($my_academies as $a)
-                        <li class="list-group-item small d-flex justify-content-between">
-                            <span>{{ $a->name }}</span>
-                            <span class="text-muted">{{ format_phone($a->mobile) }}</span>
-                        </li>
-                    @endforeach
-                </ul>
+                <div class="card-header"><strong><i class="bi bi-person-badge"></i> 담당 영업자 ({{ $my_agents->count() }})</strong></div>
+                <div class="card-body p-0">
+                    @if($my_agents->isEmpty())
+                        <div class="empty-state small">
+                            <i class="bi bi-person-x"></i>
+                            담당 영업자가 없습니다.
+                        </div>
+                    @else
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light"><tr><th>영업자</th><th>연락처</th><th class="text-end">할인율</th></tr></thead>
+                            <tbody>
+                                @foreach($my_agents as $a)
+                                    <tr>
+                                        <td class="small">{{ $a->name }}</td>
+                                        <td class="small text-muted">{{ format_phone($a->phone) }}</td>
+                                        <td class="text-end small">{{ rtrim(rtrim($a->discount_rate, '0'), '.') }}%</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+                </div>
             </div>
         @endif
     </div>
@@ -159,34 +172,6 @@
                                                 @default <span class="badge bg-light text-dark">{{ $v->status_code }}</span>
                                             @endswitch
                                         </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
-                </div>
-            </div>
-        @endif
-
-        {{-- 학원: 내 담당 영업자 --}}
-        @if($user->role_code === 'academy' && isset($my_agents))
-            <div class="card section-card mb-3">
-                <div class="card-header"><strong><i class="bi bi-person-badge"></i> 담당 영업자 ({{ $my_agents->count() }})</strong></div>
-                <div class="card-body p-0">
-                    @if($my_agents->isEmpty())
-                        <div class="empty-state small">
-                            <i class="bi bi-person-x"></i>
-                            담당 영업자가 없습니다.
-                        </div>
-                    @else
-                        <table class="table table-sm mb-0">
-                            <thead class="table-light"><tr><th>영업자</th><th>연락처</th><th class="text-end">기본 할인율</th></tr></thead>
-                            <tbody>
-                                @foreach($my_agents as $a)
-                                    <tr>
-                                        <td class="small">{{ $a->name }}</td>
-                                        <td class="small text-muted">{{ format_phone($a->phone) }}</td>
-                                        <td class="text-end small">{{ rtrim(rtrim($a->discount_rate, '0'), '.') }}%</td>
                                     </tr>
                                 @endforeach
                             </tbody>
