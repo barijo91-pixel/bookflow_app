@@ -30,8 +30,8 @@
 @if($errors->any())<div class="alert alert-danger py-2 small"><ul class="mb-0 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
 
 <div class="row g-3">
-    {{-- LEFT: 학급 정보 + 교재 --}}
-    <div class="col-lg-5">
+    {{-- LEFT: 학급 정보 --}}
+    <div class="col-lg-4">
         {{-- 학급 정보 (기본 접힘, 헤더 클릭 시 펼침) --}}
         <div class="card section-card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center" style="cursor:pointer"
@@ -78,89 +78,11 @@
             </form>
         </div>
 
-        {{-- 학부모 공유용 지정 교재 (도서주문 아님) — 기본 접힘 --}}
-        <div class="card section-card mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="toggleClassBooks()">
-                <strong><i class="bi bi-book"></i> 학부모 공유용 교재 ({{ $books->count() }})</strong>
-                <span class="small text-muted">
-                    <span class="d-none d-sm-inline">공유링크용 · 주문 아님</span>
-                    <i class="bi bi-chevron-down" id="classBooksChevron"></i>
-                </span>
-            </div>
-            <div id="classBooksBody" style="display:none;">
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
-                    <thead class="table-light"><tr>
-                        <th>도서</th><th class="text-end">수량</th><th></th>
-                    </tr></thead>
-                    <tbody>
-                        @forelse($books as $b)
-                            <tr>
-                                <td class="small">
-                                    <div class="fw-bold">{{ $b->title }}</div>
-                                    <div class="text-muted small"><code>{{ $b->isbn }}</code></div>
-                                </td>
-                                <td class="text-end small">{{ $b->qty }}</td>
-                                <td class="text-end">
-                                    <form method="POST" action="{{ route('my.classes.books.detach', [$class->id, $b->cb_id]) }}"
-                                          onsubmit="return confirm('이 교재를 제거할까요?')" class="d-inline">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr class="empty-row"><td colspan="3" class="text-center small">
-                                <i class="bi bi-book d-block mb-1"></i>
-                                등록된 교재가 없습니다. 아래에서 선택해 추가하세요.
-                            </td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="card-footer">
-                <div class="small mb-2 navy fw-bold py-1 px-2 rounded d-inline-block" style="background:#d4e0ee; border-left:3px solid #1f3a5f;">
-                    <i class="bi bi-plus-circle"></i> 교재 추가
-                </div>
-                <form method="POST" action="{{ route('my.classes.books.attach', $class->id) }}" class="row g-2">
-                    @csrf
-                    <div class="col-12">
-                        <select id="bookPublisher" class="form-select form-select-sm">
-                            <option value="">전체 출판사</option>
-                            @foreach($publisherOptions as $po)
-                                <option value="{{ $po->id }}">{{ $po->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                            <input type="text" id="bookSearchInput" class="form-control"
-                                   placeholder="교재 제목 검색" autocomplete="off">
-                        </div>
-                    </div>
-                    <div class="col-7">
-                        <select name="book_id" id="bookSelect" class="form-select form-select-sm" required>
-                            <option value="">교재 선택 ({{ count($availableBooks) }}권)</option>
-                            @foreach($availableBooks as $ab)
-                                <option value="{{ $ab->id }}" data-publisher="{{ $ab->publisher_id }}">{{ \Illuminate\Support\Str::limit($ab->title, 40) }} ({{ number_format($ab->price) }}원)</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-3">
-                        <input type="number" name="qty" value="1" min="1" max="99" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-2 d-grid">
-                        <button class="btn btn-sm btn-navy"><i class="bi bi-plus-lg"></i></button>
-                    </div>
-                </form>
-            </div>
-            </div>{{-- /classBooksBody --}}
-        </div>
+        {{-- 학급 교재(공유링크용)는 화면에서 제거 — class_books 데이터·학부모 공유링크 기능은 유지 --}}
     </div>
 
-    {{-- RIGHT: 학생 + 학부모 + 공유링크 --}}
-    <div class="col-lg-7">
+    {{-- RIGHT: 학생/학부모 (메인) --}}
+    <div class="col-lg-8">
         {{-- 학생 목록 + 추가 --}}
         <div class="card section-card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -194,16 +116,7 @@
                                 <td class="small text-muted">{{ $s->parent_phone ? format_phone($s->parent_phone) : '-' }}</td>
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-1">
-                                        {{-- 1. 공유링크 발송 --}}
-                                        <form method="POST" action="{{ route('my.classes.share', $class->id) }}"
-                                              onsubmit="return confirm('「{{ $s->parent_name ?? '학부모' }}」님에게 결제/안내 공유링크를 발송할까요?')" class="d-inline">
-                                            @csrf
-                                            <input type="hidden" name="student_id" value="{{ $s->id }}">
-                                            <button class="btn btn-sm btn-outline-navy" title="학부모에게 공유링크 발송">
-                                                <i class="bi bi-send"></i> 링크
-                                            </button>
-                                        </form>
-                                        {{-- 2. 학생 삭제 --}}
+                                        {{-- 학생 삭제 --}}
                                         <form method="POST" action="{{ route('my.classes.students.detach', [$class->id, $s->id]) }}"
                                               onsubmit="return confirm('「{{ $s->name }}」 학생을 이 학급에서 제거할까요?')" class="d-inline">
                                             @csrf @method('DELETE')
