@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('mypage')->name('my.')->group(function () {
         // 공통 - 주문 목록/상세/액션
         Route::get('orders',                       [\App\Http\Controllers\MyPageController::class, 'ordersIndex'])->name('orders.index');
+        Route::get('orders/book-search',           [\App\Http\Controllers\MyPageController::class, 'orderBookSearch'])->name('orders.book_search');
         Route::get('orders/{id}',                  [\App\Http\Controllers\MyPageController::class, 'showOrder'])->name('orders.show');
         Route::get('orders/{id}/edit',             [\App\Http\Controllers\MyPageController::class, 'editOrder'])->name('orders.edit');
         Route::put('orders/{id}',                  [\App\Http\Controllers\MyPageController::class, 'updateOrder'])->name('orders.update');

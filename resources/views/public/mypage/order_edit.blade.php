@@ -76,6 +76,14 @@
                 </tfoot>
             </table>
         </div>
+        {{-- 도서 추가 (접수 대기 상태에서만) --}}
+        <div class="card-body border-top">
+            <label class="form-label small fw-bold navy mb-1"><i class="bi bi-plus-circle"></i> 도서 추가</label>
+            <input type="text" id="bookSearchInput" class="form-control form-control-sm mb-2"
+                   placeholder="추가할 도서 제목 또는 ISBN 검색" autocomplete="off">
+            <div id="bookSearchResults" class="border rounded" style="max-height:240px; overflow-y:auto;"></div>
+            <div class="form-text">검색 후 <strong>추가</strong>를 누르면 위 목록에 들어갑니다. 단가는 이 주문 할인율({{ rtrim(rtrim(number_format($orderRate, 2), '0'), '.') }}%)로 계산됩니다.</div>
+        </div>
         <div class="card-body">
             <label class="form-label small text-muted mb-1">수정 사유 (선택)</label>
             <input type="text" name="reason" class="form-control form-control-sm" maxlength="500"
@@ -91,8 +99,8 @@
         <i class="bi bi-info-circle"></i>
         <strong>안내</strong>:
         수량을 <strong>0</strong>으로 두거나 <strong>삭제</strong>를 체크하면 해당 도서는 주문에서 제거됩니다.
-        도서 추가가 필요하면 이 주문을 취소하고 다시 주문하세요.
-        단가/할인율은 주문 시점 스냅샷이라 변경되지 않습니다.
+        <strong>도서 추가</strong>는 위 "도서 추가" 검색에서 할 수 있습니다.
+        기존 도서의 단가/할인율은 주문 시점 스냅샷이라 변경되지 않으며, 추가 도서는 이 주문 할인율로 계산됩니다.
     </div>
 </form>
 
@@ -102,6 +110,11 @@
     const fmt = n => new Intl.NumberFormat('ko-KR').format(n);
     const table = document.getElementById('editTable');
     if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const ORDER_RATE = {{ $orderRate }};
+    let newIdx = 0;
+
+    function esc(s){ return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
     function recalc() {
         let total = 0;
@@ -110,18 +123,84 @@
             const qtyInput = tr.querySelector('.qty-input');
             const delCheck = tr.querySelector('.delete-check');
             const lineCell = tr.querySelector('.line-total');
-            const deleted = delCheck.checked || parseInt(qtyInput.value, 10) === 0;
+            if (!qtyInput || !lineCell) return;
+            const deleted = (delCheck && delCheck.checked) || parseInt(qtyInput.value, 10) === 0;
             const qty = parseInt(qtyInput.value, 10) || 0;
             const line = deleted ? 0 : unit * qty;
             lineCell.textContent = fmt(line) + '원';
             tr.style.opacity = deleted ? '0.4' : '1';
-            qtyInput.disabled = delCheck.checked;
+            if (delCheck) qtyInput.disabled = delCheck.checked;
             total += line;
         });
         document.getElementById('newTotal').textContent = fmt(total) + '원';
     }
     table.addEventListener('input', e => { if (e.target.matches('.qty-input')) recalc(); });
     table.addEventListener('change', e => { if (e.target.matches('.delete-check')) recalc(); });
+
+    // ===== 도서 추가 검색 =====
+    const searchInput = document.getElementById('bookSearchInput');
+    const resultsBox  = document.getElementById('bookSearchResults');
+    let searchTimer = null;
+
+    async function doSearch() {
+        const q = searchInput.value.trim();
+        if (q.length < 1) { resultsBox.innerHTML = ''; return; }
+        resultsBox.innerHTML = '<div class="text-muted small p-2">검색 중…</div>';
+        try {
+            const res = await fetch('{{ route('my.orders.book_search') }}?q=' + encodeURIComponent(q), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const books = await res.json();
+            if (!Array.isArray(books) || !books.length) {
+                resultsBox.innerHTML = '<div class="text-muted small p-2">검색 결과가 없습니다.</div>';
+                return;
+            }
+            resultsBox.innerHTML = books.map(b => {
+                const unit = Math.round(b.price * (100 - ORDER_RATE) / 100);
+                return '<div class="d-flex justify-content-between align-items-center border-bottom py-2 px-2">'
+                    + '<div class="small me-2"><strong>' + esc(b.title) + '</strong>'
+                    + '<div class="text-muted"><code>' + esc(b.isbn) + '</code> · 정가 ' + fmt(b.price) + '원 · 적용단가 ' + fmt(unit) + '원</div></div>'
+                    + '<button type="button" class="btn btn-sm btn-outline-primary add-book-btn flex-shrink-0"'
+                    + ' data-id="' + b.id + '" data-title="' + esc(b.title) + '" data-isbn="' + esc(b.isbn) + '"'
+                    + ' data-price="' + b.price + '" data-unit="' + unit + '">'
+                    + '<i class="bi bi-plus-lg"></i> 추가</button></div>';
+            }).join('');
+        } catch (err) {
+            resultsBox.innerHTML = '<div class="text-danger small p-2">검색 오류가 발생했습니다.</div>';
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(doSearch, 300); });
+        searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(searchTimer); doSearch(); } });
+    }
+    if (resultsBox) {
+        resultsBox.addEventListener('click', e => {
+            const btn = e.target.closest('.add-book-btn');
+            if (btn) addBookRow(btn.dataset);
+        });
+    }
+
+    function addBookRow(d) {
+        const unit = parseInt(d.unit, 10) || 0;
+        const i = 'n' + (newIdx++);
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-row', '');
+        tr.dataset.unit = unit;
+        tr.className = 'table-success';
+        tr.innerHTML =
+            '<td class="small">'
+          + '<input type="hidden" name="new_items[' + i + '][book_id]" value="' + esc(d.id) + '">'
+          + '<strong>' + esc(d.title) + '</strong> <span class="badge bg-success">추가</span>'
+          + '<div class="text-muted small"><code>' + esc(d.isbn) + '</code> · 정가 ' + fmt(parseInt(d.price, 10)) + '원 · 할인 ' + ORDER_RATE + '%</div></td>'
+          + '<td class="text-end small">' + fmt(unit) + '원</td>'
+          + '<td class="text-center"><input type="number" name="new_items[' + i + '][qty]" value="1" min="1" max="99999" class="form-control form-control-sm text-end qty-input" style="max-width:90px; margin:auto;"></td>'
+          + '<td class="text-end small navy fw-bold line-total">' + fmt(unit) + '원</td>'
+          + '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-new-btn"><i class="bi bi-x-lg"></i></button></td>';
+        tbody.appendChild(tr);
+        tr.querySelector('.remove-new-btn').addEventListener('click', () => { tr.remove(); recalc(); });
+        recalc();
+    }
 })();
 </script>
 @endpush

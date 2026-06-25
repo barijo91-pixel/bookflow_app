@@ -72,7 +72,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer text-end">
+                <div class="card-footer text-end" id="classInfoFooter" style="display:none;">
                     <button class="btn btn-sm btn-navy"><i class="bi bi-save"></i> 저장</button>
                 </div>
             </form>
@@ -301,10 +301,12 @@
 // 학급 정보 카드 접기/펼치기 (기본 접힘)
 function toggleClassInfo() {
     var b = document.getElementById('classInfoBody');
+    var f = document.getElementById('classInfoFooter');
     var c = document.getElementById('classInfoChevron');
     if (!b) return;
     var show = b.style.display === 'none';
     b.style.display = show ? '' : 'none';
+    if (f) f.style.display = show ? '' : 'none';
     if (c) { c.classList.toggle('bi-chevron-down', !show); c.classList.toggle('bi-chevron-up', show); }
 }
 

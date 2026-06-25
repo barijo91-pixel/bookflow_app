@@ -465,10 +465,35 @@ class MyPageController extends Controller
             ->select('oi.*', 'b.cover_path', 'b.isbn as book_isbn', 'b.title as book_title')
             ->orderBy('oi.id')->get();
 
-        return view('public.mypage.order_edit', compact('user', 'order', 'vendor', 'items'));
+        // 도서 추가 시 적용할 할인율 = 이 주문이 적용한 할인율(첫 도서 스냅샷 기준)
+        $orderRate = $items->isNotEmpty() ? (float) $items->first()->discount_rate : 0.0;
+
+        return view('public.mypage.order_edit', compact('user', 'order', 'vendor', 'items', 'orderRate'));
     }
 
-    /** 주문 수정 적용 (수량 변경 + 행 삭제) */
+    /** 주문 수정 화면 — 도서 추가용 검색 (제목/ISBN, 판매중만) */
+    public function orderBookSearch(Request $request)
+    {
+        $q = trim((string) $request->query('q', ''));
+        if (mb_strlen($q) < 1) {
+            return response()->json([]);
+        }
+        $books = DB::table('books')
+            ->whereNull('deleted_at')
+            ->where('status_code', 'selling')
+            ->where(function ($w) use ($q) {
+                $w->where('title', 'like', "%{$q}%")
+                  ->orWhere('isbn', 'like', "%{$q}%");
+            })
+            ->select('id', 'title', 'isbn', 'price')
+            ->orderBy('title')
+            ->limit(20)
+            ->get();
+
+        return response()->json($books);
+    }
+
+    /** 주문 수정 적용 (수량 변경 + 행 삭제 + 도서 추가) */
     public function updateOrder(Request $request, $id)
     {
         $order = \App\Models\Order::findOrFail($id);
@@ -480,11 +505,14 @@ class MyPageController extends Controller
         }
 
         $data = $request->validate([
-            'items'           => ['required', 'array', 'min:1'],
-            'items.*.id'      => ['required', 'integer'],
-            'items.*.qty'     => ['required', 'integer', 'min:0', 'max:99999'],
-            'items.*.delete'  => ['nullable', 'in:0,1'],
-            'reason'          => ['nullable', 'string', 'max:500'],
+            'items'                => ['required', 'array', 'min:1'],
+            'items.*.id'           => ['required', 'integer'],
+            'items.*.qty'          => ['required', 'integer', 'min:0', 'max:99999'],
+            'items.*.delete'       => ['nullable', 'in:0,1'],
+            'new_items'            => ['nullable', 'array'],
+            'new_items.*.book_id'  => ['required_with:new_items', 'integer', 'exists:books,id'],
+            'new_items.*.qty'      => ['required_with:new_items', 'integer', 'min:1', 'max:99999'],
+            'reason'               => ['nullable', 'string', 'max:500'],
         ]);
 
         $existingItems = DB::table('order_items')->where('order_id', $order->id)->get()->keyBy('id');
@@ -516,11 +544,37 @@ class MyPageController extends Controller
             $keptCount++;
         }
 
-        if ($keptCount === 0) {
+        // 도서 추가분 — 이 주문이 적용한 할인율(첫 도서 스냅샷)을 동일 적용해 단가 스냅샷 생성
+        $orderRate = (float) (optional($existingItems->first())->discount_rate ?? 0);
+        $newItemsToInsert = [];
+        foreach (($data['new_items'] ?? []) as $ni) {
+            $book = DB::table('books')->whereNull('deleted_at')->find($ni['book_id']);
+            if (! $book) continue;
+            $qty  = (int) $ni['qty'];
+            $unit = (int) round($book->price * (100 - $orderRate) / 100);
+            $line = $unit * $qty;
+            $newItemsToInsert[] = [
+                'order_id'        => $order->id,
+                'book_id'         => $book->id,
+                'isbn_snapshot'   => $book->isbn,
+                'title_snapshot'  => $book->title,
+                'qty'             => $qty,
+                'list_price'      => (int) $book->price,
+                'discount_rate'   => $orderRate,
+                'discount_source' => 'default',
+                'unit_price'      => $unit,
+                'line_total'      => $line,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ];
+            $newSubtotal += $line;
+        }
+
+        if ($keptCount === 0 && empty($newItemsToInsert)) {
             return back()->withInput()->with('error', '최소 1개 도서는 남겨야 합니다. 전체 삭제는 "주문 취소"를 사용하세요.');
         }
 
-        DB::transaction(function () use ($order, $toUpdate, $toDelete, $newSubtotal, $user, $data) {
+        DB::transaction(function () use ($order, $toUpdate, $toDelete, $newItemsToInsert, $newSubtotal, $user, $data) {
             foreach ($toUpdate as $itemId => $up) {
                 DB::table('order_items')->where('id', $itemId)->update([
                     'qty'        => $up['qty'],
@@ -530,6 +584,9 @@ class MyPageController extends Controller
             }
             if (! empty($toDelete)) {
                 DB::table('order_items')->whereIn('id', $toDelete)->delete();
+            }
+            if (! empty($newItemsToInsert)) {
+                DB::table('order_items')->insert($newItemsToInsert);
             }
             DB::table('orders')->where('id', $order->id)->update([
                 'subtotal_amount' => $newSubtotal,
@@ -541,7 +598,7 @@ class MyPageController extends Controller
                 'from_status' => 'requested',
                 'to_status'   => 'requested',
                 'changed_by'  => $user->id,
-                'reason'      => '주문 수정: '.($data['reason'] ?? '학원에서 수량 변경/도서 삭제'),
+                'reason'      => '주문 수정: '.($data['reason'] ?? '학원에서 수량 변경/도서 추가·삭제'),
                 'created_at'  => now(),
             ]);
         });
