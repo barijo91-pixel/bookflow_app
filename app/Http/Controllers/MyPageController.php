@@ -1771,11 +1771,29 @@ class MyPageController extends Controller
             'class_id' => ['nullable', 'integer'],
             'student_ids' => ['nullable', 'array'],
             'student_ids.*' => ['integer'],
+            'qty' => ['nullable', 'array'],
+            'qty.*' => ['integer', 'min:0', 'max:9999'],
         ]);
 
         $cart = $request->session()->get($data['cart_key'], []);
+
+        // 주문 시점 수량 반영 (별도 "수량 업데이트" 버튼 대체 — 주문하기로 바로 반영)
+        if (! empty($data['qty']) && is_array($data['qty'])) {
+            foreach ($data['qty'] as $bid => $q) {
+                $bid = (int) $bid;
+                $q   = (int) $q;
+                if (! array_key_exists($bid, $cart)) continue;
+                if ($q <= 0) {
+                    unset($cart[$bid]);
+                } else {
+                    $cart[$bid] = $q;
+                }
+            }
+            $request->session()->put($data['cart_key'], $cart);
+        }
+
         if (empty($cart)) {
-            return back()->with('error', '장바구니가 비어있습니다.');
+            return back()->with('error', '장바구니가 비어있습니다. 수량을 1 이상으로 입력하거나 도서를 담아주세요.');
         }
 
         $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');

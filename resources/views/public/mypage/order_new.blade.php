@@ -393,9 +393,7 @@
                             <span style="width:32px;"></span>
                         </div>
                     </div>
-                    <form method="POST" action="{{ route('my.cart.update') }}" id="cartForm">
-                        @csrf
-                        <input type="hidden" name="cart_key" value="{{ $cartKey }}">
+                    <div id="cartForm">
                         <table class="table table-sm mb-0">
                             <tbody>
                                 @foreach($cartLines as $line)
@@ -426,20 +424,15 @@
                                 @endforeach
                             </tbody>
                         </table>
-                        <div class="p-3 border-top">
-                            <button type="submit" class="btn btn-sm btn-outline-secondary w-100">
-                                <i class="bi bi-arrow-clockwise"></i> 수량 업데이트
-                            </button>
-                        </div>
-                    </form>
+                    </div>
 
                     <div class="p-3 border-top bg-light">
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">소계 ({{ $cartLines->sum('qty') }}권)</span>
                             <strong class="navy">{{ number_format($subtotal) }}원</strong>
                         </div>
-                        <form method="POST" action="{{ route('my.order.store') }}"
-                              onsubmit="return confirm('이 내용으로 주문하시겠습니까?')">
+                        <form method="POST" action="{{ route('my.order.store') }}" id="orderForm"
+                              onsubmit="return confirm('이 내용으로 주문하시겠습니까?') && syncCartQty(this)">
                             @csrf
                             <input type="hidden" name="cart_key" value="{{ $cartKey }}">
                             <input type="hidden" name="agent_id" value="{{ $selectedAgent->id }}">
@@ -1066,6 +1059,17 @@ function toggleFilterBody() {
 })();
 </script>
 <script>
+// 주문 시 장바구니 수량 input 값을 주문 폼에 반영 (별도 "수량 업데이트" 버튼 대체)
+function syncCartQty(form) {
+    document.querySelectorAll('#cartForm input[name^="qty["]').forEach(function (inp) {
+        var h = document.createElement('input');
+        h.type = 'hidden';
+        h.name = inp.name;
+        h.value = inp.value;
+        form.appendChild(h);
+    });
+    return true;
+}
 (function () {
     var sel  = document.getElementById('orderClassSelect');
     var area = document.getElementById('studentPickArea');
