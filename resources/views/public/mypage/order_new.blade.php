@@ -443,6 +443,14 @@
                             @csrf
                             <input type="hidden" name="cart_key" value="{{ $cartKey }}">
                             <input type="hidden" name="agent_id" value="{{ $selectedAgent->id }}">
+                            @if($classes->isNotEmpty())
+                                <select name="class_id" class="form-select form-select-sm mb-2" aria-label="학급 선택">
+                                    <option value="">학급 선택 안 함</option>
+                                    @foreach($classes as $c)
+                                        <option value="{{ $c->id }}">{{ $c->name }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
                             <button type="submit" class="btn btn-navy w-100 btn-lg">
                                 <i class="bi bi-check-lg"></i> 주문하기
                             </button>

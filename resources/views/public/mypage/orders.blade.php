@@ -93,6 +93,7 @@
             <thead class="table-light">
                 <tr>
                     <th>주문번호</th>
+                    <th>학급</th>
                     @if($user->role_code !== 'academy')<th>학원</th><th>구분</th>@endif
                     @if($user->role_code !== 'agent')
                         <th>영업자</th>
@@ -112,6 +113,13 @@
                             <a href="{{ route('my.orders.show', $o->id) }}" class="text-decoration-none navy fw-bold" onclick="event.stopPropagation()">
                                 <code>{{ $o->order_no }}</code> <i class="bi bi-chevron-right small"></i>
                             </a>
+                        </td>
+                        <td class="small">
+                            @if($o->class_name)
+                                <span class="badge bg-light text-dark"><i class="bi bi-mortarboard"></i> {{ $o->class_name }}</span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
                         </td>
                         @if($user->role_code !== 'academy')
                             <td class="small">{{ $o->vendor_name ?? '-' }}</td>
@@ -134,7 +142,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ 5 + ($user->role_code !== 'agent' ? 1 : 0) + ($user->role_code !== 'distributor' ? 1 : 0) - ($user->role_code === 'academy' ? 1 : 0) + ($user->role_code !== 'academy' ? 1 : 0) }}"
+                        <td colspan="{{ 6 + ($user->role_code !== 'agent' ? 1 : 0) + ($user->role_code !== 'distributor' ? 1 : 0) - ($user->role_code === 'academy' ? 1 : 0) + ($user->role_code !== 'academy' ? 1 : 0) }}"
                             class="text-center text-muted py-5">
                             <i class="bi bi-inbox" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">
@@ -157,6 +165,9 @@
                     <code class="navy fw-bold">{{ $o->order_no }}</code>
                     <span class="badge {{ $opt[1] }}">{{ $opt[0] }}</span>
                 </div>
+                @if($o->class_name)
+                    <div class="small mb-1"><span class="badge bg-light text-dark"><i class="bi bi-mortarboard"></i> {{ $o->class_name }}</span></div>
+                @endif
                 @if($user->role_code !== 'academy')
                     <div class="fw-bold mb-1">{{ $o->vendor_name ?? '-' }}
                         <span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span>

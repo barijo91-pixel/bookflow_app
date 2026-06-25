@@ -40,6 +40,10 @@
                 <dl class="row small mb-0">
                     <dt class="col-4 text-muted">학원</dt>
                     <dd class="col-8 fw-bold">{{ $vendor->name ?? '-' }}</dd>
+                    @if(!empty($class))
+                        <dt class="col-4 text-muted">학급</dt>
+                        <dd class="col-8"><span class="badge bg-light text-dark"><i class="bi bi-mortarboard"></i> {{ $class->name }}</span></dd>
+                    @endif
                     <dt class="col-4 text-muted">영업자</dt>
                     <dd class="col-8">{{ $agent->name ?? '-' }}</dd>
                     <dt class="col-4 text-muted">총판</dt>

@@ -401,6 +401,7 @@ class MyPageController extends Controller
         $vendor = DB::table('vendors')->find($order->vendor_id);
         $agent  = $order->agent_user_id ? DB::table('users')->find($order->agent_user_id) : null;
         $dist   = $order->distributor_user_id ? DB::table('users')->find($order->distributor_user_id) : null;
+        $class  = $order->class_id ? DB::table('academy_classes')->find($order->class_id) : null;
 
         $items = DB::table('order_items as oi')
             ->leftJoin('books as b', 'b.id', '=', 'oi.book_id')
@@ -442,7 +443,7 @@ class MyPageController extends Controller
             ->get(['student_name', 'parent_name', 'parent_phone', 'amount', 'status', 'paid_at']);
 
         return view('public.mypage.order_show', compact(
-            'user', 'order', 'vendor', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
+            'user', 'order', 'vendor', 'class', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
             'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit', 'payers'
         ));
     }
@@ -873,6 +874,7 @@ class MyPageController extends Controller
             ->leftJoin('vendors as v', 'v.id', '=', 'o.vendor_id')
             ->leftJoin('users as ag', 'ag.id', '=', 'o.agent_user_id')
             ->leftJoin('users as ds', 'ds.id', '=', 'o.distributor_user_id')
+            ->leftJoin('academy_classes as ac', 'ac.id', '=', 'o.class_id')
             ->whereNull('o.deleted_at')
             ->select(
                 'o.id', 'o.order_no', 'o.status_code', 'o.total_amount',
@@ -880,6 +882,7 @@ class MyPageController extends Controller
                 'o.shipped_at', 'o.completed_at', 'o.created_at',
                 'v.name as vendor_name', 'v.trade_type',
                 'ag.name as agent_name', 'ag.login_id as agent_login_id',
+                'ac.name as class_name',
                 DB::raw("COALESCE(NULLIF(ds.business_name, ''), ds.name) as distributor_name")
             );
 
@@ -1515,6 +1518,12 @@ class MyPageController extends Controller
             ]);
         }
 
+        // 학급 목록 (도서주문 시 선택용 — 본인 학원의 진행중 학급)
+        $classes = $vendor
+            ? DB::table('academy_classes')->where('vendor_id', $vendorId)
+                ->where('status', 'active')->orderBy('name')->get(['id', 'name', 'grade_code'])
+            : collect();
+
         return view('public.mypage.order_new', [
             'user'           => $user,
             'vendor'         => $vendor,
@@ -1531,6 +1540,7 @@ class MyPageController extends Controller
             'showSubFilters' => $showSubFilters,
             'showGradeRow'   => $showGradeRow,
             'showSemesterRow'=> $showSemesterRow,
+            'classes'        => $classes,
         ]);
     }
 
@@ -1727,6 +1737,7 @@ class MyPageController extends Controller
         $data = $request->validate([
             'cart_key' => ['required', 'string'],
             'agent_id' => ['required', 'integer'],
+            'class_id' => ['nullable', 'integer'],
         ]);
 
         $cart = $request->session()->get($data['cart_key'], []);
@@ -1737,6 +1748,15 @@ class MyPageController extends Controller
         $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
         if (! $vendorId) {
             return back()->with('error', '학원 매핑이 없습니다.');
+        }
+
+        // 학급(선택) 검증 — 본인 학원의 학급만 허용
+        $classId = null;
+        if (! empty($data['class_id'])) {
+            $classId = DB::table('academy_classes')
+                ->where('id', $data['class_id'])
+                ->where('vendor_id', $vendorId)
+                ->value('id');
         }
 
         // 영업자 검증 (이 vendor에 매핑된 active agent인지)
@@ -1798,10 +1818,11 @@ class MyPageController extends Controller
         }
 
         $orderId = null;
-        DB::transaction(function () use ($orderNo, $vendorId, $agentRow, $distId, $subtotal, $itemRows, $user, &$orderId) {
+        DB::transaction(function () use ($orderNo, $vendorId, $classId, $agentRow, $distId, $subtotal, $itemRows, $user, &$orderId) {
             $orderId = DB::table('orders')->insertGetId([
                 'order_no'            => $orderNo,
                 'vendor_id'           => $vendorId,
+                'class_id'            => $classId,
                 'agent_user_id'       => $agentRow->agent_user_id,
                 'distributor_user_id' => $distId,
                 'subtotal_amount'     => $subtotal,
