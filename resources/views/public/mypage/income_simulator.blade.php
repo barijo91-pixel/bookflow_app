@@ -86,15 +86,9 @@
                                         <td class="text-end text-danger">-{{ number_format($b2bTax['withholding_tax']) }}원</td>
                                     </tr>
                                 @endif
-                                @if($b2bTax['vat'] > 0)
-                                    <tr>
-                                        <th class="text-muted">부가세 10% (별도 청구)</th>
-                                        <td class="text-end text-success">+{{ number_format($b2bTax['vat']) }}원</td>
-                                    </tr>
-                                @endif
                                 <tr class="table-success">
                                     <th>최종 실수령</th>
-                                    <td class="text-end fw-bold">{{ number_format($b2bTax['net']) }}원</td>
+                                    <td class="text-end fw-bold">{{ number_format($b2b['agent_margin'] - $b2bTax['withholding_tax']) }}원</td>
                                 </tr>
                             @else
                                 <tr class="border-top">
@@ -151,15 +145,9 @@
                                         <td class="text-end text-danger">-{{ number_format($b2cTax['withholding_tax']) }}원</td>
                                     </tr>
                                 @endif
-                                @if($b2cTax['vat'] > 0)
-                                    <tr>
-                                        <th class="text-muted">부가세 10% (별도 청구)</th>
-                                        <td class="text-end text-success">+{{ number_format($b2cTax['vat']) }}원</td>
-                                    </tr>
-                                @endif
                                 <tr class="table-success">
                                     <th>최종 실수령</th>
-                                    <td class="text-end fw-bold">{{ number_format($b2cTax['net']) }}원</td>
+                                    <td class="text-end fw-bold">{{ number_format($b2c['agent_net'] - $b2cTax['withholding_tax']) }}원</td>
                                 </tr>
                             @else
                                 <tr class="border-top">
