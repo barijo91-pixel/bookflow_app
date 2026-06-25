@@ -869,6 +869,7 @@ class MyPageController extends Controller
         $dateTo   = $request->query('date_to')   ?: now()->format('Y-m-d');
         $q        = trim((string) $request->query('q'));
         $tradeType = $request->query('trade_type'); // retail/wholesale 필터 (영업자·총판용)
+        $selectedVendor = $request->query('vendor_id'); // 학원 선택 필터
 
         $query = DB::table('orders as o')
             ->leftJoin('vendors as v', 'v.id', '=', 'o.vendor_id')
@@ -915,8 +916,20 @@ class MyPageController extends Controller
                   ->orWhere('v.name', 'like', "%{$q}%");
             });
         }
+        if ($selectedVendor) $query->where('o.vendor_id', $selectedVendor);
 
         $orders = $query->orderByDesc('o.id')->paginate(20)->withQueryString();
+
+        // 학원 선택 드롭다운 — 이 사용자가 보는 주문들의 학원 목록 (academy는 자기 학원만이라 미표시)
+        $vendorOptions = collect();
+        if ($user->role_code !== 'academy') {
+            $voQuery = DB::table('orders as o')
+                ->join('vendors as v', 'v.id', '=', 'o.vendor_id')
+                ->whereNull('o.deleted_at');
+            if ($user->role_code === 'agent')       $voQuery->where('o.agent_user_id', $user->id);
+            if ($user->role_code === 'distributor') $voQuery->where('o.distributor_user_id', $user->id);
+            $vendorOptions = $voQuery->select('v.id', 'v.name')->distinct()->orderBy('v.name')->get();
+        }
 
         // 상태별 카운트 (필터 UI용) — 목록과 동일한 날짜 범위 적용 (카운트=목록 일치)
         $statusBaseQuery = DB::table('orders')->whereNull('deleted_at');
@@ -940,6 +953,8 @@ class MyPageController extends Controller
             'q'        => $q,
             'tradeType' => $tradeType,
             'statusCounts' => $statusCounts,
+            'vendorOptions' => $vendorOptions,
+            'selectedVendor' => $selectedVendor,
         ]);
     }
 

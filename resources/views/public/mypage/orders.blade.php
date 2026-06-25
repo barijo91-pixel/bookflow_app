@@ -40,7 +40,7 @@
         </a>
         @foreach($statusOptions as $code => [$label, $cls])
             @if($statusCounts->get($code, 0) > 0)
-                <a href="{{ route('my.orders.index', array_merge(request()->only(['date_from','date_to','q']), ['status' => $code])) }}"
+                <a href="{{ route('my.orders.index', array_merge(request()->only(['date_from','date_to','q','vendor_id','trade_type']), ['status' => $code])) }}"
                    class="btn btn-sm {{ $status === $code ? 'btn-navy' : 'btn-outline-secondary' }}">
                     {{ $label }} ({{ $statusCounts->get($code, 0) }})
                 </a>
@@ -61,9 +61,20 @@
                 <label class="form-label small text-muted mb-1">주문일자 To</label>
                 <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
             </div>
+            @if($user->role_code !== 'academy')
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">학원 선택</label>
+                <select name="vendor_id" class="form-select form-select-sm">
+                    <option value="">전체 학원</option>
+                    @foreach($vendorOptions as $vo)
+                        <option value="{{ $vo->id }}" @selected((string) $selectedVendor === (string) $vo->id)>{{ $vo->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
             <div class="col-md-{{ $user->role_code !== 'academy' ? '2' : '4' }}">
-                <label class="form-label small text-muted mb-1">검색 (주문번호 / 학원명)</label>
-                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="주문번호·학원명">
+                <label class="form-label small text-muted mb-1">주문번호 검색</label>
+                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="주문번호">
             </div>
             @if($user->role_code !== 'academy')
             <div class="col-md-2">
