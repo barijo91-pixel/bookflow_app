@@ -31,7 +31,7 @@
 
 <div class="row g-3">
     {{-- LEFT: 학급 정보 + 교재 --}}
-    <div class="col-lg-6">
+    <div class="col-lg-5">
         {{-- 학급 정보 (기본 접힘, 헤더 클릭 시 펼침) --}}
         <div class="card section-card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center" style="cursor:pointer"
@@ -78,9 +78,16 @@
             </form>
         </div>
 
-        {{-- 교재 --}}
+        {{-- 학부모 공유용 지정 교재 (도서주문 아님) — 기본 접힘 --}}
         <div class="card section-card mb-3">
-            <div class="card-header"><strong><i class="bi bi-book"></i> 학급 교재 ({{ $books->count() }})</strong></div>
+            <div class="card-header d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="toggleClassBooks()">
+                <strong><i class="bi bi-book"></i> 학부모 공유용 교재 ({{ $books->count() }})</strong>
+                <span class="small text-muted">
+                    <span class="d-none d-sm-inline">공유링크용 · 주문 아님</span>
+                    <i class="bi bi-chevron-down" id="classBooksChevron"></i>
+                </span>
+            </div>
+            <div id="classBooksBody" style="display:none;">
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light"><tr>
@@ -148,11 +155,12 @@
                     </div>
                 </form>
             </div>
+            </div>{{-- /classBooksBody --}}
         </div>
     </div>
 
     {{-- RIGHT: 학생 + 학부모 + 공유링크 --}}
-    <div class="col-lg-6">
+    <div class="col-lg-7">
         {{-- 학생 목록 + 추가 --}}
         <div class="card section-card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -307,6 +315,15 @@ function toggleClassInfo() {
     var show = b.style.display === 'none';
     b.style.display = show ? '' : 'none';
     if (f) f.style.display = show ? '' : 'none';
+    if (c) { c.classList.toggle('bi-chevron-down', !show); c.classList.toggle('bi-chevron-up', show); }
+}
+
+function toggleClassBooks() {
+    var b = document.getElementById('classBooksBody');
+    var c = document.getElementById('classBooksChevron');
+    if (!b) return;
+    var show = b.style.display === 'none';
+    b.style.display = show ? '' : 'none';
     if (c) { c.classList.toggle('bi-chevron-down', !show); c.classList.toggle('bi-chevron-up', show); }
 }
 
