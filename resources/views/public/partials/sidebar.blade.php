@@ -50,9 +50,6 @@
                     <i class="bi bi-receipt"></i> 주문관리
                     @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
-                <a href="{{ route('my.stocks.index') }}" class="nav-item {{ $startsWith('my.stocks') }}">
-                    <i class="bi bi-box-seam"></i> 재고관리
-                </a>
                 <a href="{{ route('my.agents.index') }}" class="nav-item {{ $startsWith('my.agents') }}">
                     <i class="bi bi-person-badge"></i> 영업자 관리
                 </a>
@@ -64,6 +61,9 @@
                 </a>
                 <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
                     <i class="bi bi-cash-stack"></i> 정산 내역
+                </a>
+                <a href="{{ route('my.stocks.index') }}" class="nav-item {{ $startsWith('my.stocks') }}">
+                    <i class="bi bi-box-seam"></i> 재고관리
                 </a>
                 @break
 
