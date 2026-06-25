@@ -402,6 +402,7 @@ class MyPageController extends Controller
         $agent  = $order->agent_user_id ? DB::table('users')->find($order->agent_user_id) : null;
         $dist   = $order->distributor_user_id ? DB::table('users')->find($order->distributor_user_id) : null;
         $class  = $order->class_id ? DB::table('academy_classes')->find($order->class_id) : null;
+        $orderStudents = DB::table('order_students')->where('order_id', $order->id)->orderBy('id')->get();
 
         $items = DB::table('order_items as oi')
             ->leftJoin('books as b', 'b.id', '=', 'oi.book_id')
@@ -443,7 +444,7 @@ class MyPageController extends Controller
             ->get(['student_name', 'parent_name', 'parent_phone', 'amount', 'status', 'paid_at']);
 
         return view('public.mypage.order_show', compact(
-            'user', 'order', 'vendor', 'class', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
+            'user', 'order', 'vendor', 'class', 'orderStudents', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
             'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit', 'payers'
         ));
     }
@@ -1753,6 +1754,8 @@ class MyPageController extends Controller
             'cart_key' => ['required', 'string'],
             'agent_id' => ['required', 'integer'],
             'class_id' => ['nullable', 'integer'],
+            'student_ids' => ['nullable', 'array'],
+            'student_ids.*' => ['integer'],
         ]);
 
         $cart = $request->session()->get($data['cart_key'], []);
@@ -1772,6 +1775,18 @@ class MyPageController extends Controller
                 ->where('id', $data['class_id'])
                 ->where('vendor_id', $vendorId)
                 ->value('id');
+        }
+
+        // 대상 학생(선택) — 위 학급에 속한 학생만 스냅샷으로 보존
+        $studentRows = [];
+        if ($classId && ! empty($data['student_ids'])) {
+            $studentRows = DB::table('students as s')
+                ->leftJoin('parents as p', 'p.id', '=', 's.parent_id')
+                ->where('s.class_id', $classId)
+                ->whereIn('s.id', $data['student_ids'])
+                ->whereNull('s.deleted_at')
+                ->select('s.id', 's.name as student_name', 'p.name as parent_name')
+                ->get();
         }
 
         // 영업자 검증 (이 vendor에 매핑된 active agent인지)
@@ -1833,7 +1848,7 @@ class MyPageController extends Controller
         }
 
         $orderId = null;
-        DB::transaction(function () use ($orderNo, $vendorId, $classId, $agentRow, $distId, $subtotal, $itemRows, $user, &$orderId) {
+        DB::transaction(function () use ($orderNo, $vendorId, $classId, $agentRow, $distId, $subtotal, $itemRows, $studentRows, $user, &$orderId) {
             $orderId = DB::table('orders')->insertGetId([
                 'order_no'            => $orderNo,
                 'vendor_id'           => $vendorId,
@@ -1853,6 +1868,21 @@ class MyPageController extends Controller
                 $row['created_at'] = now();
                 $row['updated_at'] = now();
                 DB::table('order_items')->insert($row);
+            }
+            if (! empty($studentRows)) {
+                $nowTs = now();
+                $orderStudents = [];
+                foreach ($studentRows as $s) {
+                    $orderStudents[] = [
+                        'order_id'     => $orderId,
+                        'student_id'   => $s->id,
+                        'student_name' => $s->student_name,
+                        'parent_name'  => $s->parent_name,
+                        'created_at'   => $nowTs,
+                        'updated_at'   => $nowTs,
+                    ];
+                }
+                DB::table('order_students')->insert($orderStudents);
             }
             DB::table('order_status_logs')->insert([
                 'order_id'    => $orderId,

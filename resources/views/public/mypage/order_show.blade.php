@@ -44,6 +44,14 @@
                         <dt class="col-4 text-muted">학급</dt>
                         <dd class="col-8"><span class="badge bg-light text-dark"><i class="bi bi-mortarboard"></i> {{ $class->name }}</span></dd>
                     @endif
+                    @if(!empty($orderStudents) && $orderStudents->count())
+                        <dt class="col-4 text-muted">대상 학생 ({{ $orderStudents->count() }})</dt>
+                        <dd class="col-8">
+                            @foreach($orderStudents as $os)
+                                <span class="badge bg-light text-dark mb-1">{{ $os->student_name }}@if($os->parent_name) · {{ $os->parent_name }}@endif</span>
+                            @endforeach
+                        </dd>
+                    @endif
                     <dt class="col-4 text-muted">영업자</dt>
                     <dd class="col-8">{{ $agent->name ?? '-' }}</dd>
                     <dt class="col-4 text-muted">총판</dt>

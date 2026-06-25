@@ -444,12 +444,16 @@
                             <input type="hidden" name="cart_key" value="{{ $cartKey }}">
                             <input type="hidden" name="agent_id" value="{{ $selectedAgent->id }}">
                             @if($classes->isNotEmpty())
-                                <select name="class_id" class="form-select form-select-sm mb-2" aria-label="학급 선택">
+                                <select name="class_id" id="orderClassSelect" class="form-select form-select-sm mb-2" aria-label="학급 선택">
                                     <option value="">학급 선택 안 함</option>
                                     @foreach($classes as $c)
                                         <option value="{{ $c->id }}">{{ $c->name }}</option>
                                     @endforeach
                                 </select>
+                                <div id="studentPickArea" class="mb-2 text-start" style="display:none;">
+                                    <div class="small text-muted mb-1"><i class="bi bi-people"></i> 대상 학생 <span class="text-muted">(기본 전체 선택)</span></div>
+                                    <div id="studentPickList" class="border rounded p-2" style="max-height:160px; overflow-y:auto;"></div>
+                                </div>
                             @endif
                             <button type="submit" class="btn btn-navy w-100 btn-lg">
                                 <i class="bi bi-check-lg"></i> 주문하기
@@ -1058,6 +1062,38 @@ function toggleFilterBody() {
             resultEl.innerHTML = '<span class="text-danger">인식 요청 실패: ' + (e.message || e) + '</span>';
         }
         this.value = '';
+    });
+})();
+</script>
+<script>
+(function () {
+    var sel  = document.getElementById('orderClassSelect');
+    var area = document.getElementById('studentPickArea');
+    var list = document.getElementById('studentPickList');
+    if (!sel || !area || !list) return;
+    var base = "{{ url('/mypage/classes') }}";
+    function esc(t){ return (t==null?'':String(t)).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+    sel.addEventListener('change', function () {
+        var cid = sel.value;
+        if (!cid) { area.style.display = 'none'; list.innerHTML = ''; return; }
+        area.style.display = '';
+        list.innerHTML = '<div class="small text-muted">불러오는 중…</div>';
+        fetch(base + '/' + cid + '/students-with-parents', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); })
+            .then(function (rows) {
+                if (!Array.isArray(rows) || !rows.length) {
+                    list.innerHTML = '<div class="small text-muted">이 학급에 등록된 학생이 없습니다.</div>';
+                    return;
+                }
+                list.innerHTML = rows.map(function (s) {
+                    return '<div class="form-check text-start mb-1">'
+                        + '<input class="form-check-input" type="checkbox" name="student_ids[]" value="' + s.student_id + '" id="ostu' + s.student_id + '" checked>'
+                        + '<label class="form-check-label small" for="ostu' + s.student_id + '">' + esc(s.student_name)
+                        + (s.parent_name ? ' <span class="text-muted">(' + esc(s.parent_name) + ')</span>' : '') + '</label>'
+                        + '</div>';
+                }).join('');
+            })
+            .catch(function () { list.innerHTML = '<div class="small text-danger">학생을 불러오지 못했습니다.</div>'; });
     });
 })();
 </script>
