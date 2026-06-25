@@ -470,24 +470,39 @@ class MyPageController extends Controller
         // 도서 추가 시 적용할 할인율 = 이 주문이 적용한 할인율(첫 도서 스냅샷 기준)
         $orderRate = $items->isNotEmpty() ? (float) $items->first()->discount_rate : 0.0;
 
-        return view('public.mypage.order_edit', compact('user', 'order', 'vendor', 'items', 'orderRate'));
+        // 도서 추가 검색용 출판사 목록 (판매중 도서가 있는 출판사만)
+        $publisherOptions = DB::table('publishers as p')
+            ->whereIn('p.id', function ($q) {
+                $q->select('publisher_id')->from('books')
+                  ->whereNull('deleted_at')->where('status_code', 'selling')->whereNotNull('publisher_id');
+            })
+            ->orderBy('p.sort_order')->orderBy('p.name')
+            ->get(['p.id', 'p.name']);
+
+        return view('public.mypage.order_edit', compact('user', 'order', 'vendor', 'items', 'orderRate', 'publisherOptions'));
     }
 
     /** 주문 수정 화면 — 도서 추가용 검색 (제목/ISBN, 판매중만) */
     public function orderBookSearch(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
-        if (mb_strlen($q) < 1) {
+        $publisherId = $request->query('publisher_id');
+        if (mb_strlen($q) < 1 && ! $publisherId) {
             return response()->json([]);
         }
         $books = DB::table('books')
             ->whereNull('deleted_at')
-            ->where('status_code', 'selling')
-            ->where(function ($w) use ($q) {
+            ->where('status_code', 'selling');
+        if ($publisherId) {
+            $books->where('publisher_id', $publisherId);
+        }
+        if (mb_strlen($q) >= 1) {
+            $books->where(function ($w) use ($q) {
                 $w->where('title', 'like', "%{$q}%")
                   ->orWhere('isbn', 'like', "%{$q}%");
-            })
-            ->select('id', 'title', 'isbn', 'price')
+            });
+        }
+        $books = $books->select('id', 'title', 'isbn', 'price')
             ->orderBy('title')
             ->limit(20)
             ->get();

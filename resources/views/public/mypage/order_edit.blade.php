@@ -79,8 +79,14 @@
         {{-- 도서 추가 (접수 대기 상태에서만) --}}
         <div class="card-body border-top">
             <label class="form-label small fw-bold navy mb-1"><i class="bi bi-plus-circle"></i> 도서 추가</label>
+            <select id="bookPublisherFilter" class="form-select form-select-sm mb-2">
+                <option value="">전체 출판사</option>
+                @foreach($publisherOptions as $po)
+                    <option value="{{ $po->id }}">{{ $po->name }}</option>
+                @endforeach
+            </select>
             <input type="text" id="bookSearchInput" class="form-control form-control-sm mb-2"
-                   placeholder="추가할 도서 제목 또는 ISBN 검색" autocomplete="off">
+                   placeholder="추가할 도서 제목 또는 ISBN 검색 (출판사만 선택해도 됨)" autocomplete="off">
             <div id="bookSearchResults" class="border rounded" style="max-height:240px; overflow-y:auto;"></div>
             <div class="form-text">검색 후 <strong>추가</strong>를 누르면 위 목록에 들어갑니다. 단가는 이 주문 할인율({{ rtrim(rtrim(number_format($orderRate, 2), '0'), '.') }}%)로 계산됩니다.</div>
         </div>
@@ -140,14 +146,18 @@
     // ===== 도서 추가 검색 =====
     const searchInput = document.getElementById('bookSearchInput');
     const resultsBox  = document.getElementById('bookSearchResults');
+    const pubFilter   = document.getElementById('bookPublisherFilter');
     let searchTimer = null;
 
     async function doSearch() {
         const q = searchInput.value.trim();
-        if (q.length < 1) { resultsBox.innerHTML = ''; return; }
+        const pub = pubFilter ? pubFilter.value : '';
+        if (q.length < 1 && !pub) { resultsBox.innerHTML = ''; return; }
         resultsBox.innerHTML = '<div class="text-muted small p-2">검색 중…</div>';
         try {
-            const res = await fetch('{{ route('my.orders.book_search') }}?q=' + encodeURIComponent(q), {
+            let url = '{{ route('my.orders.book_search') }}?q=' + encodeURIComponent(q);
+            if (pub) url += '&publisher_id=' + encodeURIComponent(pub);
+            const res = await fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const books = await res.json();
@@ -173,6 +183,9 @@
     if (searchInput) {
         searchInput.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(doSearch, 300); });
         searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(searchTimer); doSearch(); } });
+    }
+    if (pubFilter) {
+        pubFilter.addEventListener('change', () => { clearTimeout(searchTimer); doSearch(); });
     }
     if (resultsBox) {
         resultsBox.addEventListener('click', e => {
