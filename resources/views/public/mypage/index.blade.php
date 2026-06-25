@@ -230,7 +230,11 @@
                             <tbody>
                                 @foreach($recent_orders as $o)
                                     <tr>
-                                        <td class="small"><code>{{ $o->order_no }}</code></td>
+                                        <td class="small">
+                                            <a href="{{ route('my.orders.show', $o->id) }}" class="text-decoration-none navy fw-bold">
+                                                <code>{{ $o->order_no }}</code> <i class="bi bi-chevron-right small"></i>
+                                            </a>
+                                        </td>
                                         @if($user->role_code !== 'academy')<td class="small">{{ $o->vendor_name }}</td>@endif
                                         @if($user->role_code !== 'agent')<td class="small text-muted d-none d-md-table-cell">{{ $o->agent_name }}</td>@endif
                                         <td>

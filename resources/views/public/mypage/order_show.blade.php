@@ -71,9 +71,8 @@
             </div>
         </div>
 
-        {{-- 액션 카드 --}}
-        @php $isAcademy = $user->role_code === 'academy'; @endphp
-        @if($canConfirm || $canAccept || $canShip || $canCancel || $canEdit || $isAcademy)
+        {{-- 액션 카드 (결제 액션은 우측 상단으로 분리) --}}
+        @if($canConfirm || $canAccept || $canShip || $canCancel || $canEdit)
             <div class="card section-card mb-3">
                 <div class="card-header"><strong><i class="bi bi-lightning"></i> 처리</strong></div>
                 <div class="card-body">
@@ -81,23 +80,6 @@
                         <a href="{{ route('my.orders.edit', $order->id) }}" class="btn btn-outline-primary w-100 mb-2">
                             <i class="bi bi-pencil-square"></i> 주문 수정 (수량/도서 삭제)
                         </a>
-                    @endif
-                    @if($user->role_code === 'academy' && in_array($order->status_code, ['requested','confirmed','accepted','shipped']))
-                        @if(($vendor->trade_type ?? 'retail') === 'wholesale')
-                            {{-- 도매: 학원이 직접 결제 (학부모 거치지 않음) --}}
-                            <form method="POST" action="{{ route('my.orders.pay_direct', $order->id) }}"
-                                  onsubmit="return confirm('교재비 {{ number_format($order->total_amount) }}원을 결제할까요?')">
-                                @csrf
-                                <button class="btn btn-warning w-100 mb-2 text-dark fw-bold">
-                                    <i class="bi bi-credit-card"></i> 교재비 결제 ({{ number_format($order->total_amount) }}원)
-                                </button>
-                            </form>
-                        @else
-                            {{-- 소매: 학부모에게 결제 요청 --}}
-                            <a href="{{ route('my.orders.payment.create', $order->id) }}" class="btn btn-warning w-100 mb-2">
-                                <i class="bi bi-chat-dots-fill"></i> 학부모에게 결제 요청
-                            </a>
-                        @endif
                     @endif
                     @if($canConfirm)
                         <form method="POST" action="{{ route('my.orders.transition', $order->id) }}" class="mb-2"
@@ -305,10 +287,33 @@
         @endif
     </div>
 
-    {{-- 우측: 도서 목록 + 상태 로그 --}}
+    {{-- 우측: 결제 액션 + 주문 목록 + 상태 로그 --}}
     <div class="col-lg-7">
+        {{-- 학원 결제 액션 (우측 상단 강조) --}}
+        @if($user->role_code === 'academy' && in_array($order->status_code, ['requested','confirmed','accepted','shipped']))
+            <div class="card section-card mb-3 border-warning">
+                <div class="card-body">
+                    @if(($vendor->trade_type ?? 'retail') === 'wholesale')
+                        {{-- 도매: 학원이 직접 결제 (학부모 거치지 않음) --}}
+                        <form method="POST" action="{{ route('my.orders.pay_direct', $order->id) }}"
+                              onsubmit="return confirm('교재비 {{ number_format($order->total_amount) }}원을 결제할까요?')">
+                            @csrf
+                            <button class="btn btn-warning w-100 text-dark fw-bold">
+                                <i class="bi bi-credit-card"></i> 교재비 결제 ({{ number_format($order->total_amount) }}원)
+                            </button>
+                        </form>
+                    @else
+                        {{-- 소매: 학부모에게 결제 요청 --}}
+                        <a href="{{ route('my.orders.payment.create', $order->id) }}" class="btn btn-warning w-100">
+                            <i class="bi bi-chat-dots-fill"></i> 학부모에게 결제 요청
+                        </a>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <div class="card section-card mb-3">
-            <div class="card-header"><strong><i class="bi bi-book"></i> 도서 목록 ({{ $items->count() }}건)</strong></div>
+            <div class="card-header"><strong><i class="bi bi-book"></i> 주문 목록 ({{ $items->count() }}건)</strong></div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light">
