@@ -131,7 +131,7 @@
                                 <td class="text-end">{{ number_format($b2c['margin_pool']) }}원</td>
                             </tr>
                             <tr>
-                                <th class="text-muted">학원 소개료</th>
+                                <th class="text-muted">학원 마진</th>
                                 <td class="text-end text-warning">-{{ number_format($b2c['referral_gross']) }}원</td>
                             </tr>
                             @if($user->role_code === 'agent')
