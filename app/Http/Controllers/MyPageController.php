@@ -1486,7 +1486,7 @@ class MyPageController extends Controller
             });
         }
 
-        $books = $booksQuery->orderBy('books.title')->paginate(60)->withQueryString();
+        $books = $booksQuery->orderBy('books.title')->paginate(50)->withQueryString();
 
         // 필터 옵션 (codes 테이블에서, 분류에 따라 학년 동적 필터)
         $allGrades = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get(['code','name']);
