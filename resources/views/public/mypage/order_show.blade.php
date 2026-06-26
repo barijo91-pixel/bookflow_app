@@ -48,7 +48,7 @@
                         <dt class="col-4 text-muted">대상 학생 ({{ $orderStudents->count() }})</dt>
                         <dd class="col-8">
                             @foreach($orderStudents as $os)
-                                <span class="badge bg-light text-dark mb-1">{{ $os->student_name }}@if($os->parent_name) · {{ $os->parent_name }}@endif</span>
+                                <span class="badge bg-light text-dark me-1 mb-1">{{ $os->student_name }}@if($os->parent_name) <span class="text-muted fw-normal">(학부모 {{ $os->parent_name }})</span>@endif</span>
                             @endforeach
                         </dd>
                     @endif
