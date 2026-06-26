@@ -35,7 +35,7 @@ class AuditLogController extends Controller
             });
         }
 
-        $logs = $query->paginate(30)->withQueryString();
+        $logs = $query->paginate(50)->withQueryString();
 
         $entities = DB::table('audit_logs')->distinct()->orderBy('entity')->pluck('entity')->filter()->values();
         $actions  = DB::table('audit_logs')->distinct()->orderBy('action')->pluck('action')->filter()->values();

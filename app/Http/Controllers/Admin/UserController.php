@@ -65,7 +65,7 @@ class UserController extends Controller
             $query->whereIn('id', $includeIds);
         }
 
-        $users = $query->paginate(20)->withQueryString();
+        $users = $query->paginate(50)->withQueryString();
         $roleOptions   = DB::table('codes')->where('group_code', 'user_role')->orderBy('sort_order')->get();
         $statusOptions = DB::table('codes')->where('group_code', 'user_status')->orderBy('sort_order')->get();
 
@@ -147,7 +147,7 @@ class UserController extends Controller
 
     public function pending()
     {
-        $users = User::where('status_code', 'pending')->orderBy('id')->paginate(20);
+        $users = User::where('status_code', 'pending')->orderBy('id')->paginate(50);
         return view('admin.users.pending', compact('users'));
     }
 

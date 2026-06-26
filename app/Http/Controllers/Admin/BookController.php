@@ -46,7 +46,7 @@ class BookController extends Controller
                   ->orWhere('publisher_code', 'like', "%{$q}%");
             });
         }
-        $books = $query->paginate(20)->withQueryString();
+        $books = $query->paginate(50)->withQueryString();
 
         $statusOptions    = DB::table('codes')->where('group_code', 'book_status')->orderBy('sort_order')->get();
         $subjectOptions   = DB::table('codes')->where('group_code', 'subject')->orderBy('sort_order')->get();

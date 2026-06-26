@@ -80,7 +80,7 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->paginate(20)->withQueryString();
+        $orders = $query->paginate(50)->withQueryString();
 
         $statusOptions = DB::table('codes')->where('group_code', 'order_status')->orderBy('sort_order')->get();
         $vendors = DB::table('vendors')->orderBy('name')->get(['id', 'name']);

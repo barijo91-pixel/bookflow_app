@@ -149,7 +149,7 @@ class SettlementController extends Controller
         if ($from)     $q->where('computed_at', '>=', $from . ' 00:00:00');
         if ($to)       $q->where('computed_at', '<=', $to . ' 23:59:59');
 
-        $records = $q->paginate(20)->withQueryString();
+        $records = $q->paginate(50)->withQueryString();
 
         // 합계
         $totals = SettlementRecord::query()

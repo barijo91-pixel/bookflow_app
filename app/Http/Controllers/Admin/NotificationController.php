@@ -156,7 +156,7 @@ class NotificationController extends Controller
                   ->orWhere('payload', 'like', "%{$q}%");
             });
         }
-        $logs = $query->paginate(30)->withQueryString();
+        $logs = $query->paginate(50)->withQueryString();
 
         $events = DB::table('codes')->where('group_code', 'notify_event')->orderBy('sort_order')->get();
         $channels = DB::table('codes')->where('group_code', 'notify_channel')->orderBy('sort_order')->get();

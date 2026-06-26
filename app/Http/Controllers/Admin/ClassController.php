@@ -51,7 +51,7 @@ class ClassController extends Controller
             });
         }
 
-        $classes = $query->paginate(20)->withQueryString();
+        $classes = $query->paginate(50)->withQueryString();
 
         // 각 학급의 학생 수
         $classIds = $classes->pluck('id')->toArray();

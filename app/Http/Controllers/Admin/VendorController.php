@@ -38,7 +38,7 @@ class VendorController extends Controller
             });
         }
 
-        $vendors = $query->paginate(20)->withQueryString();
+        $vendors = $query->paginate(50)->withQueryString();
         $typeOptions   = DB::table('codes')->where('group_code', 'vendor_type')->orderBy('sort_order')->get();
         $statusOptions = DB::table('codes')->where('group_code', 'vendor_status')->orderBy('sort_order')->get();
 

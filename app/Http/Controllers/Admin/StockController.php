@@ -60,7 +60,7 @@ class StockController extends Controller
             });
         }
 
-        $stocks = $query->paginate(30)->withQueryString();
+        $stocks = $query->paginate(50)->withQueryString();
 
         $distributors = DB::table('users')
             ->where('role_code', 'distributor')

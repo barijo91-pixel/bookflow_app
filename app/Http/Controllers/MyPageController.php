@@ -258,7 +258,7 @@ class MyPageController extends Controller
             $q->where('status', $status);
         }
 
-        $records = $q->paginate(20)->withQueryString();
+        $records = $q->paginate(50)->withQueryString();
 
         // 누적 통계 (필터 무관 — 전체)
         $base = \App\Models\SettlementRecord::query();
@@ -934,7 +934,7 @@ class MyPageController extends Controller
         }
         if ($selectedVendor) $query->where('o.vendor_id', $selectedVendor);
 
-        $orders = $query->orderByDesc('o.id')->paginate(20)->withQueryString();
+        $orders = $query->orderByDesc('o.id')->paginate(50)->withQueryString();
 
         // 학원 선택 드롭다운 — 이 사용자가 보는 주문들의 학원 목록 (academy는 자기 학원만이라 미표시)
         $vendorOptions = collect();
@@ -1004,7 +1004,7 @@ class MyPageController extends Controller
         if ($low) {
             $query->whereColumn('s.qty', '<=', 's.low_stock_threshold');
         }
-        $stocks = $query->orderBy('b.title')->paginate(30)->withQueryString();
+        $stocks = $query->orderBy('b.title')->paginate(50)->withQueryString();
 
         // 요약
         $baseStocks = DB::table('book_stocks')->where('distributor_user_id', $user->id);
