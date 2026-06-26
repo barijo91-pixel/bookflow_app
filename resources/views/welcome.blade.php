@@ -492,6 +492,7 @@
                 <p class="mb-1">{{ setting('company_name', 'e-Learn') }}</p>
                 @if(setting('representative'))<p class="mb-1">대표 {{ setting('representative') }}</p>@endif
                 @if(setting('business_no'))<p class="mb-1">사업자등록번호 {{ setting('business_no') }}</p>@endif
+                @if(setting('biz_report_no'))<p class="mb-1">통신판매신고 {{ setting('biz_report_no') }}</p>@endif
                 @if(setting('company_address'))<p class="mb-1">{{ setting('company_address') }}</p>@endif
                 @if(setting('company_phone'))<p class="mb-1"><i class="bi bi-telephone"></i> {{ setting('company_phone') }}</p>@endif
                 @if(setting('company_email'))<p class="mb-1"><i class="bi bi-envelope"></i> {{ setting('company_email') }}</p>@endif

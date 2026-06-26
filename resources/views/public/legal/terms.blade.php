@@ -74,6 +74,7 @@
     상호: {{ $company }}
     @if(setting('representative')) · 대표: {{ setting('representative') }} @endif
     @if(setting('business_no')) · 사업자등록번호: {{ setting('business_no') }} @endif
+    @if(setting('biz_report_no')) · 통신판매신고: {{ setting('biz_report_no') }} @endif
     @if(setting('company_phone')) · 연락처: {{ setting('company_phone') }} @endif
     @if(setting('company_email')) · 이메일: {{ setting('company_email') }} @endif
 </p>

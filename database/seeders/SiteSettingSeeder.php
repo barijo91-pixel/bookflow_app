@@ -14,6 +14,7 @@ class SiteSettingSeeder extends Seeder
             ['company', 'company_name', 'e-Learn', 'text', '회사명', null, 10],
             ['company', 'service_name', 'BookSys', 'text', '서비스명', null, 20],
             ['company', 'business_no', '', 'text', '사업자등록번호', null, 30],
+            ['company', 'biz_report_no', '', 'text', '통신판매신고번호', null, 35],
             ['company', 'representative', '', 'text', '대표자', null, 40],
             ['company', 'company_address', '', 'text', '주소', null, 50],
             ['company', 'company_phone', '', 'text', '대표 전화', null, 60],
