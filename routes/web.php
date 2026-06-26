@@ -21,7 +21,14 @@ use Illuminate\Support\Facades\Route;
 
 // 공개 랜딩 페이지
 Route::get('/', function () {
-    return view('welcome');
+    $featuredBooks = \Illuminate\Support\Facades\DB::table('books')
+        ->whereNull('deleted_at')
+        ->where('status_code', 'selling')
+        ->orderByRaw('CASE WHEN cover_path IS NULL THEN 1 ELSE 0 END')
+        ->orderByDesc('id')
+        ->limit(8)
+        ->get(['title', 'isbn', 'price', 'cover_path', 'author']);
+    return view('welcome', compact('featuredBooks'));
 })->name('home');
 
 // 학부모 공유링크 (공개, 토큰 기반)
@@ -41,6 +48,11 @@ Route::post('/pay/{token}/portone-complete', [\App\Http\Controllers\PaymentReque
 
 // SEO
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
+// 약관/정책 (전자상거래 필수 + PG 심사 요건)
+Route::view('/terms', 'public.legal.terms')->name('legal.terms');
+Route::view('/privacy', 'public.legal.privacy')->name('legal.privacy');
+Route::view('/refund', 'public.legal.refund')->name('legal.refund');
 
 // 공개 회원가입/로그인
 Route::middleware('guest')->group(function () {

@@ -347,6 +347,37 @@
     </div>
 </section>
 
+{{-- 대표 교재 (정가 안내 — 전자상거래 상품·가격 노출) --}}
+<section style="background:#fff; padding:4rem 1rem;">
+    <div class="container">
+        <h2 class="section-title">대표 교재</h2>
+        <p class="section-sub">BookSys가 유통하는 주요 영어 교재입니다. 표시 가격은 정가(권장 소비자가)이며, 실제 공급가는 거래 조건에 따라 달라집니다.</p>
+        @if(($featuredBooks ?? collect())->isNotEmpty())
+            <div class="row g-3 mt-2">
+                @foreach($featuredBooks as $b)
+                    <div class="col-6 col-md-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            @if($b->cover_path)
+                                <img src="{{ asset('storage/'.$b->cover_path) }}" class="card-img-top" alt="{{ $b->title }}" style="height:190px; object-fit:cover;">
+                            @else
+                                <div class="d-flex align-items-center justify-content-center bg-light" style="height:190px;"><i class="bi bi-book" style="font-size:2.6rem; color:#cbd3dd;"></i></div>
+                            @endif
+                            <div class="card-body p-2">
+                                <div class="small fw-bold text-truncate" title="{{ $b->title }}">{{ $b->title }}</div>
+                                @if($b->author)<div class="text-muted" style="font-size:.78rem;">{{ \Illuminate\Support\Str::limit($b->author, 20) }}</div>@endif
+                                <div class="mt-1" style="color:var(--navy); font-weight:700;">{{ number_format($b->price) }}원</div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <p class="text-center text-muted">현재 표시할 교재가 없습니다.</p>
+        @endif
+        <p class="text-center text-muted small mt-4 mb-0">전체 교재 목록과 구매는 로그인 후 이용하실 수 있습니다.</p>
+    </div>
+</section>
+
 {{-- 앱 다운로드 --}}
 @if(setting('app_download_active') === '1')
     @php
@@ -467,6 +498,11 @@
             </div>
         </div>
         <div class="copyright">
+            <div class="mb-2">
+                <a href="{{ route('legal.terms') }}" class="me-3">이용약관</a>
+                <a href="{{ route('legal.privacy') }}" class="me-3">개인정보처리방침</a>
+                <a href="{{ route('legal.refund') }}">취소·환불정책</a>
+            </div>
             &copy; {{ date('Y') }} BookSys · All rights reserved.
         </div>
     </div>
