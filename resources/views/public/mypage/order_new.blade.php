@@ -306,7 +306,7 @@
         <div class="card section-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-journals"></i> 도서 목록</strong>
-                <span class="small text-muted">{{ $books->count() }}건 표시 (최대 60건)</span>
+                <span class="small text-muted">전체 {{ number_format($books->total()) }}건 중 {{ $books->firstItem() ?? 0 }}–{{ $books->lastItem() ?? 0 }}</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-sm table-hover align-middle mb-0 table-row-highlight">
@@ -364,6 +364,11 @@
                     </tbody>
                 </table>
             </div>
+            @if($books->hasPages())
+                <div class="card-footer d-flex justify-content-center pt-3">
+                    {{ $books->onEachSide(1)->links() }}
+                </div>
+            @endif
         </div>
     </div>
 
