@@ -437,15 +437,20 @@
                             <input type="hidden" name="cart_key" value="{{ $cartKey }}">
                             <input type="hidden" name="agent_id" value="{{ $selectedAgent->id }}">
                             @if($classes->isNotEmpty())
-                                <select name="class_id" id="orderClassSelect" class="form-select form-select-sm mb-2" aria-label="학급 선택">
-                                    <option value="">학급 선택 안 함</option>
-                                    @foreach($classes as $c)
-                                        <option value="{{ $c->id }}">{{ $c->name }}</option>
-                                    @endforeach
-                                </select>
-                                <div id="studentPickArea" class="mb-2 text-start" style="display:none;">
-                                    <div class="small text-muted mb-1"><i class="bi bi-people"></i> 대상 학생 <span class="text-muted">(기본 전체 선택)</span></div>
-                                    <div id="studentPickList" class="border rounded p-2" style="max-height:160px; overflow-y:auto;"></div>
+                                <div class="mb-2 p-2 rounded" style="background:#eaf1f8; border:1px solid #1f3a5f;">
+                                    <label class="form-label small fw-bold navy mb-1" for="orderClassSelect">
+                                        <i class="bi bi-mortarboard-fill"></i> 학급 선택 <span class="text-muted fw-normal">(소매 주문 시)</span>
+                                    </label>
+                                    <select name="class_id" id="orderClassSelect" class="form-select form-select-sm" aria-label="학급 선택">
+                                        <option value="">학급 선택 안 함</option>
+                                        @foreach($classes as $c)
+                                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div id="studentPickArea" class="mt-2 text-start" style="display:none;">
+                                        <div class="small text-muted mb-1"><i class="bi bi-people"></i> 대상 학생 <span class="text-muted">(기본 전체 선택)</span></div>
+                                        <div id="studentPickList" class="border rounded p-2 bg-white" style="max-height:160px; overflow-y:auto;"></div>
+                                    </div>
                                 </div>
                             @endif
                             <button type="submit" class="btn btn-navy w-100 btn-lg">
