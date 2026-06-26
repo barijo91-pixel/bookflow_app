@@ -33,7 +33,7 @@ class OrderController extends Controller
             $query->where('status_code', $status);
         }
 
-        $orders = $query->paginate(20);
+        $orders = $query->paginate(50);
         return response()->json([
             'ok' => true,
             'data' => collect($orders->items())->map(fn ($o) => $this->serializeListItem($o))->all(),

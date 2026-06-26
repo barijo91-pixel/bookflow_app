@@ -16,7 +16,7 @@ class BookController extends Controller
         $school = $request->query('school');
         $subject = $request->query('subject');
         $publisher = $request->query('publisher');
-        $perPage = min((int) ($request->query('per_page', 20)), 50);
+        $perPage = min((int) ($request->query('per_page', 50)), 50);
 
         $query = Book::query()->where('status_code', 'selling');
         if ($q !== '') {
