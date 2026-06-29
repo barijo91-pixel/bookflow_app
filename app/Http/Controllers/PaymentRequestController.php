@@ -371,16 +371,15 @@ class PaymentRequestController extends Controller
         abort_if(! $pr, 404, '결제 요청을 찾을 수 없습니다.');
 
         $data = $request->validate([
-            'imp_uid'      => ['required', 'string', 'max:100'],
-            'merchant_uid' => ['required', 'string', 'max:100'],
+            'payment_id' => ['required', 'string', 'max:100'],
         ]);
 
         if ($pr->status === 'paid') {
             return response()->json(['success' => true, 'message' => '이미 결제 완료']);
         }
 
-        // PortOne API로 결제 검증
-        $payment = PortOneService::getPayment($data['imp_uid']);
+        // PortOne V2 API로 결제 검증 (위변조 방지)
+        $payment = PortOneService::getPayment($data['payment_id']);
         if (! $payment) {
             return response()->json([
                 'success' => false,
@@ -388,21 +387,22 @@ class PaymentRequestController extends Controller
             ], 400);
         }
 
-        // 위변조 방지: 결제 상태 + 금액 검증
-        if (($payment['status'] ?? '') !== 'paid') {
+        $result = PortOneService::paidAmount($payment); // ['paid'=>bool,'amount'=>int,'status'=>string]
+
+        if (! $result['paid']) {
             return response()->json([
                 'success' => false,
-                'message' => '결제 상태 이상: ' . ($payment['status'] ?? '?'),
+                'message' => '결제 상태 이상: ' . $result['status'],
             ], 400);
         }
 
-        if ((int) ($payment['amount'] ?? 0) !== (int) $pr->amount) {
+        if ($result['amount'] !== (int) $pr->amount) {
             // 결제 금액 위변조 → 자동 환불
-            PortOneService::cancel($data['imp_uid'], (int) ($payment['amount'] ?? 0), '결제 금액 불일치 자동 환불');
+            PortOneService::cancel($data['payment_id'], $result['amount'], '결제 금액 불일치 자동 환불');
             AuditLog::log('payment_requests', $pr->id, 'amount_mismatch', null, [
-                'expected' => $pr->amount,
-                'actual'   => $payment['amount'] ?? 0,
-                'imp_uid'  => $data['imp_uid'],
+                'expected'   => $pr->amount,
+                'actual'     => $result['amount'],
+                'payment_id' => $data['payment_id'],
             ]);
             return response()->json([
                 'success' => false,
@@ -416,15 +416,14 @@ class PaymentRequestController extends Controller
                 'paid_at' => now(),
             ]);
 
-            $settlement = SettlementService::createFromPaymentRequest($pr, $data['imp_uid']);
+            $settlement = SettlementService::createFromPaymentRequest($pr, $data['payment_id']);
 
             AuditLog::log('payment_requests', $pr->id, 'portone_paid', null, [
-                'imp_uid'          => $data['imp_uid'],
-                'merchant_uid'     => $data['merchant_uid'],
-                'pg_provider'      => $payment['pg_provider'] ?? '',
-                'pay_method'       => $payment['pay_method'] ?? '',
-                'settlement_id'    => $settlement->id,
-                'parent_paid'      => $pr->amount,
+                'payment_id'    => $data['payment_id'],
+                'pg_provider'   => $payment['channel']['pgProvider'] ?? '',
+                'pay_method'    => is_array($payment['method'] ?? null) ? ($payment['method']['type'] ?? '') : '',
+                'settlement_id' => $settlement->id,
+                'parent_paid'   => $pr->amount,
             ]);
         });
 

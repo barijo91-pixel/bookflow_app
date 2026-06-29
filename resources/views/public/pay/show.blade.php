@@ -181,68 +181,60 @@ function copyAcc() {
 </script>
 
 @if(($portOneActive ?? false) && in_array($pr->status, ['sent', 'viewed']))
-{{-- PortOne (구 아임포트) SDK --}}
-<script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+{{-- PortOne V2 결제 SDK --}}
+<script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
 <script>
 (function() {
-    const IMP = window.IMP;
-    IMP.init('{{ $portOneImpUid }}');
-
-    const merchantUid = 'pay_{{ $pr->id }}_' + Date.now();
     const csrfToken = '{{ csrf_token() }}';
+    const btn = document.getElementById('portOnePayBtn');
+    const amountLabel = '<i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원';
+    if (!btn) return;
 
-    document.getElementById('portOnePayBtn').addEventListener('click', function() {
-        const btn = this;
+    btn.addEventListener('click', async function() {
         btn.disabled = true;
         btn.innerHTML = '<i class="bi bi-hourglass-split"></i> 결제 요청 중...';
+        const paymentId = 'pay-{{ $pr->id }}-' + Date.now();
+        try {
+            const response = await PortOne.requestPayment({
+                storeId: {!! json_encode($portOneStoreId ?? '') !!},
+                channelKey: {!! json_encode($portOneChannelKey ?? '') !!},
+                paymentId: paymentId,
+                orderName: {!! json_encode('교재 대금 — '.($vendor->name ?? 'BookSys')) !!},
+                totalAmount: {{ (int) $pr->amount }},
+                currency: 'CURRENCY_KRW',
+                payMethod: 'CARD',
+                customer: {
+                    fullName: {!! json_encode($pr->parent_name ?? $pr->student_name ?? '') !!},
+                    phoneNumber: {!! json_encode($pr->parent_phone ?? '') !!},
+                },
+            });
 
-        IMP.request_pay({
-            pg: 'html5_inicis',  // 또는 'kakaopay', 'tosspayments' — 관리자가 선택 가능하게 추후 확장
-            pay_method: 'card',
-            merchant_uid: merchantUid,
-            name: '교재 대금 — {{ $vendor->name ?? 'BookSys' }}',
-            amount: {{ (int) $pr->amount }},
-            buyer_name: {!! json_encode($pr->parent_name ?? $pr->student_name ?? '') !!},
-            buyer_tel: {!! json_encode($pr->parent_phone ?? '') !!},
-        }, function(rsp) {
-            if (rsp.success) {
-                // 결제 성공 → 서버 검증 호출
-                fetch('{{ route('public.pay.portone', $pr->token) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        imp_uid: rsp.imp_uid,
-                        merchant_uid: rsp.merchant_uid,
-                    }),
-                })
-                .then(r => r.json())
-                .then(j => {
-                    if (j.success) {
-                        window.location.href = j.redirect_url || window.location.href;
-                    } else {
-                        alert('결제 검증 실패: ' + (j.message || '알 수 없는 오류'));
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원';
-                    }
-                })
-                .catch(err => {
-                    alert('서버 통신 오류. 다시 시도해주세요.');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원';
-                });
-            } else {
-                // 결제 실패/취소
-                if (rsp.error_msg && !rsp.error_msg.includes('USER_CANCEL')) {
-                    alert('결제 실패: ' + rsp.error_msg);
+            // response.code 가 있으면 실패/취소
+            if (response && response.code != null) {
+                if (!String(response.code).includes('CANCEL')) {
+                    alert('결제 실패: ' + (response.message || response.code));
                 }
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원';
+                btn.disabled = false; btn.innerHTML = amountLabel;
+                return;
             }
-        });
+
+            // 결제창 완료 → 서버 검증 (paymentId 전달)
+            const r = await fetch('{{ route('public.pay.portone', $pr->token) }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                body: JSON.stringify({ payment_id: response.paymentId }),
+            });
+            const j = await r.json();
+            if (j.success) {
+                window.location.href = j.redirect_url || window.location.href;
+            } else {
+                alert('결제 검증 실패: ' + (j.message || '알 수 없는 오류'));
+                btn.disabled = false; btn.innerHTML = amountLabel;
+            }
+        } catch (e) {
+            alert('결제 중 오류가 발생했습니다. 다시 시도해주세요.');
+            btn.disabled = false; btn.innerHTML = amountLabel;
+        }
     });
 })();
 </script>
