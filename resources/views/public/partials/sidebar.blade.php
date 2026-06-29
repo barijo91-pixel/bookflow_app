@@ -105,6 +105,9 @@
                     <i class="bi bi-clipboard-data"></i> 주문내역
                     @if($orderBadge > 0)<span class="badge bg-secondary ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
+                <a href="{{ route('my.store.index') }}" class="nav-item {{ $startsWith('my.store') }}">
+                    <i class="bi bi-bag-heart"></i> 교재 구매 <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem;">심사용</span>
+                </a>
                 @if($academyTradeType !== 'wholesale')
                 <a href="{{ route('my.classes.index') }}" class="nav-item {{ $startsWith('my.classes') }}">
                     <i class="bi bi-mortarboard"></i> 학급/학생
