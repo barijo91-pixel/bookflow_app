@@ -510,6 +510,64 @@ class MyPageController extends Controller
         return response()->json($books);
     }
 
+    /** PG/카드사 심사용 상품(교재) 페이지 — 로그인 계정만, 실제 결제창 노출 */
+    public function storeIndex()
+    {
+        $user = Auth::user();
+        $books = DB::table('books')
+            ->whereNull('deleted_at')
+            ->where('status_code', 'selling')
+            ->orderByRaw('CASE WHEN cover_path IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get(['id', 'title', 'isbn', 'price', 'cover_path', 'author']);
+
+        return view('public.mypage.store', [
+            'user'              => $user,
+            'books'             => $books,
+            'portOneActive'     => \App\Services\PortOneService::isActive(),
+            'portOneStoreId'    => \App\Services\PortOneService::storeId(),
+            'portOneChannelKey' => \App\Services\PortOneService::channelKey(),
+        ]);
+    }
+
+    /** 심사용 상품 결제 검증 (paymentId) */
+    public function storeVerify(Request $request)
+    {
+        $data = $request->validate([
+            'payment_id' => ['required', 'string', 'max:100'],
+            'book_id'    => ['required', 'integer'],
+        ]);
+
+        $book = DB::table('books')->whereNull('deleted_at')->find($data['book_id']);
+        if (! $book) {
+            return response()->json(['success' => false, 'message' => '상품을 찾을 수 없습니다.'], 400);
+        }
+
+        if (! \App\Services\PortOneService::isActive()) {
+            return response()->json(['success' => false, 'message' => 'PG가 설정되지 않았습니다. (사이트설정에 PortOne 키 입력 필요)'], 400);
+        }
+
+        $payment = \App\Services\PortOneService::getPayment($data['payment_id']);
+        $result  = \App\Services\PortOneService::paidAmount($payment);
+
+        if (! $result['paid']) {
+            return response()->json(['success' => false, 'message' => '결제 상태 이상: ' . $result['status']], 400);
+        }
+        if ($result['amount'] !== (int) $book->price) {
+            \App\Services\PortOneService::cancel($data['payment_id'], $result['amount'], '결제 금액 불일치 자동 환불');
+            return response()->json(['success' => false, 'message' => '결제 금액 불일치. 자동 환불되었습니다.'], 400);
+        }
+
+        AuditLog::log('store_payment', (int) $book->id, 'paid', null, [
+            'payment_id' => $data['payment_id'],
+            'amount'     => $result['amount'],
+            'title'      => $book->title,
+        ]);
+
+        return response()->json(['success' => true, 'message' => '결제가 완료되었습니다. 감사합니다.']);
+    }
+
     /** 주문 수정 적용 (수량 변경 + 행 삭제 + 도서 추가) */
     public function updateOrder(Request $request, $id)
     {

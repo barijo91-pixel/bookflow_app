@@ -107,6 +107,10 @@ Route::middleware('auth')->group(function () {
         // 도매 학원 — 학원 직접 결제 (학부모 거치지 않음)
         Route::post('orders/{id}/pay-direct',
             [\App\Http\Controllers\PaymentRequestController::class, 'payDirect'])->name('orders.pay_direct');
+
+        // PG/카드사 심사용 상품(교재) 페이지 — 로그인 계정만 접근, 실제 결제창 호출
+        Route::get('store',         [\App\Http\Controllers\MyPageController::class, 'storeIndex'])->name('store.index');
+        Route::post('store/verify', [\App\Http\Controllers\MyPageController::class, 'storeVerify'])->name('store.verify');
         Route::get('classes/{classId}/students-with-parents',
             [\App\Http\Controllers\PaymentRequestController::class, 'studentsWithParents'])->name('classes.students_parents');
 
