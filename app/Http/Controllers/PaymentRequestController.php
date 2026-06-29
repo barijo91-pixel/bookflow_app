@@ -294,10 +294,11 @@ class PaymentRequestController extends Controller
         }
 
         $items = json_decode($pr->items_snapshot ?? '[]', true) ?: [];
-        $portOneActive = PortOneService::isActive();
-        $portOneImpUid = PortOneService::impUid();
+        $portOneActive     = PortOneService::isActive();
+        $portOneStoreId    = PortOneService::storeId();
+        $portOneChannelKey = PortOneService::channelKey();
 
-        return view('public.pay.show', compact('pr', 'vendor', 'distributor', 'bankName', 'items', 'portOneActive', 'portOneImpUid'));
+        return view('public.pay.show', compact('pr', 'vendor', 'distributor', 'bankName', 'items', 'portOneActive', 'portOneStoreId', 'portOneChannelKey'));
     }
 
     /**

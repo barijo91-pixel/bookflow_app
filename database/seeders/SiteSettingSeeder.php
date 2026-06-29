@@ -33,9 +33,9 @@ class SiteSettingSeeder extends Seeder
             ['integration', 'fcm_project_id', '', 'text', 'FCM Project ID', null, 100],
             // PortOne (구 아임포트) PG 결제
             ['integration', 'portone_active', '0', 'boolean', 'PortOne PG 활성화', '미체크 시 mock 결제로 fallback', 110],
-            ['integration', 'portone_imp_uid', '', 'text', 'PortOne 가맹점 식별코드 (imp_uid)', '예: imp00000000', 120],
-            ['integration', 'portone_rest_api_key', '', 'text', 'PortOne REST API Key', null, 130],
-            ['integration', 'portone_rest_secret', '', 'text', 'PortOne REST API Secret', null, 140],
+            ['integration', 'portone_v2_store_id', '', 'text', 'PortOne Store ID', '예: store-xxxxxxxx (V2 콘솔 > 결제연동)', 120],
+            ['integration', 'portone_v2_channel_key', '', 'text', 'PortOne 채널 키 (Channel Key)', '예: channel-key-xxxxxxxx', 130],
+            ['integration', 'portone_v2_api_secret', '', 'text', 'PortOne V2 API Secret', '서버 결제검증/취소용 (외부 노출 금지)', 140],
 
             // SEO
             ['seo', 'meta_title', 'BookSys - 교재 도매 유통 플랫폼', 'text', 'SEO 제목', null, 10],

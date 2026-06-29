@@ -6,96 +6,96 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * PortOne (구 아임포트) 결제 검증 서비스 — V1 REST API 기준
+ * PortOne V2 결제 검증 서비스 — api.portone.io 기준
  *
- * 필수 site_settings:
- *  - portone_imp_uid:     가맹점 식별 코드 (imp00000000)
- *  - portone_rest_api_key: REST API Key
- *  - portone_rest_secret:  REST API Secret
- *  - portone_active:       'Y' = PG 활성화 (미설정 시 mock 결제로 fallback)
+ * 필수 site_settings (integration 그룹):
+ *  - portone_v2_store_id:    Store ID (store-xxxxxxxx)
+ *  - portone_v2_channel_key: 결제 채널 키 (channel-key-xxxxxxxx)
+ *  - portone_v2_api_secret:  V2 API Secret (서버 검증/취소용)
+ *  - portone_active:         'Y' = PG 활성화 (미설정 시 mock 결제로 fallback)
  *
- * 채널: 추후 다중 PG 지원 시 portone_channel_key 추가
+ * V2는 V1(아임포트)과 달리 토큰 발급 없이 'Authorization: PortOne {API_SECRET}' 헤더로 호출.
+ * 결제 식별자: paymentId (가맹점이 생성, 브라우저 SDK requestPayment에 전달).
  */
 class PortOneService
 {
-    private const API_BASE = 'https://api.iamport.kr';
+    private const API_BASE = 'https://api.portone.io';
 
-    /**
-     * 키 설정 여부 — false면 mock 결제로 fallback
-     */
+    /** 키 설정 여부 — false면 mock 결제로 fallback */
     public static function isActive(): bool
     {
-        return setting('portone_active') === 'Y'
-            && setting('portone_imp_uid')
-            && setting('portone_rest_api_key')
-            && setting('portone_rest_secret');
+        return in_array((string) setting('portone_active'), ['1', 'Y', 'true'], true)
+            && setting('portone_v2_store_id')
+            && setting('portone_v2_channel_key')
+            && setting('portone_v2_api_secret');
     }
 
-    public static function impUid(): string
+    public static function storeId(): string
     {
-        return (string) setting('portone_imp_uid', '');
+        return (string) setting('portone_v2_store_id', '');
+    }
+
+    public static function channelKey(): string
+    {
+        return (string) setting('portone_v2_channel_key', '');
+    }
+
+    private static function secret(): string
+    {
+        return (string) setting('portone_v2_api_secret', '');
     }
 
     /**
-     * Access Token 발급
+     * 결제 단건 조회 — paymentId 기준
+     * 반환(V2): ['status' => 'PAID'|'FAILED'|..., 'amount' => ['total' => int, ...], 'orderName' => ..., ...]
      */
-    public static function getAccessToken(): ?string
+    public static function getPayment(string $paymentId): ?array
     {
+        $secret = self::secret();
+        if (! $secret) return null;
+
         try {
-            $res = Http::asJson()->post(self::API_BASE . '/users/getToken', [
-                'imp_key'    => setting('portone_rest_api_key'),
-                'imp_secret' => setting('portone_rest_secret'),
-            ]);
-            $body = $res->json();
-            if (($body['code'] ?? -1) === 0) {
-                return $body['response']['access_token'] ?? null;
+            $res = Http::withHeaders(['Authorization' => 'PortOne ' . $secret])
+                ->get(self::API_BASE . '/payments/' . rawurlencode($paymentId));
+            if ($res->successful()) {
+                return $res->json();
             }
-            Log::warning('PortOne token failed', ['body' => $body]);
+            Log::warning('PortOne v2 getPayment failed', ['status' => $res->status(), 'body' => $res->body()]);
         } catch (\Throwable $e) {
-            Log::error('PortOne token exception', ['err' => $e->getMessage()]);
+            Log::error('PortOne v2 getPayment exception', ['err' => $e->getMessage()]);
         }
         return null;
     }
 
     /**
-     * 결제 정보 조회 — 클라이언트가 전달한 imp_uid 기준
-     * 반환: ['status' => 'paid'|'failed'|..., 'amount' => int, 'merchant_uid' => string, ...]
+     * 결제 상태가 완료(PAID)인지 + 결제 총액 반환
+     * 반환: ['paid' => bool, 'amount' => int, 'status' => string]
      */
-    public static function getPayment(string $impUid): ?array
+    public static function paidAmount(?array $payment): array
     {
-        $token = self::getAccessToken();
-        if (! $token) return null;
-
-        try {
-            $res = Http::withToken($token)->get(self::API_BASE . '/payments/' . $impUid);
-            $body = $res->json();
-            if (($body['code'] ?? -1) === 0) {
-                return $body['response'] ?? null;
-            }
-        } catch (\Throwable $e) {
-            Log::error('PortOne getPayment exception', ['err' => $e->getMessage()]);
-        }
-        return null;
+        $status = is_array($payment) ? ($payment['status'] ?? '') : '';
+        $amount = is_array($payment) ? (int) ($payment['amount']['total'] ?? 0) : 0;
+        return ['paid' => $status === 'PAID', 'amount' => $amount, 'status' => $status];
     }
 
     /**
-     * 결제 취소 (환불)
+     * 결제 취소 (환불) — paymentId 기준
      */
-    public static function cancel(string $impUid, ?int $amount = null, string $reason = ''): array
+    public static function cancel(string $paymentId, ?int $amount = null, string $reason = ''): array
     {
-        $token = self::getAccessToken();
-        if (! $token) return ['success' => false, 'message' => 'PG 토큰 발급 실패'];
+        $secret = self::secret();
+        if (! $secret) return ['success' => false, 'message' => 'API Secret 미설정'];
 
-        $payload = ['imp_uid' => $impUid, 'reason' => $reason];
+        $payload = ['reason' => $reason ?: '가맹점 취소'];
         if ($amount !== null) $payload['amount'] = $amount;
 
         try {
-            $res = Http::withToken($token)->post(self::API_BASE . '/payments/cancel', $payload);
-            $body = $res->json();
-            if (($body['code'] ?? -1) === 0) {
-                return ['success' => true, 'response' => $body['response']];
+            $res = Http::withHeaders(['Authorization' => 'PortOne ' . $secret])
+                ->post(self::API_BASE . '/payments/' . rawurlencode($paymentId) . '/cancel', $payload);
+            if ($res->successful()) {
+                return ['success' => true, 'response' => $res->json()];
             }
-            return ['success' => false, 'message' => $body['message'] ?? '취소 실패'];
+            return ['success' => false, 'message' => $res->json('message') ?? '취소 실패'];
         } catch (\Throwable $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
