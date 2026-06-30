@@ -517,8 +517,7 @@ class MyPageController extends Controller
         $books = DB::table('books')
             ->whereNull('deleted_at')
             ->where('status_code', 'selling')
-            ->orderByRaw('CASE WHEN cover_path IS NULL THEN 1 ELSE 0 END')
-            ->orderByDesc('id')
+            ->orderByDesc('id')   // 최신 등록 3건 (표지 유무 무관 — 심사용 교재 우선 노출)
             ->limit(3)
             ->get(['id', 'title', 'isbn', 'price', 'cover_path', 'author']);
 
