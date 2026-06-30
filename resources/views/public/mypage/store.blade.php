@@ -19,7 +19,7 @@
         <div class="col-md-4">
             <div class="card section-card h-100">
                 @if($b->cover_path)
-                    <img src="{{ asset('storage/'.$b->cover_path) }}" class="card-img-top" alt="{{ $b->title }}" style="height:220px; object-fit:cover;">
+                    <img src="{{ str_starts_with($b->cover_path, 'http') ? $b->cover_path : asset('storage/'.$b->cover_path) }}" class="card-img-top" alt="{{ $b->title }}" style="height:220px; object-fit:cover;">
                 @else
                     <div class="d-flex align-items-center justify-content-center bg-light" style="height:220px;"><i class="bi bi-book" style="font-size:3rem; color:#cbd3dd;"></i></div>
                 @endif

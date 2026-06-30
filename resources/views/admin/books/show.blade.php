@@ -30,7 +30,7 @@
     <div class="col-lg-8">
         <div class="card section-card">
             <div class="card-header"><strong>기본 정보</strong></div>
-            <form method="POST" action="{{ route('admin.books.update', $book) }}">
+            <form method="POST" action="{{ route('admin.books.update', $book) }}" enctype="multipart/form-data">
                 @csrf @method('PUT')
                 <input type="hidden" name="source" value="{{ $book->source }}">
                 <div class="card-body">
@@ -47,6 +47,8 @@
                                     <i class="bi bi-book"></i>
                                 @endif
                             </div>
+                            <input type="file" name="cover_file" accept="image/*" class="form-control form-control-sm mt-2" style="font-size:.7rem;">
+                            <div class="form-text text-center" style="font-size:.66rem;">파일 업로드 시<br>URL보다 우선</div>
                         </div>
                         <div class="col-md-10">
                             <div class="row g-3">

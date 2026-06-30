@@ -100,6 +100,13 @@ class BookController extends Controller
     public function update(Request $request, Book $book)
     {
         $data = $this->validatePayload($request, $book->id);
+
+        // 표지 파일 업로드 시 URL/경로보다 우선 적용 (storage/app/public/books)
+        if ($request->hasFile('cover_file')) {
+            $request->validate(['cover_file' => ['image', 'max:5120']]);
+            $data['cover_path'] = $request->file('cover_file')->store('books', 'public');
+        }
+
         $book->update($data);
         $this->syncTargets($book, $request);
         return redirect()->route('admin.books.show', $book)->with('success', '저장되었습니다.');
