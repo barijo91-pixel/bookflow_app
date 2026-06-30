@@ -77,17 +77,23 @@
             </table>
         </div>
         {{-- 도서 추가 (접수 대기 상태에서만) --}}
-        <div class="card-body border-top">
-            <label class="form-label small fw-bold navy mb-1"><i class="bi bi-plus-circle"></i> 도서 추가</label>
-            <select id="bookPublisherFilter" class="form-select form-select-sm mb-2">
-                <option value="">전체 출판사</option>
-                @foreach($publisherOptions as $po)
-                    <option value="{{ $po->id }}">{{ $po->name }}</option>
-                @endforeach
-            </select>
-            <input type="text" id="bookSearchInput" class="form-control form-control-sm mb-2"
-                   placeholder="추가할 도서 제목 또는 ISBN 검색 (출판사만 선택해도 됨)" autocomplete="off">
-            <div id="bookSearchResults" class="border rounded" style="max-height:240px; overflow-y:auto;"></div>
+        <div class="card-body border-top" style="background:#e7edf4;">
+            <label class="form-label small fw-bold navy mb-2"><i class="bi bi-plus-circle"></i> 도서 추가</label>
+            <div class="row g-2 mb-2">
+                <div class="col-md-4">
+                    <select id="bookPublisherFilter" class="form-select form-select-sm">
+                        <option value="">전체 출판사</option>
+                        @foreach($publisherOptions as $po)
+                            <option value="{{ $po->id }}">{{ $po->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <input type="text" id="bookSearchInput" class="form-control form-control-sm"
+                           placeholder="추가할 도서 제목 또는 ISBN 검색 (출판사만 선택해도 됨)" autocomplete="off">
+                </div>
+            </div>
+            <div id="bookSearchResults" class="border rounded bg-white" style="max-height:240px; overflow-y:auto;"></div>
             <div class="form-text">검색 후 <strong>추가</strong>를 누르면 위 목록에 들어갑니다. 단가는 이 주문 할인율({{ rtrim(rtrim(number_format($orderRate, 2), '0'), '.') }}%)로 계산됩니다.</div>
         </div>
         <div class="card-body">
