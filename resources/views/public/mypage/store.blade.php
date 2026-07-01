@@ -110,7 +110,8 @@
                 alert(j.message || (j.success ? '결제 완료' : '검증 실패'));
                 btn.disabled = false; btn.innerHTML = orig;
             } catch (e) {
-                alert('결제 중 오류가 발생했습니다. 다시 시도해주세요.');
+                console.error('PortOne 결제 오류:', e);
+                alert('결제 오류: ' + (e && e.message ? e.message : JSON.stringify(e)));
                 btn.disabled = false; btn.innerHTML = orig;
             }
         });
