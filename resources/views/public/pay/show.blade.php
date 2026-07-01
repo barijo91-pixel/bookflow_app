@@ -206,6 +206,7 @@ function copyAcc() {
                 customer: {
                     fullName: {!! json_encode($pr->parent_name ?? $pr->student_name ?? '') !!},
                     phoneNumber: {!! json_encode($pr->parent_phone ?? '') !!},
+                    email: {!! json_encode(setting('company_email', 'help@booksys.co.kr')) !!},
                 },
             });
 

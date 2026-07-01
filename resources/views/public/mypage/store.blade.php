@@ -91,6 +91,11 @@
                     totalAmount: amount,
                     currency: 'CURRENCY_KRW',
                     payMethod: 'CARD',
+                    customer: {
+                        fullName: {!! json_encode($user->name ?? '고객') !!},
+                        phoneNumber: {!! json_encode($user->phone ?? '') !!},
+                        email: {!! json_encode(filter_var($user->email ?? '', FILTER_VALIDATE_EMAIL) ? $user->email : setting('company_email', 'help@booksys.co.kr')) !!},
+                    },
                 });
                 if (response && response.code != null) {
                     if (!String(response.code).includes('CANCEL')) alert('결제 실패: ' + (response.message || response.code));
