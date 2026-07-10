@@ -111,7 +111,7 @@
                 btn.disabled = false; btn.innerHTML = orig;
             } catch (e) {
                 console.error('PortOne 결제 오류:', e);
-                alert('결제 오류: ' + (e && e.message ? e.message : JSON.stringify(e)));
+                alert('결제 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
                 btn.disabled = false; btn.innerHTML = orig;
             }
         });
