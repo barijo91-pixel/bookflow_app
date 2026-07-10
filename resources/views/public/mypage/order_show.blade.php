@@ -407,13 +407,21 @@
                 <div class="card-body">
                     @if(($vendor->trade_type ?? 'retail') === 'wholesale')
                         {{-- 도매: 학원이 직접 결제 (학부모 거치지 않음) --}}
-                        <form method="POST" action="{{ route('my.orders.pay_direct', $order->id) }}"
-                              onsubmit="return confirm('교재비 {{ number_format($order->total_amount) }}원을 결제할까요?')">
-                            @csrf
-                            <button class="btn btn-warning w-100 text-dark fw-bold">
-                                <i class="bi bi-credit-card"></i> 교재비 결제 ({{ number_format($order->total_amount) }}원)
+                        @if($portOneActive ?? false)
+                            <button type="button" id="payDirectBtn" class="btn btn-warning w-100 text-dark fw-bold"
+                                    data-amount="{{ (int) $order->total_amount }}"
+                                    data-order-name="교재비 · 주문 {{ $order->order_no }}">
+                                <i class="bi bi-credit-card"></i> 교재비 카드 결제 ({{ number_format($order->total_amount) }}원)
                             </button>
-                        </form>
+                        @else
+                            <form method="POST" action="{{ route('my.orders.pay_direct', $order->id) }}"
+                                  onsubmit="return confirm('교재비 {{ number_format($order->total_amount) }}원을 결제할까요? (테스트)')">
+                                @csrf
+                                <button class="btn btn-warning w-100 text-dark fw-bold">
+                                    <i class="bi bi-credit-card"></i> 교재비 결제 ({{ number_format($order->total_amount) }}원)
+                                </button>
+                            </form>
+                        @endif
                     @else
                         {{-- 소매: 학부모에게 결제 요청 --}}
                         <a href="{{ route('my.orders.payment.create', $order->id) }}" class="btn btn-warning w-100">
@@ -425,4 +433,61 @@
         @endif
     </div>
 </div>
+@push('scripts')
+@if(($portOneActive ?? false) && ($vendor->trade_type ?? 'retail') === 'wholesale')
+<script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+<script>
+(function () {
+    var btn = document.getElementById('payDirectBtn');
+    if (!btn) return;
+    var csrf       = '{{ csrf_token() }}';
+    var storeId    = {!! json_encode($portOneStoreId ?? '') !!};
+    var channelKey = {!! json_encode($portOneChannelKey ?? '') !!};
+    var verifyUrl  = '{{ route('my.orders.pay_direct_verify', $order->id) }}';
+
+    btn.addEventListener('click', async function () {
+        var orig = btn.innerHTML;
+        btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> 결제 요청 중...';
+        var paymentId = 'order-{{ $order->id }}-' + Date.now();
+        try {
+            var response = await PortOne.requestPayment({
+                storeId: storeId,
+                channelKey: channelKey,
+                paymentId: paymentId,
+                orderName: btn.dataset.orderName,
+                totalAmount: parseInt(btn.dataset.amount, 10),
+                currency: 'CURRENCY_KRW',
+                payMethod: 'CARD',
+                customer: {
+                    fullName: {!! json_encode($user->name ?? ($vendor->name ?? '학원')) !!},
+                    phoneNumber: {!! json_encode($user->phone ?? '') !!},
+                    email: {!! json_encode(filter_var($user->email ?? '', FILTER_VALIDATE_EMAIL) ? $user->email : setting('company_email', 'help@booksys.co.kr')) !!},
+                },
+            });
+            if (response && response.code != null) {
+                if (!String(response.code).includes('CANCEL')) alert('결제 실패: ' + (response.message || response.code));
+                btn.disabled = false; btn.innerHTML = orig; return;
+            }
+            var r = await fetch(verifyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                body: JSON.stringify({ payment_id: response.paymentId }),
+            });
+            var j = await r.json();
+            if (j.success) {
+                window.location.href = j.redirect_url || window.location.href;
+            } else {
+                alert(j.message || '결제 검증 실패');
+                btn.disabled = false; btn.innerHTML = orig;
+            }
+        } catch (e) {
+            console.error('payDirect 오류:', e);
+            alert('결제 오류: ' + (e && e.message ? e.message : JSON.stringify(e)));
+            btn.disabled = false; btn.innerHTML = orig;
+        }
+    });
+})();
+</script>
+@endif
+@endpush
 @endsection

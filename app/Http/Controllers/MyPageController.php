@@ -443,9 +443,15 @@ class MyPageController extends Controller
             ->orderBy('id')
             ->get(['student_name', 'parent_name', 'parent_phone', 'amount', 'status', 'paid_at']);
 
+        // 도매 학원 직접결제(payDirect) V2 결제창용
+        $portOneActive     = \App\Services\PortOneService::isActive();
+        $portOneStoreId    = \App\Services\PortOneService::storeId();
+        $portOneChannelKey = \App\Services\PortOneService::channelKey();
+
         return view('public.mypage.order_show', compact(
             'user', 'order', 'vendor', 'class', 'orderStudents', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
-            'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit', 'payers'
+            'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit', 'payers',
+            'portOneActive', 'portOneStoreId', 'portOneChannelKey'
         ));
     }
 

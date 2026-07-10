@@ -62,6 +62,75 @@ class PaymentRequestController extends Controller
     }
 
     /**
+     * 도매 학원 직접결제 — PortOne V2 결제 검증 (payDirect의 실 PG 버전)
+     * 요청: payment_id (PortOne 결제 식별)
+     */
+    public function payDirectVerify(Request $request, $orderId)
+    {
+        $user = Auth::user();
+        if (! $user || $user->role_code !== 'academy') abort(403);
+
+        $order = \App\Models\Order::findOrFail($orderId);
+        $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
+        if (! $vendorIds->contains($order->vendor_id)) {
+            return response()->json(['success' => false, 'message' => '본인 학원 주문이 아닙니다.'], 403);
+        }
+
+        $vendor = DB::table('vendors')->find($order->vendor_id);
+        if (! $vendor || ($vendor->trade_type ?? 'retail') !== 'wholesale') {
+            return response()->json(['success' => false, 'message' => '도매 학원만 직접 결제할 수 있습니다.'], 400);
+        }
+
+        if (DB::table('payment_requests')->where('order_id', $order->id)->where('status', 'paid')->exists()) {
+            return response()->json(['success' => true, 'message' => '이미 결제 완료된 주문입니다.', 'redirect_url' => route('my.orders.show', $order->id)]);
+        }
+
+        $data = $request->validate(['payment_id' => ['required', 'string', 'max:100']]);
+
+        if (! PortOneService::isActive()) {
+            return response()->json(['success' => false, 'message' => 'PG가 설정되지 않았습니다.'], 400);
+        }
+
+        // PortOne V2 결제 검증 (위변조 방지)
+        $payment = PortOneService::getPayment($data['payment_id']);
+        $result  = PortOneService::paidAmount($payment);
+        if (! $result['paid']) {
+            return response()->json(['success' => false, 'message' => '결제 상태 이상: ' . $result['status']], 400);
+        }
+        if ($result['amount'] !== (int) $order->total_amount) {
+            PortOneService::cancel($data['payment_id'], $result['amount'], '결제 금액 불일치 자동 환불');
+            return response()->json(['success' => false, 'message' => '결제 금액 불일치. 자동 환불되었습니다.'], 400);
+        }
+
+        DB::table('payment_requests')->insert([
+            'token'        => Str::random(40),
+            'order_id'     => $order->id,
+            'vendor_id'    => $order->vendor_id,
+            'parent_name'  => $vendor->name,
+            'student_name' => '(학원 일괄 결제)',
+            'amount'       => $order->total_amount,
+            'status'       => 'paid',
+            'paid_at'      => now(),
+            'created_by'   => $user->id,
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
+
+        AuditLog::log('payment_requests', $order->id, 'wholesale_direct_pay', null, [
+            'vendor'     => $vendor->name,
+            'amount'     => $order->total_amount,
+            'payment_id' => $data['payment_id'],
+            'mock'       => false,
+        ]);
+
+        return response()->json([
+            'success'      => true,
+            'message'      => '교재비 결제가 완료되었습니다.',
+            'redirect_url' => route('my.orders.show', $order->id),
+        ]);
+    }
+
+    /**
      * 학원이 주문에서 학부모에게 결제요청 보내기 — 폼 진입
      * /mypage/orders/{id}/payment-requests/create
      */
