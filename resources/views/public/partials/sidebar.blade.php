@@ -105,9 +105,10 @@
                     <i class="bi bi-clipboard-data"></i> 주문내역
                     @if($orderBadge > 0)<span class="badge bg-secondary ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
-                <a href="{{ route('my.store.index') }}" class="nav-item {{ $startsWith('my.store') }}">
+                {{-- 심사용 교재구매 메뉴 — 카카오 심사 때 다시 노출. 라우트/페이지(/mypage/store)는 유지되어 URL로 접근 가능 --}}
+                {{-- <a href="{{ route('my.store.index') }}" class="nav-item {{ $startsWith('my.store') }}">
                     <i class="bi bi-bag-heart"></i> 교재 구매 <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem;">심사용</span>
-                </a>
+                </a> --}}
                 @if($academyTradeType !== 'wholesale')
                 <a href="{{ route('my.classes.index') }}" class="nav-item {{ $startsWith('my.classes') }}">
                     <i class="bi bi-mortarboard"></i> 학급/학생
