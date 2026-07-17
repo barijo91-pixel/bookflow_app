@@ -116,6 +116,19 @@
                                 <td class="small text-muted">{{ $s->parent_phone ? format_phone($s->parent_phone) : '-' }}</td>
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-1">
+                                        {{-- 학생 수정 (학부모 연락처·주소 포함) --}}
+                                        <button type="button" class="btn btn-sm btn-outline-secondary student-edit-btn"
+                                                title="학생 수정"
+                                                data-action="{{ route('my.classes.students.update', [$class->id, $s->id]) }}"
+                                                data-student-name="{{ $s->name }}"
+                                                data-grade="{{ $s->grade_code }}"
+                                                data-parent-name="{{ $s->parent_name }}"
+                                                data-parent-phone="{{ $s->parent_phone }}"
+                                                data-address="{{ $s->parent_address }}"
+                                                data-address-detail="{{ $s->parent_address_detail }}"
+                                                data-memo="{{ $s->memo }}">
+                                            <i class="bi bi-pencil"></i> 수정
+                                        </button>
                                         {{-- 학생 삭제 --}}
                                         <form method="POST" action="{{ route('my.classes.students.detach', [$class->id, $s->id]) }}"
                                               onsubmit="return confirm('「{{ $s->name }}」 학생을 이 학급에서 제거할까요?')" class="d-inline">
@@ -170,6 +183,64 @@
                     </div>
                     <div class="col-md-3 d-grid">
                         <button class="btn btn-sm btn-navy"><i class="bi bi-plus-lg"></i> 학생 추가</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- 학생 수정 모달 — 위 목록의 [수정] 버튼이 data-* 값으로 채운다 --}}
+        <div class="modal fade" id="studentEditModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form method="POST" id="studentEditForm" class="modal-content">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header">
+                        <h5 class="modal-title navy"><i class="bi bi-pencil"></i> 학생 정보 수정</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-2">
+                            <div class="col-md-7">
+                                <label class="form-label small mb-1">학생 이름</label>
+                                <input type="text" name="student_name" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small mb-1">학년</label>
+                                <select name="grade_code" class="form-select form-select-sm">
+                                    <option value="">학년</option>
+                                    @foreach($grades as $g)
+                                        <option value="{{ $g->code }}">{{ $g->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small mb-1">학부모 이름</label>
+                                <input type="text" name="parent_name" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small mb-1">학부모 휴대폰</label>
+                                <input type="tel" name="parent_phone" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small mb-1">학부모 주소 <span class="text-muted">(소매 배송지)</span></label>
+                                <input type="text" name="parent_address" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small mb-1">상세주소</label>
+                                <input type="text" name="parent_address_detail" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small mb-1">메모</label>
+                                <input type="text" name="memo" class="form-control form-control-sm" maxlength="500">
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">
+                            <i class="bi bi-info-circle"></i> 같은 휴대폰 번호의 학부모가 이미 있으면 그 학부모로 연결됩니다.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">취소</button>
+                        <button type="submit" class="btn btn-sm btn-navy"><i class="bi bi-check-lg"></i> 저장</button>
                     </div>
                 </form>
             </div>
@@ -239,6 +310,23 @@ function toggleClassBooks() {
     b.style.display = show ? '' : 'none';
     if (c) { c.classList.toggle('bi-chevron-down', !show); c.classList.toggle('bi-chevron-up', show); }
 }
+
+// 학생 수정 모달 — 목록의 [수정] 버튼 data-* 값으로 폼을 채워서 연다
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.student-edit-btn');
+    if (!btn) return;
+    const form = document.getElementById('studentEditForm');
+    form.action = btn.dataset.action;
+    const set = (name, val) => { const el = form.querySelector(`[name="${name}"]`); if (el) el.value = val || ''; };
+    set('student_name', btn.dataset.studentName);
+    set('grade_code', btn.dataset.grade);
+    set('parent_name', btn.dataset.parentName);
+    set('parent_phone', btn.dataset.parentPhone);
+    set('parent_address', btn.dataset.address);
+    set('parent_address_detail', btn.dataset.addressDetail);
+    set('memo', btn.dataset.memo);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('studentEditModal')).show();
+});
 
 // 학생 등록 폼 접기/펼치기 (기본 접힘)
 function toggleStudentForm() {

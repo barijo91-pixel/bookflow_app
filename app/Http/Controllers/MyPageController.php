@@ -2105,7 +2105,8 @@ class MyPageController extends Controller
             ->where('s.class_id', $id)
             ->whereNull('s.deleted_at')
             ->select('s.id', 's.name', 's.grade_code', 's.memo',
-                'p.id as parent_id', 'p.name as parent_name', 'p.phone as parent_phone')
+                'p.id as parent_id', 'p.name as parent_name', 'p.phone as parent_phone',
+                'p.address as parent_address', 'p.address_detail as parent_address_detail')
             ->orderBy('s.id')->get();
 
         $books = DB::table('class_books as cb')
@@ -2181,6 +2182,74 @@ class MyPageController extends Controller
     }
 
     /** 학생 + 학부모 한번에 추가 */
+    /** 학급 학생 정보 수정 (학생명/학년/학부모 이름·연락처·주소) */
+    public function classUpdateStudent(Request $request, $id, $sid)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404);
+
+        // 본인 학원·해당 학급의 학생인지 확인
+        $student = DB::table('students')->where('id', $sid)->where('class_id', $id)
+            ->where('vendor_id', $vendorId)->whereNull('deleted_at')->first();
+        if (! $student) abort(404);
+
+        $data = $request->validate([
+            'student_name' => ['required', 'string', 'max:80'],
+            'grade_code'   => ['nullable', 'string', 'max:30'],
+            'parent_name'  => ['required', 'string', 'max:80'],
+            'parent_phone' => ['required', 'string', 'max:20'],
+            'parent_address'        => ['nullable', 'string', 'max:255'],
+            'parent_address_detail' => ['nullable', 'string', 'max:100'],
+            'memo'         => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $now   = now();
+        $phone = preg_replace('/[^0-9]/', '', $data['parent_phone']);
+
+        DB::transaction(function () use ($student, $sid, $data, $phone, $now) {
+            $parentFields = [
+                'name'           => $data['parent_name'],
+                'phone'          => $phone,
+                'address'        => $data['parent_address'] ?? null,
+                'address_detail' => $data['parent_address_detail'] ?? null,
+                'updated_at'     => $now,
+            ];
+
+            // 같은 번호의 학부모가 이미 있으면 그 학부모로 연결 (등록 로직과 동일 규칙)
+            $samePhoneId = DB::table('parents')->where('phone', $phone)->whereNull('deleted_at')->value('id');
+
+            if ($samePhoneId) {
+                DB::table('parents')->where('id', $samePhoneId)->update($parentFields);
+                $parentId = $samePhoneId;
+            } else {
+                // 이 학생만 쓰는 학부모면 그대로 수정. 형제 등 여러 학생이 공유 중이면
+                // 다른 학생 정보가 바뀌지 않도록 새 학부모를 만들어 연결한다.
+                $shared = $student->parent_id
+                    ? DB::table('students')->where('parent_id', $student->parent_id)
+                        ->where('id', '!=', $sid)->whereNull('deleted_at')->exists()
+                    : true;
+
+                if ($student->parent_id && ! $shared) {
+                    DB::table('parents')->where('id', $student->parent_id)->update($parentFields);
+                    $parentId = $student->parent_id;
+                } else {
+                    $parentId = DB::table('parents')->insertGetId($parentFields + ['created_at' => $now]);
+                }
+            }
+
+            DB::table('students')->where('id', $sid)->update([
+                'parent_id'  => $parentId,
+                'name'       => $data['student_name'],
+                'grade_code' => $data['grade_code'] ?? null,
+                'memo'       => $data['memo'] ?? null,
+                'updated_at' => $now,
+            ]);
+        });
+
+        return back()->with('success', '학생 정보를 수정했습니다.');
+    }
+
     public function classAttachStudent(Request $request, $id)
     {
         [$user, $vendorId] = $this->academyVendor();
