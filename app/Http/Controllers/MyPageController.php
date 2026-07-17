@@ -520,10 +520,13 @@ class MyPageController extends Controller
     public function storeIndex()
     {
         $user = Auth::user();
+        // 심사용 상품 페이지 — 표지(상품 이미지)가 있는 도서를 우선 노출하고, 그 중 최신 3건.
+        // (표지 없는 도서가 뜨면 카드사/카카오 심사에서 상품 이미지 누락으로 보임)
         $books = DB::table('books')
             ->whereNull('deleted_at')
             ->where('status_code', 'selling')
-            ->orderByDesc('id')   // 최신 등록 3건 (표지 유무 무관 — 심사용 교재 우선 노출)
+            ->orderByRaw("CASE WHEN cover_path IS NULL OR cover_path = '' THEN 1 ELSE 0 END")
+            ->orderByDesc('id')
             ->limit(3)
             ->get(['id', 'title', 'isbn', 'price', 'cover_path', 'author']);
 
