@@ -34,10 +34,11 @@
                             <a href="{{ route('my.classes.index') }}">학급/학생 페이지</a>에서 먼저 등록해주세요.
                         </div>
                     @else
+                        {{-- 주문 시 선택한 학급을 기본 선택 (아래 JS가 학생 목록까지 자동 로드) --}}
                         <select name="class_id" id="classSelect" class="form-select form-select-lg">
                             <option value="">학급 선택...</option>
                             @foreach($classes as $c)
-                                <option value="{{ $c->id }}">{{ $c->name }}@if($c->grade_code) ({{ $c->grade_code }})@endif</option>
+                                <option value="{{ $c->id }}" @selected($order->class_id == $c->id)>{{ $c->name }}@if($c->grade_code) ({{ $c->grade_code }})@endif</option>
                             @endforeach
                         </select>
                     @endif
@@ -228,7 +229,7 @@ classSel?.addEventListener('change', async () => {
 checkAll?.addEventListener('change', () => {
     document.querySelectorAll('.row-check').forEach(cb => {
         cb.checked = checkAll.checked;
-        cb.dispatchEvent(new Event('change'));
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
     });
 });
 
@@ -258,7 +259,7 @@ function applyRecommended() {
 function applyAmountToAll(val) {
     document.querySelectorAll('.row-check').forEach((cb) => {
         cb.checked = true;
-        cb.dispatchEvent(new Event('change'));
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
         const tr = cb.closest('tr');
         const amt = tr.querySelector('.row-amount');
         amt.value = val;
@@ -301,6 +302,11 @@ function updateSendBtn() {
     } else {
         sendBtn.innerHTML = `<i class="bi bi-send"></i> 선택한 학부모에게 결제 요청 보내기`;
     }
+}
+
+// 주문 시 선택한 학급이 기본 선택돼 있으면 학생 목록을 바로 불러온다
+if (classSel && classSel.value) {
+    classSel.dispatchEvent(new Event('change', { bubbles: true }));
 }
 </script>
 @endpush

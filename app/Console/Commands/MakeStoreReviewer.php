@@ -193,6 +193,36 @@ class MakeStoreReviewer extends Command
                         ]);
                     }
                 }
+
+                // 7) 학부모 연결 — PaymentRequestController::store() 는 학부모 연락처가 없으면
+                //    결제요청을 생성하지 않고 건너뛴다(실패 처리). 심사원이 결제창까지 갈 수 있도록 연결.
+                //    (이미 만들어진 학생 중 학부모가 없거나 연락처가 빈 경우도 함께 보정)
+                $students = DB::table('students as s')
+                    ->leftJoin('parents as p', 'p.id', '=', 's.parent_id')
+                    ->where('s.class_id', $classId)
+                    ->whereNull('s.deleted_at')
+                    ->select('s.id', 's.name', 's.parent_id', 'p.phone as parent_phone')
+                    ->get();
+
+                foreach ($students as $s) {
+                    if ($s->parent_id && ! empty($s->parent_phone)) {
+                        continue;   // 이미 정상 연결됨
+                    }
+                    if ($s->parent_id) {
+                        // 학부모는 있는데 연락처가 비어있음 → 연락처만 보정
+                        DB::table('parents')->where('id', $s->parent_id)
+                            ->update(['phone' => $phone, 'updated_at' => $now]);
+                        continue;
+                    }
+                    $parentId = DB::table('parents')->insertGetId([
+                        'name'       => $s->name . ' 학부모',
+                        'phone'      => $phone,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                    DB::table('students')->where('id', $s->id)
+                        ->update(['parent_id' => $parentId, 'updated_at' => $now]);
+                }
             });
         } catch (\Throwable $e) {
             $this->error('실패: ' . $e->getMessage());
@@ -205,7 +235,7 @@ class MakeStoreReviewer extends Command
         $this->line("  · 구매자명   : {$name}  /  연락처: {$phone}");
         $this->line("  · 거래처     : {$vendorNm}  (소매)");
         $this->line("  · 담당 영업자: {$agentName}  (할인율 {$rate}%)");
-        $this->line('  · 학급/학생  : 심사용 학급 + 학생 2명');
+        $this->line("  · 학급/학생  : 심사용 학급 + 학생 2명 (학부모 연락처 {$phone} 연결)");
         $this->newLine();
         $this->line('  확인: 로그인 → 좌측 "교재 구매(심사용)" (결제창) / "도서주문" (주문 플로우)');
         $this->warn('  심사 종료 후에는 이 계정을 삭제하거나 비밀번호를 변경하세요.');
