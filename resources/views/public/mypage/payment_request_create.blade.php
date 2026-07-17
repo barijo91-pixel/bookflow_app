@@ -120,7 +120,7 @@
                 <div class="table-responsive">
                     <table class="table table-sm align-middle mb-0">
                         <thead class="table-light">
-                            <tr><th>학생</th><th>학부모</th><th class="text-end">금액</th><th>상태</th><th>발송</th></tr>
+                            <tr><th>학생</th><th>학부모</th><th class="text-end">금액</th><th>상태</th><th>발송</th><th style="width:78px">결제</th></tr>
                         </thead>
                         <tbody>
                             @foreach($existing as $e)
@@ -140,6 +140,17 @@
                                     </td>
                                     <td class="small text-muted">
                                         {{ $e->sent_at ? \Carbon\Carbon::parse($e->sent_at)->format('m-d H:i') : '-' }}
+                                    </td>
+                                    {{-- 결제 링크 — 알림톡 미발송/학부모 연락처 없을 때 학원이 직접 전달, 결제 확인용 --}}
+                                    <td class="text-nowrap">
+                                        <a href="{{ url('/pay/'.$e->token) }}" target="_blank" rel="noopener"
+                                           class="btn btn-sm btn-outline-secondary py-0 px-1" title="결제창 열기">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 copy-pay-link"
+                                                data-url="{{ url('/pay/'.$e->token) }}" title="결제 링크 복사">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -254,6 +265,28 @@ function applyAmountToAll(val) {
     });
     updateSendBtn();
 }
+
+// 결제 링크 복사 (clipboard API 미지원/비보안 컨텍스트면 폴백)
+document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.copy-pay-link');
+    if (!btn) return;
+    const url = btn.dataset.url;
+    const icon = btn.querySelector('i');
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(url);
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta);
+        }
+        icon.className = 'bi bi-check2';
+        setTimeout(() => { icon.className = 'bi bi-clipboard'; }, 1500);
+    } catch (err) {
+        window.prompt('결제 링크를 복사하세요', url);
+    }
+});
 
 function updateSendBtn() {
     const valid = Array.from(document.querySelectorAll('.row-check'))
