@@ -202,7 +202,7 @@ function copyAcc() {
                 orderName: {!! json_encode('교재 대금 — '.($vendor->name ?? 'BookSys')) !!},
                 totalAmount: {{ (int) $pr->amount }},
                 currency: 'CURRENCY_KRW',
-                payMethod: 'CARD',
+                payMethod: {!! json_encode($portOnePayMethod ?? 'CARD') !!},
                 customer: {
                     fullName: {!! json_encode($pr->parent_name ?? $pr->student_name ?? '') !!},
                     phoneNumber: {!! json_encode($pr->parent_phone ?? '') !!},

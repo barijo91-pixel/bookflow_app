@@ -366,8 +366,9 @@ class PaymentRequestController extends Controller
         $portOneActive     = PortOneService::isActive();
         $portOneStoreId    = PortOneService::storeId();
         $portOneChannelKey = PortOneService::channelKey();
+        $portOnePayMethod  = PortOneService::payMethod();
 
-        return view('public.pay.show', compact('pr', 'vendor', 'distributor', 'bankName', 'items', 'portOneActive', 'portOneStoreId', 'portOneChannelKey'));
+        return view('public.pay.show', compact('pr', 'vendor', 'distributor', 'bankName', 'items', 'portOneActive', 'portOneStoreId', 'portOneChannelKey', 'portOnePayMethod'));
     }
 
     /**

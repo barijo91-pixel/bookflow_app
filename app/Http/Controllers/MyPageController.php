@@ -447,11 +447,12 @@ class MyPageController extends Controller
         $portOneActive     = \App\Services\PortOneService::isActive();
         $portOneStoreId    = \App\Services\PortOneService::storeId();
         $portOneChannelKey = \App\Services\PortOneService::channelKey();
+        $portOnePayMethod  = \App\Services\PortOneService::payMethod();
 
         return view('public.mypage.order_show', compact(
             'user', 'order', 'vendor', 'class', 'orderStudents', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
             'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit', 'payers',
-            'portOneActive', 'portOneStoreId', 'portOneChannelKey'
+            'portOneActive', 'portOneStoreId', 'portOneChannelKey', 'portOnePayMethod'
         ));
     }
 
@@ -536,6 +537,7 @@ class MyPageController extends Controller
             'portOneActive'     => \App\Services\PortOneService::isActive(),
             'portOneStoreId'    => \App\Services\PortOneService::storeId(),
             'portOneChannelKey' => \App\Services\PortOneService::channelKey(),
+            'portOnePayMethod'  => \App\Services\PortOneService::payMethod(),
         ]);
     }
 

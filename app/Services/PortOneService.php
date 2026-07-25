@@ -40,6 +40,18 @@ class PortOneService
         return (string) setting('portone_v2_channel_key', '');
     }
 
+    /**
+     * 브라우저 결제창 payMethod — 채널(PG)에 맞춰 관리자에서 설정.
+     *  - CARD:     카드 결제창 (KG이니시스 등 일반 PG)
+     *  - EASY_PAY: 간편결제 (카카오페이) — 카카오페이 채널은 반드시 EASY_PAY
+     * 잘못된 값이면 CARD로 폴백.
+     */
+    public static function payMethod(): string
+    {
+        $m = strtoupper(trim((string) setting('portone_pay_method', 'CARD')));
+        return in_array($m, ['CARD', 'EASY_PAY'], true) ? $m : 'CARD';
+    }
+
     private static function secret(): string
     {
         return (string) setting('portone_v2_api_secret', '');

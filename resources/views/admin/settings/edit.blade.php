@@ -54,6 +54,18 @@
                                     <input type="number" name="settings[{{ $s->key }}]" value="{{ $s->value }}"
                                            class="form-control">
                                     @break
+                                @case('select')
+                                    @php
+                                        $selectOptions = [
+                                            'portone_pay_method' => ['CARD' => '카드 (KG이니시스 등)', 'EASY_PAY' => '간편결제 (카카오페이)'],
+                                        ][$s->key] ?? [];
+                                    @endphp
+                                    <select name="settings[{{ $s->key }}]" class="form-select">
+                                        @foreach($selectOptions as $val => $lbl)
+                                            <option value="{{ $val }}" @selected($s->value === $val)>{{ $lbl }} ({{ $val }})</option>
+                                        @endforeach
+                                    </select>
+                                    @break
                                 @case('password')
                                     <input type="password" name="settings[{{ $s->key }}]" value="{{ $s->value }}"
                                            class="form-control" autocomplete="off">

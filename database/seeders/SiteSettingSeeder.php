@@ -11,14 +11,14 @@ class SiteSettingSeeder extends Seeder
     {
         $settings = [
             // group, key, value, type, label, description, sort
-            ['company', 'company_name', 'e-Learn', 'text', '회사명', null, 10],
+            ['company', 'company_name', '이런', 'text', '회사명', null, 10],
             ['company', 'service_name', 'BookSys', 'text', '서비스명', null, 20],
-            ['company', 'business_no', '', 'text', '사업자등록번호', null, 30],
-            ['company', 'biz_report_no', '', 'text', '통신판매신고번호', null, 35],
-            ['company', 'representative', '', 'text', '대표자', null, 40],
-            ['company', 'company_address', '', 'text', '주소', null, 50],
-            ['company', 'company_phone', '', 'text', '대표 전화', null, 60],
-            ['company', 'company_email', 'no-reply@bookflow.local', 'text', '대표 이메일', null, 70],
+            ['company', 'business_no', '603-39-60694', 'text', '사업자등록번호', null, 30],
+            ['company', 'biz_report_no', '제 2026-서울양천-0556 호', 'text', '통신판매신고번호', null, 35],
+            ['company', 'representative', '전찬주', 'text', '대표자', null, 40],
+            ['company', 'company_address', '서울시 양천구 목동중앙북로 7 2층', 'text', '주소', null, 50],
+            ['company', 'company_phone', '1688-7561', 'text', '대표 전화', null, 60],
+            ['company', 'company_email', 'barijo@daum.net', 'text', '대표 이메일', null, 70],
 
             // 외부 연동
             ['integration', 'aligo_api_key', '', 'text', '알리고 API Key', null, 10],
@@ -36,6 +36,7 @@ class SiteSettingSeeder extends Seeder
             ['integration', 'portone_v2_store_id', '', 'text', 'PortOne Store ID', '예: store-xxxxxxxx (V2 콘솔 > 결제연동)', 120],
             ['integration', 'portone_v2_channel_key', '', 'text', 'PortOne 채널 키 (Channel Key)', '예: channel-key-xxxxxxxx', 130],
             ['integration', 'portone_v2_api_secret', '', 'text', 'PortOne V2 API Secret', '서버 결제검증/취소용 (외부 노출 금지)', 140],
+            ['integration', 'portone_pay_method', 'CARD', 'select', 'PG 결제수단', '연결한 채널에 맞춰 선택 — 카카오페이 채널은 반드시 간편결제(EASY_PAY)', 145],
 
             // SEO
             ['seo', 'meta_title', 'BookSys - 교재 도매 유통 플랫폼', 'text', 'SEO 제목', null, 10],

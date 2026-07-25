@@ -70,6 +70,7 @@
     var active     = {{ $portOneActive ? 'true' : 'false' }};
     var storeId    = {!! json_encode($portOneStoreId ?? '') !!};
     var channelKey = {!! json_encode($portOneChannelKey ?? '') !!};
+    var payMethod  = {!! json_encode($portOnePayMethod ?? 'CARD') !!};
     var verifyUrl  = '{{ route('my.store.verify') }}';
     var csrf       = '{{ csrf_token() }}';
 
@@ -90,7 +91,7 @@
                     orderName: title,
                     totalAmount: amount,
                     currency: 'CURRENCY_KRW',
-                    payMethod: 'CARD',
+                    payMethod: payMethod,
                     customer: {
                         fullName: {!! json_encode($user->name ?? '고객') !!},
                         phoneNumber: {!! json_encode($user->phone ?? '') !!},

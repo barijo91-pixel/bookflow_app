@@ -457,7 +457,7 @@
                 orderName: btn.dataset.orderName,
                 totalAmount: parseInt(btn.dataset.amount, 10),
                 currency: 'CURRENCY_KRW',
-                payMethod: 'CARD',
+                payMethod: {!! json_encode($portOnePayMethod ?? 'CARD') !!},
                 customer: {
                     fullName: {!! json_encode($user->name ?? ($vendor->name ?? '학원')) !!},
                     phoneNumber: {!! json_encode($user->phone ?? '') !!},
