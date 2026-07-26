@@ -15,12 +15,12 @@
             --navy: #1f3a5f;
             --navy-dark: #15294a;
             --navy-soft: #eaf0fa;
-            --sidebar-bg: #1f4a4a;            /* 짙은 청록 (쿨잉글리시 톤) */
-            --sidebar-border: #163636;
-            --sidebar-text: #e6f5f1;
+            --sidebar-bg: #14264a;            /* 짙은 네이비 (coolenglish.kr 라이브 톤) */
+            --sidebar-border: #22345c;
+            --sidebar-text: #e8eefb;
             --sidebar-text-strong: #ffffff;
-            --sidebar-section: #5eead4;
-            --sidebar-active-bg: #2a5f5e;
+            --sidebar-section: #93c5fd;
+            --sidebar-active-bg: #2d4b70;
             --sidebar-hover-bg: rgba(255,255,255,0.08);
             --content-bg: #f6f7fb;
             --text-muted-2: #6c757d;
@@ -71,7 +71,7 @@
         .public-nav .nav-item:hover i { opacity: 1; }
         .public-nav .nav-item.active {
             background: var(--sidebar-active-bg); color: var(--sidebar-text-strong); font-weight: 600;
-            border-left-color: #5eead4;
+            border-left-color: #93c5fd;
         }
         .public-nav .nav-item.active i { opacity: 1; }
         .public-main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; }
