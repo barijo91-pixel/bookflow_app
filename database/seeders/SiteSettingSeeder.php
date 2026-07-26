@@ -33,10 +33,10 @@ class SiteSettingSeeder extends Seeder
             ['integration', 'fcm_project_id', '', 'text', 'FCM Project ID', null, 100],
             // PortOne (구 아임포트) PG 결제
             ['integration', 'portone_active', '0', 'boolean', 'PortOne PG 활성화', '미체크 시 mock 결제로 fallback', 110],
-            ['integration', 'portone_v2_store_id', '', 'text', 'PortOne Store ID', '예: store-xxxxxxxx (V2 콘솔 > 결제연동)', 120],
-            ['integration', 'portone_v2_channel_key', '', 'text', 'PortOne 채널 키 (Channel Key)', '예: channel-key-xxxxxxxx', 130],
-            ['integration', 'portone_v2_api_secret', '', 'text', 'PortOne V2 API Secret', '서버 결제검증/취소용 (외부 노출 금지)', 140],
-            ['integration', 'portone_pay_method', 'CARD', 'select', 'PG 결제수단', '연결한 채널에 맞춰 선택 — 카카오페이 채널은 반드시 간편결제(EASY_PAY)', 145],
+            ['integration', 'portone_v2_store_id', '', 'text', 'PortOne Store ID', '예: store-xxxxxxxx (V2 콘솔 > 결제연동). 카드·카카오 공통', 120],
+            ['integration', 'portone_channel_card', '', 'text', 'PortOne 채널 키 (카드/이니시스)', '카드 PG 채널키 channel-key-xxxx. 비우면 카드결제 숨김', 132],
+            ['integration', 'portone_channel_kakao', '', 'text', 'PortOne 채널 키 (카카오페이)', '카카오페이 채널키 channel-key-xxxx. 비우면 카카오페이 숨김', 134],
+            ['integration', 'portone_v2_api_secret', '', 'text', 'PortOne V2 API Secret', '서버 결제검증/취소용 (외부 노출 금지). 카드·카카오 공통', 140],
 
             // SEO
             ['seo', 'meta_title', 'BookSys - 교재 도매 유통 플랫폼', 'text', 'SEO 제목', null, 10],

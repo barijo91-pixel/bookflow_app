@@ -39,12 +39,24 @@
                         <dt class="col-5">환불</dt><dd class="col-7 mb-0">반품 확인 후 3영업일 이내</dd>
                     </dl>
 
-                    <button type="button" class="btn btn-navy w-100 mt-auto store-pay-btn"
-                            data-book-id="{{ $b->id }}"
-                            data-title="{{ $b->title }}"
-                            data-amount="{{ (int) $b->price }}">
-                        <i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($b->price) }}원
-                    </button>
+                    <div class="mt-auto d-grid gap-2">
+                        @forelse($portOneMethods as $m)
+                            <button type="button" class="btn btn-navy w-100 store-pay-btn"
+                                    data-book-id="{{ $b->id }}"
+                                    data-title="{{ $b->title }}"
+                                    data-amount="{{ (int) $b->price }}"
+                                    data-channel-key="{{ $m['channelKey'] }}" data-pay-method="{{ $m['payMethod'] }}">
+                                <i class="bi bi-{{ $m['icon'] }}"></i> {{ $m['label'] }} 결제 {{ number_format($b->price) }}원
+                            </button>
+                        @empty
+                            <button type="button" class="btn btn-navy w-100 store-pay-btn"
+                                    data-book-id="{{ $b->id }}"
+                                    data-title="{{ $b->title }}"
+                                    data-amount="{{ (int) $b->price }}">
+                                <i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($b->price) }}원
+                            </button>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>
@@ -69,14 +81,13 @@
 (function () {
     var active     = {{ $portOneActive ? 'true' : 'false' }};
     var storeId    = {!! json_encode($portOneStoreId ?? '') !!};
-    var channelKey = {!! json_encode($portOneChannelKey ?? '') !!};
-    var payMethod  = {!! json_encode($portOnePayMethod ?? 'CARD') !!};
     var verifyUrl  = '{{ route('my.store.verify') }}';
     var csrf       = '{{ csrf_token() }}';
+    var allBtns    = document.querySelectorAll('.store-pay-btn');
 
-    document.querySelectorAll('.store-pay-btn').forEach(function (btn) {
+    allBtns.forEach(function (btn) {
         btn.addEventListener('click', async function () {
-            if (!active) { alert('현재 테스트 모드입니다. 관리자가 PG 키를 설정하면 결제가 가능합니다.'); return; }
+            if (!active || !btn.dataset.channelKey) { alert('현재 테스트 모드입니다. 관리자가 PG 키를 설정하면 결제가 가능합니다.'); return; }
             var bookId = btn.dataset.bookId;
             var title  = btn.dataset.title;
             var amount = parseInt(btn.dataset.amount, 10);
@@ -86,12 +97,12 @@
             try {
                 var response = await PortOne.requestPayment({
                     storeId: storeId,
-                    channelKey: channelKey,
+                    channelKey: btn.dataset.channelKey,
                     paymentId: paymentId,
                     orderName: title,
                     totalAmount: amount,
                     currency: 'CURRENCY_KRW',
-                    payMethod: payMethod,
+                    payMethod: btn.dataset.payMethod,
                     customer: {
                         fullName: {!! json_encode($user->name ?? '고객') !!},
                         phoneNumber: {!! json_encode($user->phone ?? '') !!},

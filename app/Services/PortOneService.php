@@ -21,13 +21,50 @@ class PortOneService
 {
     private const API_BASE = 'https://api.portone.io';
 
-    /** 키 설정 여부 — false면 mock 결제로 fallback */
+    /** 키 설정 여부 — false면 mock 결제로 fallback. 채널(카드/카카오)이 최소 1개 있어야 활성. */
     public static function isActive(): bool
     {
         return in_array((string) setting('portone_active'), ['1', 'Y', 'true'], true)
             && setting('portone_v2_store_id')
-            && setting('portone_v2_channel_key')
-            && setting('portone_v2_api_secret');
+            && setting('portone_v2_api_secret')
+            && ! empty(self::methods());
+    }
+
+    /**
+     * 사용 가능한 결제수단 목록 — 채널키가 설정된 것만.
+     * 반환: [['id','label','icon','payMethod','channelKey'], ...]
+     *   - 카드(이니시스 등): portone_channel_card  → payMethod CARD
+     *   - 카카오페이:        portone_channel_kakao → payMethod EASY_PAY
+     * 새 설정이 둘 다 비어있으면 구버전 단일 채널(portone_v2_channel_key + portone_pay_method)로 폴백.
+     */
+    public static function methods(): array
+    {
+        $card  = trim((string) setting('portone_channel_card', ''));
+        $kakao = trim((string) setting('portone_channel_kakao', ''));
+
+        $out = [];
+        if ($card !== '') {
+            $out[] = ['id' => 'card', 'label' => '카드', 'icon' => 'credit-card',
+                      'payMethod' => 'CARD', 'channelKey' => $card];
+        }
+        if ($kakao !== '') {
+            $out[] = ['id' => 'kakao', 'label' => '카카오페이', 'icon' => 'chat-fill',
+                      'payMethod' => 'EASY_PAY', 'channelKey' => $kakao];
+        }
+
+        // 구버전 단일 채널 호환
+        if (empty($out)) {
+            $legacy = trim((string) setting('portone_v2_channel_key', ''));
+            if ($legacy !== '') {
+                $pm = self::payMethod();
+                $out[] = ['id' => 'default',
+                          'label'      => $pm === 'EASY_PAY' ? '카카오페이' : '카드',
+                          'icon'       => $pm === 'EASY_PAY' ? 'chat-fill' : 'credit-card',
+                          'payMethod'  => $pm,
+                          'channelKey' => $legacy];
+            }
+        }
+        return $out;
     }
 
     public static function storeId(): string

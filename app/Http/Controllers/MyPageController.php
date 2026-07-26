@@ -444,15 +444,14 @@ class MyPageController extends Controller
             ->get(['student_name', 'parent_name', 'parent_phone', 'amount', 'status', 'paid_at']);
 
         // 도매 학원 직접결제(payDirect) V2 결제창용
-        $portOneActive     = \App\Services\PortOneService::isActive();
-        $portOneStoreId    = \App\Services\PortOneService::storeId();
-        $portOneChannelKey = \App\Services\PortOneService::channelKey();
-        $portOnePayMethod  = \App\Services\PortOneService::payMethod();
+        $portOneActive  = \App\Services\PortOneService::isActive();
+        $portOneStoreId = \App\Services\PortOneService::storeId();
+        $portOneMethods = \App\Services\PortOneService::methods();
 
         return view('public.mypage.order_show', compact(
             'user', 'order', 'vendor', 'class', 'orderStudents', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
             'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit', 'payers',
-            'portOneActive', 'portOneStoreId', 'portOneChannelKey', 'portOnePayMethod'
+            'portOneActive', 'portOneStoreId', 'portOneMethods'
         ));
     }
 
@@ -536,8 +535,7 @@ class MyPageController extends Controller
             'books'             => $books,
             'portOneActive'     => \App\Services\PortOneService::isActive(),
             'portOneStoreId'    => \App\Services\PortOneService::storeId(),
-            'portOneChannelKey' => \App\Services\PortOneService::channelKey(),
-            'portOnePayMethod'  => \App\Services\PortOneService::payMethod(),
+            'portOneMethods'    => \App\Services\PortOneService::methods(),
         ]);
     }
 

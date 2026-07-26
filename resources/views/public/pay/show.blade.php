@@ -97,13 +97,19 @@
 
         @if(in_array($pr->status, ['sent', 'viewed']))
             <div class="pay-section">
-                <h6><i class="bi bi-credit-card-2-front"></i> 카드로 간편하게 결제</h6>
+                <h6><i class="bi bi-credit-card-2-front"></i> 간편하게 결제</h6>
                 @if($portOneActive ?? false)
-                    {{-- PortOne 실 PG 결제 --}}
-                    <button type="button" id="portOnePayBtn" class="btn w-100 py-3"
-                            style="background:var(--navy); color:#fff; font-weight:700; font-size:1.05rem; border-radius:10px;">
-                        <i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원
-                    </button>
+                    {{-- PortOne 실 PG 결제 — 설정된 채널(카드/카카오페이)마다 버튼 --}}
+                    <div class="d-grid gap-2">
+                        @foreach($portOneMethods as $m)
+                            <button type="button" class="portone-pay-btn btn w-100 py-3"
+                                    data-channel-key="{{ $m['channelKey'] }}" data-pay-method="{{ $m['payMethod'] }}"
+                                    data-label="{{ $m['label'] }}"
+                                    style="background:var(--navy); color:#fff; font-weight:700; font-size:1.05rem; border-radius:10px;">
+                                <i class="bi bi-{{ $m['icon'] }}"></i> {{ $m['label'] }} 결제 {{ number_format($pr->amount) }}원
+                            </button>
+                        @endforeach
+                    </div>
                     <p class="small text-center text-muted mt-2 mb-0" style="font-size:.75rem;">
                         <i class="bi bi-shield-check"></i> 안전한 PG사 결제 시스템
                     </p>
@@ -186,56 +192,60 @@ function copyAcc() {
 <script>
 (function() {
     const csrfToken = '{{ csrf_token() }}';
-    const btn = document.getElementById('portOnePayBtn');
-    const amountLabel = '<i class="bi bi-credit-card"></i> 카드 결제 {{ number_format($pr->amount) }}원';
-    if (!btn) return;
+    const storeId   = {!! json_encode($portOneStoreId ?? '') !!};
+    const orderName = {!! json_encode('교재 대금 — '.($vendor->name ?? 'BookSys')) !!};
+    const amount    = {{ (int) $pr->amount }};
+    const customer  = {
+        fullName:    {!! json_encode($pr->parent_name ?? $pr->student_name ?? '') !!},
+        phoneNumber: {!! json_encode($pr->parent_phone ?? '') !!},
+        email:       {!! json_encode(setting('company_email', 'help@booksys.co.kr')) !!},
+    };
+    const verifyUrl = '{{ route('public.pay.portone', $pr->token) }}';
+    const btns = document.querySelectorAll('.portone-pay-btn');
 
-    btn.addEventListener('click', async function() {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> 결제 요청 중...';
-        const paymentId = 'pay-{{ $pr->id }}-' + Date.now();
-        try {
-            const response = await PortOne.requestPayment({
-                storeId: {!! json_encode($portOneStoreId ?? '') !!},
-                channelKey: {!! json_encode($portOneChannelKey ?? '') !!},
-                paymentId: paymentId,
-                orderName: {!! json_encode('교재 대금 — '.($vendor->name ?? 'BookSys')) !!},
-                totalAmount: {{ (int) $pr->amount }},
-                currency: 'CURRENCY_KRW',
-                payMethod: {!! json_encode($portOnePayMethod ?? 'CARD') !!},
-                customer: {
-                    fullName: {!! json_encode($pr->parent_name ?? $pr->student_name ?? '') !!},
-                    phoneNumber: {!! json_encode($pr->parent_phone ?? '') !!},
-                    email: {!! json_encode(setting('company_email', 'help@booksys.co.kr')) !!},
-                },
-            });
+    btns.forEach(function (btn) {
+        const orig = btn.innerHTML;
+        btn.addEventListener('click', async function () {
+            btns.forEach(b => b.disabled = true);
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> 결제 요청 중...';
+            const paymentId = 'pay-{{ $pr->id }}-' + Date.now();
+            try {
+                const response = await PortOne.requestPayment({
+                    storeId: storeId,
+                    channelKey: btn.dataset.channelKey,
+                    paymentId: paymentId,
+                    orderName: orderName,
+                    totalAmount: amount,
+                    currency: 'CURRENCY_KRW',
+                    payMethod: btn.dataset.payMethod,
+                    customer: customer,
+                });
 
-            // response.code 가 있으면 실패/취소
-            if (response && response.code != null) {
-                if (!String(response.code).includes('CANCEL')) {
-                    alert('결제 실패: ' + (response.message || response.code));
+                if (response && response.code != null) {
+                    if (!String(response.code).includes('CANCEL')) {
+                        alert('결제 실패: ' + (response.message || response.code));
+                    }
+                    btns.forEach(b => b.disabled = false); btn.innerHTML = orig;
+                    return;
                 }
-                btn.disabled = false; btn.innerHTML = amountLabel;
-                return;
-            }
 
-            // 결제창 완료 → 서버 검증 (paymentId 전달)
-            const r = await fetch('{{ route('public.pay.portone', $pr->token) }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                body: JSON.stringify({ payment_id: response.paymentId }),
-            });
-            const j = await r.json();
-            if (j.success) {
-                window.location.href = j.redirect_url || window.location.href;
-            } else {
-                alert('결제 검증 실패: ' + (j.message || '알 수 없는 오류'));
-                btn.disabled = false; btn.innerHTML = amountLabel;
+                const r = await fetch(verifyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                    body: JSON.stringify({ payment_id: response.paymentId }),
+                });
+                const j = await r.json();
+                if (j.success) {
+                    window.location.href = j.redirect_url || window.location.href;
+                } else {
+                    alert('결제 검증 실패: ' + (j.message || '알 수 없는 오류'));
+                    btns.forEach(b => b.disabled = false); btn.innerHTML = orig;
+                }
+            } catch (e) {
+                alert('결제 중 오류가 발생했습니다. 다시 시도해주세요.');
+                btns.forEach(b => b.disabled = false); btn.innerHTML = orig;
             }
-        } catch (e) {
-            alert('결제 중 오류가 발생했습니다. 다시 시도해주세요.');
-            btn.disabled = false; btn.innerHTML = amountLabel;
-        }
+        });
     });
 })();
 </script>
