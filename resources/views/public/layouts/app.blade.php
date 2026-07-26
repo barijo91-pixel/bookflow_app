@@ -15,13 +15,13 @@
             --navy: #1f3a5f;
             --navy-dark: #15294a;
             --navy-soft: #eaf0fa;
-            --sidebar-bg: #1a1d2e;            /* 짙은 네이비-블랙 */
-            --sidebar-border: #2a2e44;
-            --sidebar-text: #e2e8f0;
+            --sidebar-bg: #1f4a4a;            /* 짙은 청록 (쿨잉글리시 톤) */
+            --sidebar-border: #163636;
+            --sidebar-text: #e6f5f1;
             --sidebar-text-strong: #ffffff;
-            --sidebar-section: #6b7280;
-            --sidebar-active-bg: #262a40;
-            --sidebar-hover-bg: rgba(255,255,255,0.06);
+            --sidebar-section: #5eead4;
+            --sidebar-active-bg: #2a5f5e;
+            --sidebar-hover-bg: rgba(255,255,255,0.08);
             --content-bg: #f6f7fb;
             --text-muted-2: #6c757d;
         }
@@ -71,7 +71,7 @@
         .public-nav .nav-item:hover i { opacity: 1; }
         .public-nav .nav-item.active {
             background: var(--sidebar-active-bg); color: var(--sidebar-text-strong); font-weight: 600;
-            border-left-color: #5b8def;
+            border-left-color: #5eead4;
         }
         .public-nav .nav-item.active i { opacity: 1; }
         .public-main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; }
