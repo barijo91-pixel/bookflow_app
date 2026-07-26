@@ -22,28 +22,29 @@ class PortOneDiag extends Command
     public function handle(): int
     {
         $storeId = (string) setting('portone_v2_store_id', '');
-        $channel = (string) setting('portone_v2_channel_key', '');
+        $card    = (string) setting('portone_channel_card', '');
+        $kakao   = (string) setting('portone_channel_kakao', '');
         $secret  = (string) setting('portone_v2_api_secret', '');
-        $payM    = (string) setting('portone_pay_method', '');
 
         $this->info('=== PortOne 설정 ===');
         $this->line('portone_active : ' . var_export(setting('portone_active'), true));
         $this->line('isActive()     : ' . (PortOneService::isActive() ? 'true' : 'false'));
         $this->newLine();
 
-        $this->line('Store ID   : len ' . strlen($storeId) . '  ' . $this->prefixNote($storeId, 'store-'));
-        $this->line('채널 키    : len ' . strlen($channel) . '  ' . $this->prefixNote($channel, 'channel-key-'));
+        $this->line('Store ID     : len ' . strlen($storeId) . '  ' . $this->prefixNote($storeId, 'store-'));
+        $this->line('카드 채널    : len ' . strlen($card) . '  ' . ($card === '' ? '(비어있음 → 카드결제 숨김)' : $this->prefixNote($card, 'channel-key-')));
+        $this->line('카카오 채널  : len ' . strlen($kakao) . '  ' . ($kakao === '' ? '(비어있음 → 카카오페이 숨김)' : $this->prefixNote($kakao, 'channel-key-')));
 
         // API Secret 은 store-/channel-key- 로 시작하면 안 됨
         $secBad = str_starts_with($secret, 'store-') || str_starts_with($secret, 'channel-key-');
-        $this->line('API Secret : len ' . strlen($secret) . '  ' . (
+        $this->line('API Secret   : len ' . strlen($secret) . '  ' . (
             $secret === '' ? '[X] 비어있음'
                 : ($secBad ? '[X] store-/channel-key- 로 시작 → 잘못된 값' : '[OK] 접두어 정상')
         ));
 
-        $this->line('결제수단   : ' . ($payM ?: '(없음)') . '  ' . (
-            $payM === 'EASY_PAY' ? '(카카오페이)' : ($payM === 'CARD' ? '(카드)' : '[?] 알 수 없음')
-        ));
+        $methods = PortOneService::methods();
+        $labels  = array_map(fn ($m) => $m['label'] . '(' . $m['payMethod'] . ')', $methods);
+        $this->line('활성 결제수단: ' . (empty($methods) ? '[X] 없음' : '[OK] ' . implode(', ', $labels)));
         $this->newLine();
 
         // 네트워크 + 인증 테스트
