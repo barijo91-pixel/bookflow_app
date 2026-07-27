@@ -69,6 +69,46 @@
     </div>
 </form>
 
+@if($publisherOptions->isNotEmpty())
+<div class="card section-card mb-3" style="border-color:#f1aeb5;">
+    <div class="card-body py-2">
+        <form method="POST" action="{{ route('admin.books.bulk_by_publisher') }}"
+              class="row g-2 align-items-end" onsubmit="return confirmBulkDeleteByPublisher(this)">
+            @csrf
+            @method('DELETE')
+            <input type="hidden" name="confirm_name" id="bulkDelConfirmName">
+            <div class="col-auto">
+                <label class="form-label small text-danger mb-1 fw-bold">출판사 도서 일괄삭제 (위험)</label>
+                <select name="publisher_id" class="form-select form-select-sm" required style="min-width:200px;">
+                    <option value="">출판사 선택…</option>
+                    @foreach($publisherOptions as $p)
+                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-outline-danger">이 출판사 도서 전체 삭제</button>
+            </div>
+            <div class="col-12">
+                <span class="small text-muted">선택한 출판사의 모든 도서를 삭제합니다(soft delete — 복구 가능). 주문 이력이 있는 도서는 자동 제외됩니다. 실행 시 출판사명 확인 입력이 필요합니다.</span>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function confirmBulkDeleteByPublisher(f){
+    var sel = f.publisher_id;
+    if(!sel.value){ alert('출판사를 선택하세요.'); return false; }
+    var name = sel.options[sel.selectedIndex].text.trim();
+    var typed = prompt('['+name+'] 출판사의 모든 도서를 삭제합니다.\n삭제하려면 아래에 출판사명을 정확히 입력하세요:');
+    if(typed === null){ return false; }
+    if(typed.trim() !== name){ alert('출판사명이 일치하지 않습니다. 삭제 취소.'); return false; }
+    f.confirm_name.value = typed.trim();
+    return true;
+}
+</script>
+@endif
+
 <div class="card section-card">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 table-row-highlight">

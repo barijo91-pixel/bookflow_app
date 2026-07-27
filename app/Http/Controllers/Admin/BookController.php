@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Publisher;
+use App\Models\AuditLog;
 use App\Services\AladinService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -119,6 +120,50 @@ class BookController extends Controller
         }
         $book->delete();
         return redirect()->route('admin.books.index')->with('success', '도서가 삭제되었습니다.');
+    }
+
+    // -------------------- 출판사별 일괄 삭제 (soft delete) --------------------
+    public function bulkDestroyByPublisher(Request $request)
+    {
+        $data = $request->validate([
+            'publisher_id' => ['required', 'integer', 'exists:publishers,id'],
+            'confirm_name' => ['required', 'string'],
+        ]);
+
+        $publisher = Publisher::findOrFail($data['publisher_id']);
+
+        // 오삭제 방지: 확인 문구가 출판사명과 정확히 일치해야만 진행
+        if (trim($data['confirm_name']) !== $publisher->name) {
+            return back()->with('error', '확인 문구(출판사명)가 일치하지 않아 삭제를 취소했습니다.');
+        }
+
+        $bookIds = Book::where('publisher_id', $publisher->id)->pluck('id');
+        if ($bookIds->isEmpty()) {
+            return back()->with('info', "'{$publisher->name}' 출판사로 등록된 도서가 없습니다.");
+        }
+
+        // 주문 이력이 있는 도서는 제외 — 단건 삭제와 동일한 무결성 보호(주문 참조 유지)
+        $orderedIds   = DB::table('order_items')->whereIn('book_id', $bookIds)->distinct()->pluck('book_id');
+        $deletableIds = $bookIds->diff($orderedIds)->values();
+
+        $deleted = 0;
+        if ($deletableIds->isNotEmpty()) {
+            $deleted = Book::whereIn('id', $deletableIds)->delete(); // soft delete (deleted_at)
+        }
+
+        AuditLog::log('books', 0, 'bulk_delete_by_publisher', null, [
+            'publisher_id'    => $publisher->id,
+            'publisher_name'  => $publisher->name,
+            'deleted_count'   => $deleted,
+            'skipped_ordered' => $orderedIds->count(),
+        ]);
+
+        $msg = "'{$publisher->name}' 출판사 도서 {$deleted}건 삭제 (soft delete — 복구 가능)";
+        if ($orderedIds->count() > 0) {
+            $msg .= " · 주문이력 있는 {$orderedIds->count()}건은 제외(절판 처리 권장)";
+        }
+
+        return redirect()->route('admin.books.index')->with('success', $msg);
     }
 
     // -------------------- ALADIN AJAX --------------------
