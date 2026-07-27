@@ -158,6 +158,14 @@
                                     <button class="btn btn-sm btn-outline-success">정상화</button>
                                 </form>
                             @endif
+                            @if($canSuspend)
+                                <form method="POST" action="{{ route('admin.users.destroy', $u) }}" class="d-inline ms-1"
+                                      onsubmit="return confirm('[{{ $u->login_id }}] 계정을 삭제할까요?\n목록에서 제외됩니다. (복구는 관리자 문의)')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger">삭제</button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @empty

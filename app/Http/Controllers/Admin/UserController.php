@@ -663,6 +663,38 @@ class UserController extends Controller
         return back()->with('success', "{$user->name}({$user->login_id}) 정상화");
     }
 
+    // -------------------- DELETE (소프트삭제 + 안전장치) --------------------
+    public function destroy(User $user)
+    {
+        // 본인 / 타 슈퍼관리자 계정 삭제 차단
+        if (! $this->canModify($user, 'delete')) {
+            return back()->with('error', '본인 또는 슈퍼관리자 계정은 삭제할 수 없습니다.');
+        }
+
+        // 마지막 활성 관리자 삭제 차단 (관리자 전멸 → 로그인 불가 방지)
+        if ($user->role_code === 'admin') {
+            $otherActiveAdmins = User::where('role_code', 'admin')
+                ->where('id', '!=', $user->id)
+                ->where('status_code', 'active')
+                ->count();
+            if ($otherActiveAdmins < 1) {
+                return back()->with('error', '마지막 관리자 계정은 삭제할 수 없습니다.');
+            }
+        }
+
+        $before = $user->only(['login_id', 'name', 'role_code', 'admin_level', 'status_code']);
+
+        // 거래종료로 내린 뒤 소프트삭제(deleted_at) — 목록에서 제외되며 DB엔 남아 복구 가능
+        $user->status_code = 'terminated';
+        $user->save();
+        $user->delete();
+
+        AuditLog::log('users', $user->id, 'delete', $before, ['deleted_at' => now()->toDateTimeString()]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "{$before['name']}({$before['login_id']}) 삭제되었습니다. (복구는 관리자 문의)");
+    }
+
     public function resetPassword(User $user)
     {
         if (! $this->canModify($user, 'reset')) {

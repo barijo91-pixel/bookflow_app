@@ -211,6 +211,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('users/import/{jobId}/run', [UserImportController::class, 'run'])->name('users.import.run');
         Route::get('users/{user}',           [UserController::class, 'show'])->name('users.show');
         Route::put('users/{user}',           [UserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}',        [UserController::class, 'destroy'])->name('users.destroy');
         Route::post('users/{user}/approve',  [UserController::class, 'approve'])->name('users.approve');
         Route::post('users/{user}/reject',   [UserController::class, 'reject'])->name('users.reject');
         Route::post('users/{user}/suspend',  [UserController::class, 'suspend'])->name('users.suspend');
