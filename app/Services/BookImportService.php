@@ -244,12 +244,22 @@ class BookImportService
                     $payload['publisher_id'] = $pub->id;
                 }
 
-                $book = Book::where('isbn', $row['isbn'])->first();
+                // withTrashed: 소프트삭제된 책도 찾아 "같은 ISBN 재등록"을 지원한다.
+                // (안 그러면 삭제된 책이 unique(isbn) 인덱스를 점유해 insert 시 1062 중복오류로 전량 실패)
+                $book = Book::withTrashed()->where('isbn', $row['isbn'])->first();
                 if ($book) {
-                    if ($mode === 'skip_existing') { continue; }
-                    // 업데이트 — payload에 있는 컬럼만 갱신 (엑셀에 없는 컬럼은 DB 값 보존)
-                    $book->update($payload);
-                    $updated++;
+                    if ($book->trashed()) {
+                        // 삭제됐던 책 → 되살려 새 데이터로 갱신 (재등록)
+                        $book->restore();
+                        $book->update($payload);
+                        $updated++;
+                    } elseif ($mode === 'skip_existing') {
+                        continue;
+                    } else {
+                        // 업데이트 — payload에 있는 컬럼만 갱신 (엑셀에 없는 컬럼은 DB 값 보존)
+                        $book->update($payload);
+                        $updated++;
+                    }
                 } else {
                     // 신규 생성 — 필수 기본값 + ISBN + source 추가
                     $createPayload = $payload + [
