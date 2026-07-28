@@ -37,6 +37,11 @@
         code { font-size: .85em; color: var(--navy); background: var(--navy-soft); padding: .1em .4em; border-radius: 4px; }
         .badge.bg-navy { background: var(--navy); color: #fff; }
         .card { border: 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+        /* 폼 포커스 — 테마 네이비/하늘색 링으로 통일 */
+        .form-control:focus, .form-select:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 .2rem rgba(20, 38, 74, .12);
+        }
         .card-header.bg-white strong { color: var(--navy); }
 
         /* ---------- Public shell with sidebar (인증 사용자) ---------- */
