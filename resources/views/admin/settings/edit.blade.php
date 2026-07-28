@@ -44,10 +44,12 @@
                                               class="form-control">{{ $s->value }}</textarea>
                                     @break
                                 @case('boolean')
+                                    {{-- hidden 0 먼저 → 체크 해제 시에도 '0' 제출됨 (체크되면 뒤의 1이 덮음) --}}
+                                    <input type="hidden" name="settings[{{ $s->key }}]" value="0">
                                     <div class="form-check form-switch">
                                         <input type="checkbox" name="settings[{{ $s->key }}]" value="1"
                                                class="form-check-input"
-                                               @checked($s->value === '1' || $s->value === 'true' || $s->value === '1')>
+                                               @checked($s->value === '1' || $s->value === 'true')>
                                     </div>
                                     @break
                                 @case('number')

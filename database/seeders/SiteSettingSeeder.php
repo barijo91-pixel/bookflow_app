@@ -35,7 +35,9 @@ class SiteSettingSeeder extends Seeder
             ['integration', 'portone_active', '0', 'boolean', 'PortOne PG 활성화', '미체크 시 mock 결제로 fallback', 110],
             ['integration', 'portone_v2_store_id', '', 'text', 'PortOne Store ID', '예: store-xxxxxxxx (V2 콘솔 > 결제연동). 카드·카카오 공통', 120],
             ['integration', 'portone_channel_card', '', 'text', 'PortOne 채널 키 (카드/이니시스)', '카드 PG 채널키 channel-key-xxxx. 비우면 카드결제 숨김', 132],
+            ['integration', 'portone_card_enabled', '1', 'boolean', '카드 결제 표시', '체크 해제 시 결제화면에서 카드결제 숨김 (채널키는 보존)', 133],
             ['integration', 'portone_channel_kakao', '', 'text', 'PortOne 채널 키 (카카오페이)', '카카오페이 채널키 channel-key-xxxx. 비우면 카카오페이 숨김', 134],
+            ['integration', 'portone_kakao_enabled', '1', 'boolean', '카카오페이 표시', '체크 해제 시 결제화면에서 카카오페이 숨김 (채널키는 보존)', 135],
             ['integration', 'portone_v2_api_secret', '', 'text', 'PortOne V2 API Secret', '서버 결제검증/취소용 (외부 노출 금지). 카드·카카오 공통', 140],
 
             // SEO

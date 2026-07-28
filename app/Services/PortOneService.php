@@ -43,11 +43,12 @@ class PortOneService
         $kakao = trim((string) setting('portone_channel_kakao', ''));
 
         $out = [];
-        if ($card !== '') {
+        // 채널키가 있고 + 표시 토글이 켜져 있어야 노출 (토글로 채널키 보존한 채 숨김 가능)
+        if ($card !== '' && self::channelEnabled('portone_card_enabled')) {
             $out[] = ['id' => 'card', 'label' => '카드', 'icon' => 'credit-card',
                       'payMethod' => 'CARD', 'channelKey' => $card];
         }
-        if ($kakao !== '') {
+        if ($kakao !== '' && self::channelEnabled('portone_kakao_enabled')) {
             $out[] = ['id' => 'kakao', 'label' => '카카오페이', 'icon' => 'chat-fill',
                       'payMethod' => 'EASY_PAY', 'channelKey' => $kakao];
         }
@@ -75,6 +76,12 @@ class PortOneService
     public static function channelKey(): string
     {
         return (string) setting('portone_v2_channel_key', '');
+    }
+
+    /** 채널 표시 토글 — 기본 켜짐. '0'/''/false/N 이면 숨김 */
+    private static function channelEnabled(string $key): bool
+    {
+        return ! in_array((string) setting($key, '1'), ['0', '', 'false', 'N'], true);
     }
 
     /**
