@@ -327,21 +327,13 @@
                                 $hasBookDiscount = $bookDiscounts->has($b->id);
                             @endphp
                             <tr>
-                                <td class="small">
-                                    <strong>{{ $b->title }}</strong>
-                                    @if($b->subtitle)<span class="text-muted">— {{ $b->subtitle }}</span>@endif
-                                    <div class="text-muted small">
-                                        <code>{{ $b->isbn }}</code>
-                                        @if($b->publisher_name) · {{ $b->publisher_name }} @endif
-                                    </div>
+                                <td>
+                                    <strong>{{ $b->title }}</strong>@if($b->subtitle)<span class="text-muted"> — {{ $b->subtitle }}</span>@endif<span class="text-muted small ms-2"><code>{{ $b->isbn }}</code>@if($b->publisher_name) · {{ $b->publisher_name }}@endif</span>
                                 </td>
-                                <td class="text-end small text-muted">{{ number_format($b->price) }}원</td>
-                                <td class="text-end small">
+                                <td class="text-end text-muted">{{ number_format($b->price) }}원</td>
+                                <td class="text-end">
                                     <span class="fw-bold navy">{{ number_format($unit) }}원</span>
-                                    <div class="text-muted small">
-                                        {{ rtrim(rtrim($rate, '0'), '.') }}%
-                                        @if($hasBookDiscount)<i class="bi bi-star-fill text-warning" title="개별 할인율"></i>@endif
-                                    </div>
+                                    <span class="text-muted small ms-1">{{ rtrim(rtrim($rate, '0'), '.') }}%@if($hasBookDiscount) <i class="bi bi-star-fill text-warning" title="개별 할인율"></i>@endif</span>
                                 </td>
                                 <td>
                                     <form method="POST" action="{{ route('my.cart.add') }}" class="d-flex gap-1">

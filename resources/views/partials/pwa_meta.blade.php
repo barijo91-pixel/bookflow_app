@@ -91,19 +91,29 @@
         background: linear-gradient(to right, #f4f7fb 0%, #fff 30%) !important;
     }
 
-    /* 테이블 (공통) — 헤더 라벨 톤 + 행 호버로 스캔성 향상 */
+    /* 테이블 (공통) — coolenglish 표준 밀도/폰트에 맞춤 (14.5px, 조밀한 1줄 행) */
+    .section-card table { font-size: 14.5px; }
     .section-card table thead th,
     .section-card table thead.table-light th {
-        background: #f7f9fc !important;
-        color: #64748b !important;
-        font-weight: 600;
-        font-size: .78rem;
-        letter-spacing: .01em;
-        border-bottom: 1px solid #e6edf6 !important;
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: -.005em;
+        padding: 8px 14px;
+        border-bottom: 1px solid #e2e8f0 !important;
         white-space: nowrap;
     }
+    .section-card table tbody td {
+        padding: 6px 14px;
+        color: #334155;
+        vertical-align: middle;
+    }
+    /* 셀 안 보조정보(ISBN·출판사 등)는 살짝 작게 — 1줄 유지 */
+    .section-card table tbody td .text-muted.small,
+    .section-card table tbody td .sub { font-size: 12.8px; }
     .section-card table tbody tr { transition: background .12s; }
-    .section-card table tbody tr:hover { background: #f7fafe; }
+    .section-card table tbody tr:hover { background: #f6f9fe; }
 
     /* 타임라인 (상태 이력 등) — 점 + 세로선 */
     .timeline-list { list-style: none; padding: 0; margin: 0; position: relative; }
