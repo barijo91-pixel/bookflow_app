@@ -42,17 +42,17 @@
     /* 사용법: <div class="card section-card"> ... </div> */
     /* card-header / card-body / card-footer 구조 자동 스타일링 */
     .section-card {
-        border: 0 !important;
+        border: 1px solid #eef2f7 !important;
         background: #fff;
-        box-shadow: 0 2px 8px rgba(31, 58, 95, 0.07), 0 1px 3px rgba(31, 58, 95, 0.04) !important;
-        border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(20, 38, 74, 0.04), 0 6px 16px rgba(20, 38, 74, 0.06) !important;
+        border-radius: 14px;
         overflow: hidden;
     }
     .section-card > .card-header {
         /* !important 없이 — bg-danger/bg-warning 등은 Bootstrap이 우선 적용 (!important 사용) */
-        background: #e3ebf5;  /* 약간 진한 네이비 톤 — 헤더 영역 명확 */
-        border-bottom: 1px solid #c9d4e2 !important;
-        padding: .7rem 1rem;
+        background: #f6f9fd;  /* 밝고 깔끔한 네이비 틴트 헤더 */
+        border-bottom: 1px solid #e6edf6 !important;
+        padding: .85rem 1.15rem;
         font-size: .95rem;
         color: #1f3a5f;  /* strong/i가 상속 — bg-danger.text-white 헤더는 .text-white(!important)가 우선 */
     }
@@ -67,9 +67,9 @@
         color: #fff !important;
     }
     .section-card > .card-footer {
-        background: #fbfcfd !important;
-        border-top: 1px dashed #d4dbe4 !important;
-        padding: .7rem 1rem;
+        background: #fbfcfe !important;
+        border-top: 1px solid #eef2f7 !important;
+        padding: .8rem 1.15rem;
     }
     .section-card > .card-footer .form-label { color: #1f3a5f; font-weight: 600; }
     /* 빈 상태 행/블록 — 무미건조한 한 줄 대신 살짝 강조 */
