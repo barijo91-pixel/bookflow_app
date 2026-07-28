@@ -96,7 +96,8 @@
     </div>
 </div>
 
-{{-- ★ AI 책 사진 인식 (메인) — 표지를 찍으면 자동으로 찾아 담기 --}}
+{{-- ★ AI 책 사진 인식 (메인) — 아직 미적용이라 숨김. 재노출 시 아래 @if(false) → @if(true) --}}
+@if(false)
 <div class="card section-card mb-3" style="border-left:4px solid #0d6efd !important;">
     <div class="card-body py-3">
         <div class="d-flex align-items-center gap-2 mb-2">
@@ -116,6 +117,7 @@
         </div>
     </div>
 </div>
+@endif
 
 {{-- 바코드 스캔 (보조 — 기본 숨김, 위 "바코드로 스캔" 링크로 토글) --}}
 <div class="card section-card mb-3" id="barcodeCard" style="display:none; border-left:4px solid #ffc107 !important;">
