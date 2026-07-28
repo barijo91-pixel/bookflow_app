@@ -187,7 +187,7 @@
             </span>
         </header>
         <main class="public-content">
-            <div style="max-width: @yield('max_width', '1400px');">
+            <div style="max-width: @yield('max_width', '1400px'); margin-inline: auto;">
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}<button class="btn-close" data-bs-dismiss="alert"></button></div>
                 @endif
