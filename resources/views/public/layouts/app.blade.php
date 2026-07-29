@@ -47,7 +47,9 @@
         /* ---------- Public shell with sidebar (인증 사용자) ---------- */
         .public-shell { display: flex; min-height: 100vh; }
         .public-sidebar {
-            width: 240px; background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border);
+            width: 240px;
+            background: linear-gradient(180deg, #1e365f 0%, #16294c 26%, #0e1c39 100%);
+            border-right: 1px solid var(--sidebar-border);
             position: fixed; top: 0; left: 0; bottom: 0;
             display: flex; flex-direction: column; z-index: 100;
         }
