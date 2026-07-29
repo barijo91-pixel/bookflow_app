@@ -114,7 +114,7 @@ class NotificationService
                 if (empty($payload['email'])) return ['ok' => false, 'provider' => 'email', 'error' => '이메일 주소 없음'];
                 try {
                     \Illuminate\Support\Facades\Mail::raw($body, function ($m) use ($payload) {
-                        $m->to($payload['email'])->subject($payload['subject'] ?: 'BookFlow');
+                        $m->to($payload['email'])->subject($payload['subject'] ?: 'BookSys');
                     });
                     return ['ok' => true, 'provider' => 'mail'];
                 } catch (\Throwable $e) {

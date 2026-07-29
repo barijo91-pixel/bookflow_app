@@ -48,11 +48,11 @@ class AligoService
                 ['name' => 'tpl_code',    'contents' => $templateCode],
                 ['name' => 'sender',      'contents' => $this->sender()],
                 ['name' => 'receiver_1',  'contents' => $phone],
-                ['name' => 'subject_1',   'contents' => $subject ?: 'BookFlow'],
+                ['name' => 'subject_1',   'contents' => $subject ?: 'BookSys'],
                 ['name' => 'msg_1',       'contents' => $message],
                 ['name' => 'failover_1',  'contents' => 'Y'],     // 실패 시 SMS 자동 폴백
                 ['name' => 'fmsg_1',      'contents' => $message], // 폴백 메시지
-                ['name' => 'fsubject_1',  'contents' => $subject ?: 'BookFlow'],
+                ['name' => 'fsubject_1',  'contents' => $subject ?: 'BookSys'],
                 ['name' => 'testMode',    'contents' => app()->environment('production') ? 'N' : 'N'],
             ]);
         } catch (\Throwable $e) {
@@ -94,7 +94,7 @@ class AligoService
                 'receiver' => $phone,
                 'msg'      => $message,
                 'msg_type' => $msgType,
-                'title'    => $title ?: 'BookFlow',
+                'title'    => $title ?: 'BookSys',
                 'testmode_yn' => app()->environment('production') ? 'N' : 'N',
             ]);
         } catch (\Throwable $e) {
