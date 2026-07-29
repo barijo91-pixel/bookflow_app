@@ -56,7 +56,7 @@ class BookController extends Controller
         $publisherOptions = Publisher::whereIn('id', function ($sq) {
             $sq->select('publisher_id')->from('books')
                ->whereNotNull('publisher_id')->whereNull('deleted_at');
-        })->orderBy('sort_order')->orderBy('name')->get(['id','name']);
+        })->orderBy('name')->get(['id','name']);   // 이름순(가나다)
 
         return view('admin.books.index', compact(
             'books','statusOptions','subjectOptions','schoolOptions','publisherOptions',
@@ -228,7 +228,7 @@ class BookController extends Controller
             'gradeOptions'     => DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get(),
             'levelOptions'     => DB::table('codes')->where('group_code', 'level')->orderBy('sort_order')->get(),
             'semesterOptions'  => DB::table('codes')->where('group_code', 'semester')->orderBy('sort_order')->get(),
-            'publisherOptions' => Publisher::orderBy('sort_order')->get(['id','name']),
+            'publisherOptions' => Publisher::orderBy('name')->get(['id','name']),   // 이름순(가나다)
         ];
     }
 

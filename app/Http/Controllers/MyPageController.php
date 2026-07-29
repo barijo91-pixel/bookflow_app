@@ -482,7 +482,7 @@ class MyPageController extends Controller
                 $q->select('publisher_id')->from('books')
                   ->whereNull('deleted_at')->where('status_code', 'selling')->whereNotNull('publisher_id');
             })
-            ->orderBy('p.sort_order')->orderBy('p.name')
+            ->orderBy('p.name')   // 출판사 드롭다운은 이름순(가나다) 통일
             ->get(['p.id', 'p.name']);
 
         return view('public.mypage.order_edit', compact('user', 'order', 'vendor', 'items', 'orderRate', 'publisherOptions'));
@@ -1582,7 +1582,7 @@ class MyPageController extends Controller
                     $sq->select('publisher_id')->from('books')
                        ->whereNull('deleted_at')->where('status_code', 'selling')->whereNotNull('publisher_id');
                 })
-                ->orderBy('p.sort_order')->orderBy('p.name')->get(['p.id as code', 'p.name']),
+                ->orderBy('p.name')->get(['p.id as code', 'p.name']),   // 이름순(가나다)
         ];
         $activeFilters = compact('school','subject','grade','semester','q','publisher');
         $showSubFilters = (bool) $school; // 분류 선택 시에만 하위 필터 표시
@@ -2138,7 +2138,7 @@ class MyPageController extends Controller
                 $q->select('publisher_id')->from('books')
                   ->whereNull('deleted_at')->where('status_code', 'selling')->whereNotNull('publisher_id');
             })
-            ->orderBy('p.sort_order')->orderBy('p.name')
+            ->orderBy('p.name')   // 출판사 드롭다운은 이름순(가나다) 통일
             ->get(['p.id', 'p.name']);
 
         return view('public.mypage.class_show', compact(
