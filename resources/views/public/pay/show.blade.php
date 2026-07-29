@@ -96,6 +96,30 @@
         @endif
 
         @if(in_array($pr->status, ['sent', 'viewed']))
+            {{-- 카톡 등 인앱 브라우저에서는 카드 결제창(INIStdPay)이 차단됨 → 외부 브라우저 유도 --}}
+            <div id="inappNotice" class="pay-section" style="display:none;">
+                <div style="background:#fff8e1; border:1px solid #ffe08a; border-radius:10px; padding:.9rem 1rem;">
+                    <div style="font-weight:700; color:#8a6d00; margin-bottom:.35rem;">
+                        <i class="bi bi-exclamation-triangle-fill"></i> 카카오톡 안에서는 카드 결제가 제한됩니다
+                    </div>
+                    <div class="small" style="color:#6b5600; line-height:1.55;">
+                        아래 버튼을 눌러 <strong>기본 브라우저(크롬/사파리)</strong>에서 결제해 주세요.
+                        <span id="inappIosHint" style="display:none;">
+                            <br>iPhone은 화면 <strong>오른쪽 아래 <i class="bi bi-three-dots"></i> 또는 <i class="bi bi-box-arrow-up"></i></strong> →
+                            <strong>“Safari로 열기”</strong>를 눌러주세요.
+                        </span>
+                    </div>
+                    <button type="button" id="openExternalBtn" class="btn w-100 mt-2 py-2"
+                            style="background:#8a6d00; color:#fff; font-weight:700; border-radius:8px;">
+                        <i class="bi bi-box-arrow-up-right"></i> 다른 브라우저로 열기
+                    </button>
+                    <button type="button" id="copyPayUrlBtn" class="btn w-100 mt-2 py-2"
+                            style="background:#fff; color:#8a6d00; border:1px solid #ffe08a; font-weight:600; border-radius:8px;">
+                        <i class="bi bi-clipboard"></i> 결제 주소 복사
+                    </button>
+                </div>
+            </div>
+
             <div class="pay-section">
                 <h6><i class="bi bi-credit-card-2-front"></i> 간편하게 결제</h6>
                 @if($portOneActive ?? false)
@@ -184,6 +208,68 @@ function copyAcc() {
         alert('계좌번호가 복사되었습니다.\n\n' + acc);
     });
 }
+
+/* 인앱 브라우저(카카오톡/네이버/인스타 등) 감지 → 외부 브라우저 유도.
+   이니시스 결제창(INIStdPay)이 인앱에서 "해당기기로는 결제 진행 불가" 로 차단되는 문제 대응. */
+(function () {
+    var ua = (navigator.userAgent || '').toLowerCase();
+    var isKakao = ua.indexOf('kakaotalk') > -1;
+    var isInApp = isKakao
+        || ua.indexOf('naver') > -1 || ua.indexOf('inapp') > -1
+        || ua.indexOf('instagram') > -1 || ua.indexOf('fb_iab') > -1 || ua.indexOf('fbav') > -1
+        || ua.indexOf('daumapps') > -1 || ua.indexOf('line/') > -1;
+    if (!isInApp) return;
+
+    var isAndroid = ua.indexOf('android') > -1;
+    var notice = document.getElementById('inappNotice');
+    var iosHint = document.getElementById('inappIosHint');
+    var openBtn = document.getElementById('openExternalBtn');
+    var copyBtn = document.getElementById('copyPayUrlBtn');
+    var url = window.location.href;
+
+    if (notice) notice.style.display = '';
+    if (!isAndroid && iosHint) iosHint.style.display = '';   // iOS는 수동 안내 (자동 전환 불가)
+
+    // 카카오톡은 외부 브라우저로 여는 전용 스킴 지원
+    function openExternal() {
+        if (isKakao) {
+            window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+            return;
+        }
+        if (isAndroid) {
+            // 크롬으로 강제 전환 (intent 스킴)
+            var noScheme = url.replace(/^https?:\/\//, '');
+            window.location.href = 'intent://' + noScheme + '#Intent;scheme=https;package=com.android.chrome;end';
+            return;
+        }
+        // iOS 기타 인앱 — 자동 전환 불가, 주소 복사로 안내
+        copyUrl(true);
+    }
+
+    function copyUrl(fromOpen) {
+        var done = function () {
+            alert('결제 주소가 복사되었습니다.\n\n크롬/사파리 주소창에 붙여넣어 결제해 주세요.');
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(done).catch(function () { window.prompt('아래 주소를 복사해 주세요', url); });
+        } else {
+            var ta = document.createElement('textarea');
+            ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); done(); }
+            catch (e) { window.prompt('아래 주소를 복사해 주세요', url); }
+            document.body.removeChild(ta);
+        }
+    }
+
+    if (openBtn) openBtn.addEventListener('click', openExternal);
+    if (copyBtn) copyBtn.addEventListener('click', function () { copyUrl(false); });
+
+    // 카카오톡 안드로이드는 진입 즉시 외부 브라우저로 전환 (결제 실패 경험 자체를 차단)
+    if (isKakao && isAndroid) {
+        setTimeout(openExternal, 400);
+    }
+})();
 </script>
 
 @if(($portOneActive ?? false) && in_array($pr->status, ['sent', 'viewed']))
