@@ -85,6 +85,27 @@
     var csrf       = '{{ csrf_token() }}';
     var allBtns    = document.querySelectorAll('.store-pay-btn');
 
+    // 모바일 리다이렉트 복귀 처리 (결제 후 ?portone_return=1&paymentId=...&book_id=.. 로 돌아옴)
+    (function () {
+        var q = new URLSearchParams(window.location.search);
+        if (!q.has('portone_return')) return;
+        var paymentId = q.get('paymentId'), code = q.get('code'), message = q.get('message'), bookId = q.get('book_id');
+        history.replaceState(null, '', window.location.pathname);
+        if (code) {
+            if (!String(code).includes('CANCEL')) alert('결제 실패: ' + (message || code));
+            return;
+        }
+        if (!paymentId || !bookId) return;
+        fetch(verifyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+            body: JSON.stringify({ payment_id: paymentId, book_id: bookId }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { alert(j.message || (j.success ? '결제 완료' : '검증 실패')); })
+        .catch(function () { alert('결제 확인 중 오류가 발생했습니다. 잠시 후 새로고침해 주세요.'); });
+    })();
+
     allBtns.forEach(function (btn) {
         btn.addEventListener('click', async function () {
             if (!active || !btn.dataset.channelKey) { alert('현재 테스트 모드입니다. 관리자가 PG 키를 설정하면 결제가 가능합니다.'); return; }
@@ -103,6 +124,8 @@
                     totalAmount: amount,
                     currency: 'CURRENCY_KRW',
                     payMethod: btn.dataset.payMethod,
+                    // 모바일 리다이렉트 방식 필수 (미지정 시 모바일 결제창 미표시)
+                    redirectUrl: window.location.origin + window.location.pathname + '?portone_return=1&book_id=' + bookId,
                     customer: {
                         fullName: {!! json_encode($user->name ?? '고객') !!},
                         phoneNumber: {!! json_encode($user->phone ?? '') !!},

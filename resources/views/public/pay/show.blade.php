@@ -289,6 +289,44 @@ function copyAcc() {
     const verifyUrl = '{{ route('public.pay.portone', $pr->token) }}';
     const btns = document.querySelectorAll('.portone-pay-btn');
 
+    /* 모바일 리다이렉트 복귀 처리 —
+       모바일은 결제창이 별도 페이지로 열리고, 완료 후 redirectUrl 로 돌아오며
+       쿼리스트링에 paymentId(성공) 또는 code/message(실패·취소)가 붙는다. */
+    (function handleRedirectReturn() {
+        const q = new URLSearchParams(window.location.search);
+        if (!q.has('portone_return')) return;
+
+        const paymentId = q.get('paymentId');
+        const code      = q.get('code');
+        const message   = q.get('message');
+        // 주소창 정리 (뒤로가기 시 재검증 방지)
+        history.replaceState(null, '', window.location.pathname);
+
+        if (code) {
+            if (!String(code).includes('CANCEL')) alert('결제 실패: ' + (message || code));
+            return;
+        }
+        if (!paymentId) return;
+
+        const box = document.createElement('div');
+        box.style.cssText = 'padding:.8rem 1rem;background:#e8f1ff;color:#1e40af;border-radius:10px;margin:0 0 .8rem;font-weight:600;text-align:center;';
+        box.innerHTML = '<i class="bi bi-hourglass-split"></i> 결제 확인 중입니다...';
+        const wrap = document.querySelector('.pay-card') || document.body;
+        wrap.prepend(box);
+
+        fetch(verifyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+            body: JSON.stringify({ payment_id: paymentId }),
+        })
+        .then(r => r.json())
+        .then(j => {
+            if (j.success) { window.location.href = j.redirect_url || window.location.pathname; }
+            else { box.remove(); alert('결제 검증 실패: ' + (j.message || '알 수 없는 오류')); }
+        })
+        .catch(() => { box.remove(); alert('결제 확인 중 오류가 발생했습니다. 잠시 후 새로고침해 주세요.'); });
+    })();
+
     btns.forEach(function (btn) {
         const orig = btn.innerHTML;
         btn.addEventListener('click', async function () {
@@ -305,6 +343,8 @@ function copyAcc() {
                     currency: 'CURRENCY_KRW',
                     payMethod: btn.dataset.payMethod,
                     customer: customer,
+                    // 모바일은 리다이렉트 방식으로 동작 — 미지정 시 결제창이 뜨지 않음(이니시스 Dev.Error)
+                    redirectUrl: window.location.origin + window.location.pathname + '?portone_return=1',
                 });
 
                 if (response && response.code != null) {
