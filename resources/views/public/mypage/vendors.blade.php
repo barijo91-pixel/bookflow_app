@@ -1,6 +1,5 @@
 @extends('public.layouts.app')
 @section('title', '거래처(학원)')
-@section('max_width', '1100px')
 
 @section('content')
 <div class="mb-3">

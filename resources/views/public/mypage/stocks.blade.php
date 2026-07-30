@@ -1,6 +1,5 @@
 @extends('public.layouts.app')
 @section('title', '재고 관리')
-@section('max_width', '1200px')
 
 @section('content')
 <div class="mb-3 d-flex justify-content-between align-items-center">

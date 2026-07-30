@@ -1,6 +1,5 @@
 @extends('public.layouts.app')
 @section('title', '마이페이지')
-@section('max_width', '1100px')
 
 @section('content')
 <div class="mb-4">

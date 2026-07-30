@@ -1,6 +1,5 @@
 @extends('public.layouts.app')
 @section('title', '할인율 관리')
-@section('max_width', '1200px')
 
 @section('content')
 <div class="mb-3">

@@ -1,6 +1,5 @@
 @extends('public.layouts.app')
 @section('title', '학급 · '.$class->name)
-@section('max_width', '1200px')
 
 @section('content')
 <div class="mb-3">

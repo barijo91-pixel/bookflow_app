@@ -9,37 +9,37 @@
     </a>
 </div>
 
-{{-- 합계 요약 --}}
+{{-- 합계 요약 — 다른 관리자 화면과 동일한 .stat-card 표준 사용 --}}
 <div class="row g-2 mb-3">
     <div class="col-md-3">
-        <div class="card"><div class="card-body py-2 px-3">
-            <div class="small text-muted">학부모 결제 합계</div>
-            <div class="h6 mb-0">{{ number_format($totals->parent_paid) }}원</div>
-        </div></div>
+        <div class="stat-card py-2">
+            <div class="stat-label small">학부모 결제 합계</div>
+            <div class="stat-value" style="font-size:1.3rem">{{ number_format($totals->parent_paid) }}원</div>
+        </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-primary"><div class="card-body py-2 px-3">
-            <div class="small text-muted">총판 순이익</div>
-            <div class="h6 mb-0 navy">{{ number_format($totals->dist_net) }}원</div>
-        </div></div>
+        <div class="stat-card py-2">
+            <div class="stat-label small">총판 순이익</div>
+            <div class="stat-value" style="font-size:1.3rem">{{ number_format($totals->dist_net) }}원</div>
+        </div>
     </div>
     <div class="col-md-2">
-        <div class="card"><div class="card-body py-2 px-3">
-            <div class="small text-muted">사입자 마진</div>
-            <div class="h6 mb-0 text-success">{{ number_format($totals->agent_net) }}원</div>
-        </div></div>
+        <div class="stat-card py-2">
+            <div class="stat-label small">사입자 마진</div>
+            <div class="stat-value text-success" style="font-size:1.3rem">{{ number_format($totals->agent_net) }}원</div>
+        </div>
     </div>
     <div class="col-md-2">
-        <div class="card"><div class="card-body py-2 px-3">
-            <div class="small text-muted">PG 수수료</div>
-            <div class="h6 mb-0 text-danger">{{ number_format($totals->pg_fee) }}원</div>
-        </div></div>
+        <div class="stat-card py-2">
+            <div class="stat-label small">PG 수수료</div>
+            <div class="stat-value text-danger" style="font-size:1.3rem">{{ number_format($totals->pg_fee) }}원</div>
+        </div>
     </div>
     <div class="col-md-2">
-        <div class="card"><div class="card-body py-2 px-3">
-            <div class="small text-muted">BookSys 중계</div>
-            <div class="h6 mb-0">{{ number_format($totals->booksys_fee) }}원</div>
-        </div></div>
+        <div class="stat-card py-2">
+            <div class="stat-label small">BookSys 중계</div>
+            <div class="stat-value" style="font-size:1.3rem">{{ number_format($totals->booksys_fee) }}원</div>
+        </div>
     </div>
 </div>
 
