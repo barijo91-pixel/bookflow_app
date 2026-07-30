@@ -85,6 +85,19 @@
         font-size: 1.5rem; color: #b0bac5;
         display: block; margin-bottom: .25rem;
     }
+    /* 통계 카드 (공통) — 관리자 admin.css 의 .stat-card 와 동일 톤 */
+    .stat-card {
+        background: linear-gradient(180deg, #f6f9fd 0%, #eef4fb 100%);
+        border: 1px solid #e3ecf7;
+        border-left: 3px solid #1f3a5f;
+        border-radius: 10px;
+        padding: 1.1rem 1.3rem;
+        box-shadow: 0 1px 3px rgba(20, 38, 74, 0.05);
+        height: 100%;
+    }
+    .stat-label { font-size: .82rem; color: #6c757d; }
+    .stat-value { font-size: 1.7rem; font-weight: 700; color: #1f3a5f; margin-top: .25rem; }
+
     /* 안내 배너 톤 — 좌측 네이비 액센트로 정보성 강조 */
     .section-card.info-banner {
         border-left: 4px solid #1f3a5f !important;

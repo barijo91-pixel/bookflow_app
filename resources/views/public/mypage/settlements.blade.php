@@ -8,56 +8,44 @@
         @if($user->role_code === 'agent') 내 정산 내역 @else 수금/정산 관리 @endif
     </h1>
 
-    {{-- 누적 통계 카드 --}}
+    {{-- 누적 통계 카드 — 관리자 화면과 동일한 .stat-card 표준 --}}
     <div class="row g-2 mb-3">
         <div class="col-md-3 col-6">
-            <div class="card">
-                <div class="card-body py-2 px-3 text-center">
-                    <div class="small text-muted">정산 건수</div>
-                    <div class="h6 mb-0">{{ number_format($stats->cnt) }}건</div>
-                </div>
+            <div class="stat-card py-2">
+                <div class="stat-label small">정산 건수</div>
+                <div class="stat-value" style="font-size:1.3rem">{{ number_format($stats->cnt) }}건</div>
             </div>
         </div>
         <div class="col-md-3 col-6">
-            <div class="card">
-                <div class="card-body py-2 px-3 text-center">
-                    <div class="small text-muted">학부모 결제 합계</div>
-                    <div class="h6 mb-0">{{ number_format($stats->parent_paid_total) }}원</div>
-                </div>
+            <div class="stat-card py-2">
+                <div class="stat-label small">학부모 결제 합계</div>
+                <div class="stat-value" style="font-size:1.3rem">{{ number_format($stats->parent_paid_total) }}원</div>
             </div>
         </div>
         @if($user->role_code === 'agent')
             <div class="col-md-3 col-6">
-                <div class="card border-warning">
-                    <div class="card-body py-2 px-3 text-center">
-                        <div class="small text-muted">미지급 수수료</div>
-                        <div class="h6 mb-0 text-warning">{{ number_format($stats->pending_total) }}원</div>
-                    </div>
+                <div class="stat-card py-2">
+                    <div class="stat-label small">미지급 수수료</div>
+                    <div class="stat-value text-warning" style="font-size:1.3rem">{{ number_format($stats->pending_total) }}원</div>
                 </div>
             </div>
             <div class="col-md-3 col-6">
-                <div class="card border-success">
-                    <div class="card-body py-2 px-3 text-center">
-                        <div class="small text-muted">지급 완료</div>
-                        <div class="h6 mb-0 text-success">{{ number_format($stats->paid_out_total) }}원</div>
-                    </div>
+                <div class="stat-card py-2">
+                    <div class="stat-label small">지급 완료</div>
+                    <div class="stat-value text-success" style="font-size:1.3rem">{{ number_format($stats->paid_out_total) }}원</div>
                 </div>
             </div>
         @else
             <div class="col-md-3 col-6">
-                <div class="card border-primary">
-                    <div class="card-body py-2 px-3 text-center">
-                        <div class="small text-muted">총판 순이익 합계</div>
-                        <div class="h6 mb-0 text-primary">{{ number_format($stats->dist_net_total) }}원</div>
-                    </div>
+                <div class="stat-card py-2">
+                    <div class="stat-label small">총판 순이익 합계</div>
+                    <div class="stat-value" style="font-size:1.3rem">{{ number_format($stats->dist_net_total) }}원</div>
                 </div>
             </div>
             <div class="col-md-3 col-6">
-                <div class="card border-warning">
-                    <div class="card-body py-2 px-3 text-center">
-                        <div class="small text-muted">사입자 지급 대기</div>
-                        <div class="h6 mb-0 text-warning">{{ number_format($stats->pending_total) }}원</div>
-                    </div>
+                <div class="stat-card py-2">
+                    <div class="stat-label small">사입자 지급 대기</div>
+                    <div class="stat-value text-warning" style="font-size:1.3rem">{{ number_format($stats->pending_total) }}원</div>
                 </div>
             </div>
         @endif
