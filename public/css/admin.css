@@ -2,13 +2,13 @@
     --accent: #1f3a5f;
     --accent-dark: #15294a;
     --accent-soft: #eaf0fa;
-    --sidebar-bg: #1a1d2e;            /* 짙은 네이비-블랙 (스크린샷 톤) */
-    --sidebar-border: #2a2e44;        /* 약간 밝은 짙은 회색 (구분선) */
-    --sidebar-text: #e2e8f0;          /* 거의 흰색 */
+    --sidebar-bg: #14264a;            /* 짙은 네이비 (공개화면·coolenglish 톤 통일) */
+    --sidebar-border: #22345c;        /* 구분선 */
+    --sidebar-text: #e8eefb;          /* 거의 흰색 (푸른 기운) */
     --sidebar-text-strong: #ffffff;
-    --sidebar-section: #6b7280;       /* 섹션 헤더 (흐린 회색) */
-    --sidebar-active-bg: #262a40;     /* active 약간 밝은 짙은 회색 */
-    --sidebar-hover-bg: rgba(255,255,255,0.06);
+    --sidebar-section: #93c5fd;       /* 섹션 헤더 (하늘색 액센트) */
+    --sidebar-active-bg: #2d4b70;     /* active */
+    --sidebar-hover-bg: rgba(255,255,255,0.08);
     --content-bg: #f6f7fb;
     --text-muted-2: #6c757d;
 }
@@ -58,7 +58,8 @@ a { color: var(--accent); }
 /* Sidebar */
 .admin-sidebar {
     width: 240px;
-    background: var(--sidebar-bg);
+    /* 상단 밝은 네이비 → 하단 어두운 네이비 (공개화면 사이드바와 동일 톤) */
+    background: linear-gradient(180deg, #1e365f 0%, #16294c 26%, #0e1c39 100%);
     border-right: 1px solid var(--sidebar-border);
     position: fixed;
     top: 0; left: 0; bottom: 0;
@@ -114,7 +115,7 @@ a { color: var(--accent); }
     background: var(--sidebar-active-bg);
     color: var(--sidebar-text-strong);
     font-weight: 600;
-    border-left-color: #5b8def;
+    border-left-color: #93c5fd;   /* 하늘색 액센트 (공개화면 통일) */
 }
 .nav-item.active i { opacity: 1; }
 .nav-item.disabled { color: rgba(255,255,255,0.3); cursor: not-allowed; }
