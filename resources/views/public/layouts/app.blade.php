@@ -31,10 +31,10 @@
         .navy { color: var(--navy); }
         .btn-navy { background: var(--navy); border-color: var(--navy); color: #fff; }
         .btn-navy:hover, .btn-navy:focus { background: var(--navy-dark); border-color: var(--navy-dark); color: #fff; }
-        /* .btn-primary — 관리자(admin.css)와 동일하게 네이비 액센트로 통일.
-           (부트스트랩 기본 파랑과 섞여 조회/검색 버튼 색이 화면마다 달라 보이던 문제) */
-        .btn-primary { background: var(--navy); border-color: var(--navy); color: #fff; }
-        .btn-primary:hover, .btn-primary:focus { background: var(--navy-dark); border-color: var(--navy-dark); color: #fff; }
+        /* .btn-primary — 관리자(admin.css)와 동일 톤으로 통일.
+           딥네이비(#1f3a5f)는 어두워 한 단계 밝은 네이비블루 사용 */
+        .btn-primary { background: #2c5282; border-color: #2c5282; color: #fff; }
+        .btn-primary:hover, .btn-primary:focus { background: #24446e; border-color: #24446e; color: #fff; }
         .btn-outline-navy { color: var(--navy); border-color: var(--navy); }
         .btn-outline-navy:hover { background: var(--navy); color: #fff; }
         a { color: var(--navy); }

@@ -22,13 +22,14 @@ body {
     color: #212529;
 }
 a { color: var(--accent); }
+/* 조회/검색 등 주요 액션 — 딥네이비보다 한 단계 밝은 네이비블루 */
 .btn-primary {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: #2c5282;
+    border-color: #2c5282;
 }
 .btn-primary:hover, .btn-primary:focus {
-    background: var(--accent-dark);
-    border-color: var(--accent-dark);
+    background: #24446e;
+    border-color: #24446e;
 }
 
 /* ---------- Login ---------- */
