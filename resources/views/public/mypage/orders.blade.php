@@ -52,18 +52,20 @@
 {{-- 주문일자 + 키워드 검색 --}}
 <form method="GET" action="{{ route('my.orders.index') }}" class="card section-card mb-3">
     <div class="card-body py-3">
+        {{-- 필터는 한 줄 유지 — 컬럼 합이 12를 넘지 않게 배분 (역할별) --}}
+        @php $isAcademy = $user->role_code === 'academy'; @endphp
         <div class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label small text-muted mb-1">주문일자 From</label>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">시작일</label>
                 <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm">
             </div>
-            <div class="col-md-3">
-                <label class="form-label small text-muted mb-1">주문일자 To</label>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">종료일</label>
                 <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
             </div>
-            @if($user->role_code !== 'academy')
-            <div class="col-md-3">
-                <label class="form-label small text-muted mb-1">학원 선택</label>
+            @if(! $isAcademy)
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">학원</label>
                 <select name="vendor_id" class="form-select form-select-sm">
                     <option value="">전체 학원</option>
                     @foreach($vendorOptions as $vo)
@@ -72,11 +74,11 @@
                 </select>
             </div>
             @endif
-            <div class="col-md-{{ $user->role_code !== 'academy' ? '2' : '4' }}">
-                <label class="form-label small text-muted mb-1">주문번호 검색</label>
+            <div class="col-md-{{ $isAcademy ? '6' : '2' }}">
+                <label class="form-label small text-muted mb-1">주문번호</label>
                 <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="주문번호">
             </div>
-            @if($user->role_code !== 'academy')
+            @if(! $isAcademy)
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">거래구분</label>
                 <select name="trade_type" class="form-select form-select-sm">
