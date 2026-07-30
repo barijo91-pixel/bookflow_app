@@ -23,37 +23,30 @@
 @if($errors->any())<div class="alert alert-danger py-2 small"><ul class="mb-0 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
 
 {{-- 요약 카드 --}}
-<div class="row g-3 mb-3">
+{{-- 요약 통계 — 관리자 화면과 동일한 .stat-card 표준 --}}
+<div class="row g-2 mb-3">
     <div class="col-6 col-md-3">
-        <div class="card section-card">
-            <div class="card-body py-3">
-                <div class="small text-muted">취급 도서</div>
-                <div class="h4 mb-0 navy">{{ number_format($summary['total_books']) }}</div>
-            </div>
+        <div class="stat-card py-2">
+            <div class="stat-label small">취급 도서</div>
+            <div class="stat-value" style="font-size:1.3rem">{{ number_format($summary['total_books']) }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card section-card">
-            <div class="card-body py-3">
-                <div class="small text-muted">총 재고 수량</div>
-                <div class="h4 mb-0 navy">{{ number_format($summary['total_qty']) }}</div>
-            </div>
+        <div class="stat-card py-2">
+            <div class="stat-label small">총 재고 수량</div>
+            <div class="stat-value" style="font-size:1.3rem">{{ number_format($summary['total_qty']) }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card section-card">
-            <div class="card-body py-3">
-                <div class="small text-muted">안전재고 이하 <i class="bi bi-exclamation-triangle text-warning"></i></div>
-                <div class="h4 mb-0 {{ $summary['low_stock'] > 0 ? 'text-warning' : '' }}">{{ number_format($summary['low_stock']) }}</div>
-            </div>
+        <div class="stat-card py-2">
+            <div class="stat-label small">안전재고 이하</div>
+            <div class="stat-value {{ $summary['low_stock'] > 0 ? 'text-warning' : '' }}" style="font-size:1.3rem">{{ number_format($summary['low_stock']) }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card section-card">
-            <div class="card-body py-3">
-                <div class="small text-muted">재고 0건 <i class="bi bi-x-circle text-danger"></i></div>
-                <div class="h4 mb-0 {{ $summary['zero_stock'] > 0 ? 'text-danger' : '' }}">{{ number_format($summary['zero_stock']) }}</div>
-            </div>
+        <div class="stat-card py-2">
+            <div class="stat-label small">재고 0건</div>
+            <div class="stat-value {{ $summary['zero_stock'] > 0 ? 'text-danger' : '' }}" style="font-size:1.3rem">{{ number_format($summary['zero_stock']) }}</div>
         </div>
     </div>
 </div>
