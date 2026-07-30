@@ -243,7 +243,17 @@ a { color: var(--accent); }
     .admin-content .card-body { padding: .9rem; }
 }
 
-/* Table tweaks */
-.table > :not(caption) > * > * { padding: .65rem .8rem; }
+/* Table tweaks — coolenglish 표준 밀도/폰트 (14.5px, 조밀한 1줄 행) */
+.admin-content .table { font-size: 14.5px; }
+.admin-content .table thead th {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: -.005em;
+    white-space: nowrap;
+}
+.admin-content .table tbody td { color: #334155; vertical-align: middle; }
+.table > :not(caption) > * > * { padding: .5rem .8rem; }
 .card-footer .pagination { margin: 0; }
 code { font-size: .85em; color: var(--accent); background: var(--accent-soft); padding: .1em .4em; border-radius: 4px; }

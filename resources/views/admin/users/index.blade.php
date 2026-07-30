@@ -92,32 +92,19 @@
                             </a>
                             @if($u->isSuperAdmin())<span class="badge bg-danger ms-1">SUPER</span>@endif
                             @if($isSelf)<span class="badge bg-primary ms-1">나</span>@endif
-                            @php
-                                // 사업체명: 총판/영업자 → 상호명, 학원 → 학원(거래처)명
-                                $bizLabel = null; $bizIcon = 'shop';
-                                if (in_array($u->role_code, ['distributor', 'agent'])) {
-                                    $bizLabel = $u->business_name ?? null;
-                                    $bizIcon  = $u->role_code === 'distributor' ? 'truck' : 'person-badge';
-                                } elseif ($u->role_code === 'academy') {
-                                    $bizLabel = $affiliations[$u->id]['names'][0] ?? null;
-                                    $bizIcon  = 'mortarboard';
-                                }
-                            @endphp
-                            @if($bizLabel)
-                                <div class="small text-muted"><i class="bi bi-{{ $bizIcon }}"></i> {{ $bizLabel }}</div>
-                            @endif
+                            {{-- 사업체명/학원명은 우측 '소속' 컬럼에 표시되므로 여기서는 생략 (1줄 유지) --}}
                         </td>
-                        <td class="text-muted small"><code>{{ $u->login_id }}</code></td>
-                        <td class="text-muted small">{{ format_phone($u->phone) }}</td>
+                        <td class="text-nowrap"><code class="fw-bold">{{ $u->login_id }}</code></td>
+                        <td class="fw-semibold text-nowrap">{{ format_phone($u->phone) }}</td>
                         <td><span class="badge bg-light text-dark">{{ $u->role_code }}</span></td>
-                        <td class="small">
+                        <td class="fw-semibold">
                             @php $aff = $affiliations[$u->id] ?? null; @endphp
                             @if(! $aff)
-                                <span class="text-muted">—</span>
+                                <span class="text-muted fw-normal">—</span>
                             @elseif(! empty($aff['is_distributor']))
-                                <span class="text-muted">산하 영업자 {{ $aff['count'] }}명</span>
+                                <span>산하 영업자 {{ $aff['count'] }}명</span>
                             @elseif(empty($aff['names']))
-                                <span class="text-muted">—</span>
+                                <span class="text-muted fw-normal">—</span>
                             @else
                                 @php
                                     $names = $aff['names'];
@@ -139,7 +126,7 @@
                                 @default <span class="badge bg-light text-dark">{{ $u->status_code }}</span>
                             @endswitch
                         </td>
-                        <td class="text-muted small">{{ optional($u->created_at)->format('Y-m-d') }}</td>
+                        <td class="fw-semibold text-nowrap">{{ optional($u->created_at)->format('Y-m-d') }}</td>
                         <td class="text-end">
                             @if($u->status_code === 'pending' && $canSuspend)
                                 <form method="POST" action="{{ route('admin.users.approve', $u) }}" class="d-inline">
