@@ -82,18 +82,18 @@
             <table class="table table-sm align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>정산일시</th>
+                        <th><x-sort-link field="date" label="정산일시" :sort="$sort" :dir="$dir" /></th>
                         <th>주문</th>
                         <th>학원</th>
-                        <th class="text-end">학부모 결제</th>
+                        <th class="text-end"><x-sort-link field="parent" label="학부모 결제" :sort="$sort" :dir="$dir" /></th>
                         @if($user->role_code === 'agent')
-                            <th class="text-end">실 마진</th>
-                            <th class="text-end">실수령액</th>
+                            <th class="text-end"><x-sort-link field="margin" label="실 마진" :sort="$sort" :dir="$dir" /></th>
+                            <th class="text-end"><x-sort-link field="net" label="실수령액" :sort="$sort" :dir="$dir" /></th>
                         @else
-                            <th class="text-end">총판 순이익</th>
-                            <th class="text-end">사입자 지급</th>
+                            <th class="text-end"><x-sort-link field="dist" label="총판 순이익" :sort="$sort" :dir="$dir" /></th>
+                            <th class="text-end"><x-sort-link field="payout" label="사입자 지급" :sort="$sort" :dir="$dir" /></th>
                         @endif
-                        <th>상태</th>
+                        <th><x-sort-link field="status" label="상태" :sort="$sort" :dir="$dir" /></th>
                     </tr>
                 </thead>
                 <tbody>

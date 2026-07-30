@@ -70,26 +70,17 @@
             <tbody>
                 @forelse($agents as $a)
                     <tr>
-                        <td class="small">
-                            <strong>{{ $a->name }}</strong>
-                            <div class="text-muted small"><code>{{ $a->login_id }}</code></div>
+                        <td class="text-nowrap">
+                            <strong>{{ $a->name }}</strong><span class="text-muted small ms-2"><code>{{ $a->login_id }}</code></span>
                         </td>
-                        <td class="small text-muted">
-                            <i class="bi bi-phone"></i> {{ format_phone($a->phone) }}
-                            @if($a->email)
-                                <div class="text-muted small"><i class="bi bi-envelope"></i> {{ $a->email }}</div>
-                            @endif
-                        </td>
-                        <td class="small text-muted">
-                            {{ trim(($a->sido_name ?? '').' '.($a->sigungu_name ?? '')) ?: '-' }}
-                        </td>
+                        <td class="text-muted text-nowrap">{{ format_phone($a->phone) }}</td>
+                        <td class="text-muted">{{ trim(($a->sido_name ?? '').' '.($a->sigungu_name ?? '')) ?: '-' }}</td>
                         <td class="text-end">
                             <span class="badge bg-light text-dark">{{ $a->vendor_count }}개</span>
                         </td>
-                        <td class="text-end small">
+                        <td class="text-end text-nowrap">
                             @if($a->order_count > 0)
-                                <strong>{{ $a->order_count }}</strong>건
-                                <div class="text-muted small">{{ number_format($a->order_amount) }}원</div>
+                                <strong>{{ $a->order_count }}</strong>건<span class="text-muted small ms-1">{{ number_format($a->order_amount) }}원</span>
                             @else
                                 <span class="text-muted">-</span>
                             @endif

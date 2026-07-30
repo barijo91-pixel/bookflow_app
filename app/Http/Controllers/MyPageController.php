@@ -245,7 +245,22 @@ class MyPageController extends Controller
             abort(403, '영업자/총판만 접근 가능합니다.');
         }
 
+        // 정렬 (허용 컬럼만 — SQL 인젝션 방지)
+        $sortMap = [
+            'date'   => 'computed_at',
+            'parent' => 'parent_paid',
+            'margin' => 'agent_margin',
+            'net'    => 'agent_net',
+            'dist'   => 'dist_net',
+            'payout' => 'agent_payout',
+            'status' => 'status',
+        ];
+        $sort = (string) $request->query('sort', 'date');
+        $dir  = $request->query('dir') === 'asc' ? 'asc' : 'desc';
+        if (! array_key_exists($sort, $sortMap)) $sort = 'date';
+
         $q = \App\Models\SettlementRecord::with(['vendor', 'paymentRequest'])
+            ->orderBy($sortMap[$sort], $dir)
             ->orderByDesc('id');
 
         if ($user->role_code === 'agent') {
@@ -278,7 +293,7 @@ class MyPageController extends Controller
             COALESCE(SUM(CASE WHEN status="computed" THEN agent_payout ELSE 0 END),0) as pending_total
         ')->first();
 
-        return view('public.mypage.settlements', compact('records', 'stats', 'user', 'status'));
+        return view('public.mypage.settlements', compact('records', 'stats', 'user', 'status', 'sort', 'dir'));
     }
 
     /**
@@ -1000,7 +1015,24 @@ class MyPageController extends Controller
         }
         if ($selectedVendor) $query->where('o.vendor_id', $selectedVendor);
 
-        $orders = $query->orderByDesc('o.id')->paginate(50)->withQueryString();
+        // 정렬 (허용 컬럼만 — SQL 인젝션 방지)
+        $sortMap = [
+            'order_no'     => 'o.order_no',
+            'vendor'       => 'v.name',
+            'class'        => 'ac.name',
+            'agent'        => 'ag.name',
+            'distributor'  => 'ds.name',
+            'amount'       => 'o.total_amount',
+            'status'       => 'o.status_code',
+            'date'         => 'o.requested_at',
+        ];
+        $sort = (string) $request->query('sort', 'date');
+        $dir  = $request->query('dir') === 'asc' ? 'asc' : 'desc';
+        if (! array_key_exists($sort, $sortMap)) $sort = 'date';
+
+        $orders = $query->orderBy($sortMap[$sort], $dir)
+            ->orderByDesc('o.id')
+            ->paginate(50)->withQueryString();
 
         // 학원 선택 드롭다운 — 이 사용자가 보는 주문들의 학원 목록 (academy는 자기 학원만이라 미표시)
         $vendorOptions = collect();
@@ -1037,6 +1069,8 @@ class MyPageController extends Controller
             'statusCounts' => $statusCounts,
             'vendorOptions' => $vendorOptions,
             'selectedVendor' => $selectedVendor,
+            'sort' => $sort,
+            'dir'  => $dir,
         ]);
     }
 

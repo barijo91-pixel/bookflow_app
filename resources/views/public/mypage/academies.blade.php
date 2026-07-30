@@ -43,10 +43,9 @@
             <tbody>
                 @forelse($academies as $v)
                     <tr>
-                        <td class="small">
-                            <strong>{{ $v->name }}</strong>
-                            @if($v->owner_name)<div class="text-muted small">원장 {{ $v->owner_name }}</div>@endif
-                            @if($v->mobile)<div class="text-muted small"><i class="bi bi-phone"></i> {{ format_phone($v->mobile) }}</div>@endif
+                        <td>
+                            <strong>{{ $v->name }}</strong>@if($v->owner_name)<span class="text-muted small ms-2">원장 {{ $v->owner_name }}</span>@endif
+                            @if($v->mobile)<span class="text-muted small ms-2">{{ format_phone($v->mobile) }}</span>@endif
                         </td>
                         <td>
                             @if($v->trade_type === 'wholesale')
@@ -57,9 +56,8 @@
                         </td>
                         <td class="small text-muted">{{ $v->agent_name }}</td>
                         <td class="small text-muted">{{ trim(($v->sido_name ?? '').' '.($v->sigungu_name ?? '')) ?: '-' }}</td>
-                        <td class="text-end small">
-                            {{ rtrim(rtrim(number_format($v->discount_rate, 1), '0'), '.') }}%
-                            <div class="text-muted" style="font-size:0.7rem;">{{ $v->trade_type === 'wholesale' ? '매입' : '학부모' }}</div>
+                        <td class="text-end text-nowrap">
+                            {{ rtrim(rtrim(number_format($v->discount_rate, 1), '0'), '.') }}%<span class="text-muted small ms-1">{{ $v->trade_type === 'wholesale' ? '매입' : '학부모' }}</span>
                         </td>
                         <td>
                             @switch($v->status_code)

@@ -103,18 +103,18 @@
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
-                    <th>주문번호</th>
-                    <th>학급</th>
-                    @if($user->role_code !== 'academy')<th>학원</th><th>구분</th>@endif
+                    <th><x-sort-link field="order_no" label="주문번호" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="class" label="학급" :sort="$sort" :dir="$dir" /></th>
+                    @if($user->role_code !== 'academy')<th><x-sort-link field="vendor" label="학원" :sort="$sort" :dir="$dir" /></th><th>구분</th>@endif
                     @if($user->role_code !== 'agent')
-                        <th>영업자</th>
+                        <th><x-sort-link field="agent" label="영업자" :sort="$sort" :dir="$dir" /></th>
                     @endif
                     @if($user->role_code !== 'distributor')
-                        <th>총판</th>
+                        <th><x-sort-link field="distributor" label="총판" :sort="$sort" :dir="$dir" /></th>
                     @endif
-                    <th class="text-end">금액</th>
-                    <th>상태</th>
-                    <th>주문일</th>
+                    <th class="text-end"><x-sort-link field="amount" label="금액" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="status" label="상태" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="date" label="주문일" :sort="$sort" :dir="$dir" /></th>
                 </tr>
             </thead>
             <tbody>
