@@ -33,6 +33,7 @@
             <thead class="table-light">
                 <tr>
                     <th>학원</th>
+                    <th>연락처</th>
                     <th>거래구분</th>
                     <th>담당 영업자</th>
                     <th>지역</th>
@@ -43,10 +44,10 @@
             <tbody>
                 @forelse($academies as $v)
                     <tr>
-                        <td>
+                        <td class="text-nowrap">
                             <strong>{{ $v->name }}</strong>@if($v->owner_name)<span class="text-muted small ms-2">원장 {{ $v->owner_name }}</span>@endif
-                            @if($v->mobile)<span class="text-muted small ms-2">{{ format_phone($v->mobile) }}</span>@endif
                         </td>
+                        <td class="text-muted text-nowrap">{{ $v->mobile ? format_phone($v->mobile) : '-' }}</td>
                         <td>
                             @if($v->trade_type === 'wholesale')
                                 <span class="badge bg-primary">도매</span>
@@ -54,8 +55,8 @@
                                 <span class="badge bg-info text-dark">소매</span>
                             @endif
                         </td>
-                        <td class="small text-muted">{{ $v->agent_name }}</td>
-                        <td class="small text-muted">{{ trim(($v->sido_name ?? '').' '.($v->sigungu_name ?? '')) ?: '-' }}</td>
+                        <td class="text-muted text-nowrap">{{ $v->agent_name }}</td>
+                        <td class="text-muted">{{ trim(($v->sido_name ?? '').' '.($v->sigungu_name ?? '')) ?: '-' }}</td>
                         <td class="text-end text-nowrap">
                             {{ rtrim(rtrim(number_format($v->discount_rate, 1), '0'), '.') }}%<span class="text-muted small ms-1">{{ $v->trade_type === 'wholesale' ? '매입' : '학부모' }}</span>
                         </td>
@@ -69,7 +70,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-5">
+                        <td colspan="7" class="text-center text-muted py-5">
                             <i class="bi bi-building" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">산하 학원이 없습니다.</p>
                             <p class="small text-muted mb-0">소속 영업자가 학원을 등록하면 여기에 표시됩니다.</p>

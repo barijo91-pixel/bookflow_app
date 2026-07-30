@@ -85,7 +85,7 @@
                                 <span class="text-muted">-</span>
                             @endif
                         </td>
-                        <td class="small text-muted">
+                        <td class="text-muted text-nowrap">
                             {{ $a->last_login_at ? \Carbon\Carbon::parse($a->last_login_at)->format('Y-m-d') : '미접속' }}
                         </td>
                         <td>
