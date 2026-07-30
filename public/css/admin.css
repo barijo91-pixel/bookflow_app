@@ -108,7 +108,8 @@ a { color: var(--accent); }
     transition: background .15s, color .15s;
     border-left: 3px solid transparent;
 }
-.nav-item i { width: 18px; text-align: center; opacity: .85; }
+/* 아이콘 — 하늘색 액센트(섹션 라벨과 동일 톤). 활성/호버 시 더 밝게 */
+.nav-item i { width: 18px; text-align: center; color: #93c5fd; opacity: .95; }
 .nav-item:hover { background: var(--sidebar-hover-bg); color: var(--sidebar-text-strong); }
 .nav-item:hover i { opacity: 1; }
 .nav-item.active {
@@ -254,6 +255,13 @@ a { color: var(--accent); }
     white-space: nowrap;
 }
 .admin-content .table tbody td { color: #334155; vertical-align: middle; }
+/* 행 높이 — 조밀하게 (헤더 8px / 데이터 5px, 좌우 14px) */
+.admin-content .table thead th { padding: 8px 14px; }
+.admin-content .table tbody td { padding: 5px 14px; }
+/* 표준 정규화 — 셀 자체에 .small/.text-muted 를 준 곳도 표준 폰트/색으로 통일.
+   (셀 안의 span/div.small 보조정보는 계속 작게 표시됨) */
+.admin-content .table tbody > tr > td.small { font-size: 14.5px; }
+.admin-content .table tbody > tr > td.text-muted { color: #334155; }
 .table > :not(caption) > * > * { padding: .5rem .8rem; }
 .card-footer .pagination { margin: 0; }
 code { font-size: .85em; color: var(--accent); background: var(--accent-soft); padding: .1em .4em; border-radius: 4px; }

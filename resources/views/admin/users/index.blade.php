@@ -94,17 +94,17 @@
                             @if($isSelf)<span class="badge bg-primary ms-1">나</span>@endif
                             {{-- 사업체명/학원명은 우측 '소속' 컬럼에 표시되므로 여기서는 생략 (1줄 유지) --}}
                         </td>
-                        <td class="text-nowrap"><code class="fw-bold">{{ $u->login_id }}</code></td>
-                        <td class="fw-semibold text-nowrap">{{ format_phone($u->phone) }}</td>
+                        <td class="text-nowrap"><code>{{ $u->login_id }}</code></td>
+                        <td class="text-nowrap">{{ format_phone($u->phone) }}</td>
                         <td><span class="badge bg-light text-dark">{{ $u->role_code }}</span></td>
-                        <td class="fw-semibold">
+                        <td>
                             @php $aff = $affiliations[$u->id] ?? null; @endphp
                             @if(! $aff)
-                                <span class="text-muted fw-normal">—</span>
+                                <span class="text-muted">—</span>
                             @elseif(! empty($aff['is_distributor']))
                                 <span>산하 영업자 {{ $aff['count'] }}명</span>
                             @elseif(empty($aff['names']))
-                                <span class="text-muted fw-normal">—</span>
+                                <span class="text-muted">—</span>
                             @else
                                 @php
                                     $names = $aff['names'];
@@ -126,7 +126,7 @@
                                 @default <span class="badge bg-light text-dark">{{ $u->status_code }}</span>
                             @endswitch
                         </td>
-                        <td class="fw-semibold text-nowrap">{{ optional($u->created_at)->format('Y-m-d') }}</td>
+                        <td class="text-nowrap">{{ optional($u->created_at)->format('Y-m-d') }}</td>
                         <td class="text-end">
                             @if($u->status_code === 'pending' && $canSuspend)
                                 <form method="POST" action="{{ route('admin.users.approve', $u) }}" class="d-inline">

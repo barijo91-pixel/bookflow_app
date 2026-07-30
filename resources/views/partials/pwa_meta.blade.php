@@ -105,13 +105,17 @@
         white-space: nowrap;
     }
     .section-card table tbody td {
-        padding: 6px 14px;
+        padding: 5px 14px;   /* 행 높이 조밀하게 (관리자와 동일) */
         color: #334155;
         vertical-align: middle;
     }
     /* 셀 안 보조정보(ISBN·출판사 등)는 살짝 작게 — 1줄 유지 */
     .section-card table tbody td .text-muted.small,
     .section-card table tbody td .sub { font-size: 12.8px; }
+    /* 표준 정규화 — 셀 자체에 .small/.text-muted 를 준 곳도 표준 폰트/색으로 통일
+       (셀 안의 span/div.small 보조정보는 계속 작게 표시됨) */
+    .section-card table tbody > tr > td.small { font-size: 14.5px; }
+    .section-card table tbody > tr > td.text-muted { color: #334155; }
     .section-card table tbody tr { transition: background .12s; }
     .section-card table tbody tr:hover { background: #f6f9fe; }
 

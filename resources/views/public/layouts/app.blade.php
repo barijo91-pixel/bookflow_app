@@ -73,7 +73,8 @@
             font-size: .92rem; transition: background .15s, color .15s;
             border-left: 3px solid transparent;
         }
-        .public-nav .nav-item i { width: 18px; text-align: center; opacity: .85; }
+        /* 아이콘 — 하늘색 액센트(섹션 라벨과 동일 톤) */
+        .public-nav .nav-item i { width: 18px; text-align: center; color: #93c5fd; opacity: .95; }
         .public-nav .nav-item:hover { background: var(--sidebar-hover-bg); color: var(--sidebar-text-strong); }
         .public-nav .nav-item:hover i { opacity: 1; }
         .public-nav .nav-item.active {
