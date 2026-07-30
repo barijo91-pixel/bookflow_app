@@ -66,7 +66,7 @@
                 </div>
             </div>
             <div class="col-md-2 d-grid">
-                <button class="btn btn-sm btn-navy"><i class="bi bi-search"></i> 검색</button>
+                <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i> 검색</button>
             </div>
         </div>
     </div>

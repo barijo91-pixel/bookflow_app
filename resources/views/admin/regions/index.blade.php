@@ -58,7 +58,7 @@
                     <input type="hidden" name="sido" value="{{ $sidoId }}">
                     <div class="d-flex gap-2">
                         <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="시·군·구 검색">
-                        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i></button>
+                        <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
                     </div>
                 </form>
                 <div class="table-responsive">

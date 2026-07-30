@@ -89,7 +89,7 @@
             </div>
             @endif
             <div class="col-md-2 d-flex gap-1">
-                <button class="btn btn-sm btn-navy flex-grow-1"><i class="bi bi-search"></i> 조회</button>
+                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-search"></i> 조회</button>
                 <a href="{{ route('my.orders.index') }}" class="btn btn-sm btn-outline-secondary" title="초기화">
                     <i class="bi bi-x-lg"></i>
                 </a>

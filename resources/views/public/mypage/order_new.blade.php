@@ -84,7 +84,7 @@
                 </div>
             </div>
             <div class="col-md-2 d-flex gap-1">
-                <button type="submit" class="btn btn-sm btn-navy flex-grow-1"><i class="bi bi-search"></i> 검색</button>
+                <button type="submit" class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-search"></i> 검색</button>
             </div>
             {{-- 현재 필터 hidden (필터 유지) --}}
             @if($activeFilters['school'])   <input type="hidden" name="school"   value="{{ $activeFilters['school'] }}"> @endif
