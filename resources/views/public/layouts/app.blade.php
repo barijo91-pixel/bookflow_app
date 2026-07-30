@@ -15,6 +15,8 @@
             --navy: #1f3a5f;
             --navy-dark: #15294a;
             --navy-soft: #eaf0fa;
+            --btn-blue: #2c5282;        /* 버튼 공통 — 딥네이비보다 밝은 톤 */
+            --btn-blue-dark: #24446e;   /* 버튼 호버 */
             --sidebar-bg: #14264a;            /* 짙은 네이비 (coolenglish.kr 라이브 톤) */
             --sidebar-border: #22345c;
             --sidebar-text: #e8eefb;
@@ -29,14 +31,13 @@
         html, body { height: 100%; }
         body { font-family: 'Noto Sans KR', sans-serif; background: var(--content-bg); color: #212529; margin: 0; }
         .navy { color: var(--navy); }
-        .btn-navy { background: var(--navy); border-color: var(--navy); color: #fff; }
-        .btn-navy:hover, .btn-navy:focus { background: var(--navy-dark); border-color: var(--navy-dark); color: #fff; }
-        /* .btn-primary — 관리자(admin.css)와 동일 톤으로 통일.
-           딥네이비(#1f3a5f)는 어두워 한 단계 밝은 네이비블루 사용 */
-        .btn-primary { background: #2c5282; border-color: #2c5282; color: #fff; }
-        .btn-primary:hover, .btn-primary:focus { background: #24446e; border-color: #24446e; color: #fff; }
-        .btn-outline-navy { color: var(--navy); border-color: var(--navy); }
-        .btn-outline-navy:hover { background: var(--navy); color: #fff; }
+        /* 버튼 톤 — 딥네이비(#1f3a5f)는 어두워 한 단계 밝은 네이비블루로 통일.
+           btn-navy/btn-primary 를 같은 색으로 맞춰 화면 간 버튼색 차이 제거 */
+        .btn-navy, .btn-primary { background: var(--btn-blue); border-color: var(--btn-blue); color: #fff; }
+        .btn-navy:hover, .btn-navy:focus,
+        .btn-primary:hover, .btn-primary:focus { background: var(--btn-blue-dark); border-color: var(--btn-blue-dark); color: #fff; }
+        .btn-outline-navy { color: var(--btn-blue); border-color: var(--btn-blue); }
+        .btn-outline-navy:hover { background: var(--btn-blue); color: #fff; }
         a { color: var(--navy); }
         code { font-size: .85em; color: var(--navy); background: var(--navy-soft); padding: .1em .4em; border-radius: 4px; }
         .badge.bg-navy { background: var(--navy); color: #fff; }

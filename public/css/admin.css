@@ -2,6 +2,8 @@
     --accent: #1f3a5f;
     --accent-dark: #15294a;
     --accent-soft: #eaf0fa;
+    --btn-blue: #2c5282;        /* 버튼 공통 — 딥네이비보다 밝은 톤 */
+    --btn-blue-dark: #24446e;   /* 버튼 호버 */
     --sidebar-bg: #14264a;            /* 짙은 네이비 (공개화면·coolenglish 톤 통일) */
     --sidebar-border: #22345c;        /* 구분선 */
     --sidebar-text: #e8eefb;          /* 거의 흰색 (푸른 기운) */
@@ -22,15 +24,21 @@ body {
     color: #212529;
 }
 a { color: var(--accent); }
-/* 조회/검색 등 주요 액션 — 딥네이비보다 한 단계 밝은 네이비블루 */
-.btn-primary {
-    background: #2c5282;
-    border-color: #2c5282;
+/* 버튼 톤 — 딥네이비(#1f3a5f)는 어두워 한 단계 밝은 네이비블루로 통일.
+   btn-navy 는 뷰에서 쓰이지만 정의가 없어 스타일이 적용되지 않았던 것도 함께 해결 */
+.btn-primary, .btn-navy {
+    background: var(--btn-blue);
+    border-color: var(--btn-blue);
+    color: #fff;
 }
-.btn-primary:hover, .btn-primary:focus {
-    background: #24446e;
-    border-color: #24446e;
+.btn-primary:hover, .btn-primary:focus,
+.btn-navy:hover, .btn-navy:focus {
+    background: var(--btn-blue-dark);
+    border-color: var(--btn-blue-dark);
+    color: #fff;
 }
+.btn-outline-navy { color: var(--btn-blue); border-color: var(--btn-blue); }
+.btn-outline-navy:hover { background: var(--btn-blue); color: #fff; }
 
 /* ---------- Login ---------- */
 .login-body {
