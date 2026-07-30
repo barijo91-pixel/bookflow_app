@@ -257,7 +257,9 @@ a { color: var(--accent); }
 .admin-content .table tbody td { color: #334155; vertical-align: middle; }
 /* 행 높이 — 조밀하게 (헤더 8px / 데이터 5px, 좌우 14px) */
 .admin-content .table thead th { padding: 8px 14px; }
-.admin-content .table tbody td { padding: 5px 14px; }
+/* height 는 td 에서 최소높이로 동작 — 버튼(수정/삭제) 있는 행과 없는 행의
+   높이가 달라 보이던 문제를 방지해 모든 리스트 줄간격을 통일 */
+.admin-content .table tbody td { padding: 5px 14px; height: 42px; }
 /* 표준 정규화 — 셀 자체에 .small/.text-muted 를 준 곳도 표준 폰트/색으로 통일.
    (셀 안의 span/div.small 보조정보는 계속 작게 표시됨) */
 .admin-content .table tbody > tr > td.small { font-size: 14.5px; }

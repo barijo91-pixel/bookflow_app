@@ -129,11 +129,12 @@ function confirmBulkDeleteByPublisher(f){
                     <tr>
                         <td>{{ $b->id }}</td>
                         <td style="width:50px;">
+                            {{-- 표지 크기는 표준 행 높이(42px)를 넘지 않게 유지 --}}
                             @if($b->cover_path)
                                 <img src="{{ str_starts_with($b->cover_path, 'http') ? $b->cover_path : asset('storage/'.$b->cover_path) }}"
-                                     alt="" style="height:40px;border-radius:3px">
+                                     alt="" style="height:32px;border-radius:3px;display:block">
                             @else
-                                <div class="text-muted" style="font-size:1.4rem"><i class="bi bi-book"></i></div>
+                                <div class="text-muted" style="font-size:1.15rem;line-height:1"><i class="bi bi-book"></i></div>
                             @endif
                         </td>
                         <td>

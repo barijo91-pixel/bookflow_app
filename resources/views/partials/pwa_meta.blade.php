@@ -106,6 +106,7 @@
     }
     .section-card table tbody td {
         padding: 5px 14px;   /* 행 높이 조밀하게 (관리자와 동일) */
+        height: 42px;        /* 최소높이 — 버튼 있는 행/없는 행 줄간격 통일 */
         color: #334155;
         vertical-align: middle;
     }
