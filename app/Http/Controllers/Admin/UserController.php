@@ -99,7 +99,9 @@ class UserController extends Controller
             ->whereIn('r.child_user_id', $userIds)
             ->where('r.relation_type', 'distributor_agent')
             ->where('r.status', 'active')
-            ->select('r.child_user_id as user_id', 'u.name as parent_name')
+            // 소속 표기는 대표자명(u.name)이 아니라 상호명(business_name) 우선
+            ->select('r.child_user_id as user_id',
+                DB::raw("COALESCE(NULLIF(u.business_name, ''), u.name) as parent_name"))
             ->get()
             ->groupBy('user_id');
 
