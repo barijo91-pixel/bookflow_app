@@ -24,7 +24,7 @@ class UserController extends Controller
         $distributor = (int) $request->query('distributor');
 
         // 정렬
-        $allowedSorts = ['id', 'name', 'login_id', 'phone', 'role_code', 'status_code', 'created_at'];
+        $allowedSorts = ['id', 'name', 'login_id', 'phone', 'role_code', 'status_code', 'created_at', 'last_login_at'];
         $sort = $request->query('sort', 'id');
         $dir  = $request->query('dir', 'desc');
         if (! in_array($sort, $allowedSorts, true)) $sort = 'id';

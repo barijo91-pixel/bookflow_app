@@ -73,7 +73,7 @@
                     <th><x-sort-link field="role_code" label="역할" :sort="$sort" :dir="$dir" /></th>
                     <th>소속</th>
                     <th><x-sort-link field="status_code" label="상태" :sort="$sort" :dir="$dir" /></th>
-                    <th><x-sort-link field="created_at" label="가입일" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="last_login_at" label="최근 로그인" :sort="$sort" :dir="$dir" /></th>
                     <th class="text-end" style="width:240px;">조치</th>
                 </tr>
             </thead>
@@ -126,7 +126,13 @@
                                 @default <span class="badge bg-light text-dark">{{ $u->status_code }}</span>
                             @endswitch
                         </td>
-                        <td class="text-nowrap">{{ optional($u->created_at)->format('Y-m-d') }}</td>
+                        <td class="text-nowrap">
+                            @if($u->last_login_at)
+                                {{ \Carbon\Carbon::parse($u->last_login_at)->format('Y-m-d') }}
+                            @else
+                                <span class="text-muted">미접속</span>
+                            @endif
+                        </td>
                         <td class="text-end">
                             @if($u->status_code === 'pending' && $canSuspend)
                                 <form method="POST" action="{{ route('admin.users.approve', $u) }}" class="d-inline">
