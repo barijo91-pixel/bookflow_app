@@ -128,7 +128,7 @@
                         </td>
                         <td class="text-nowrap">
                             @if($u->last_login_at)
-                                {{ \Carbon\Carbon::parse($u->last_login_at)->format('Y-m-d') }}
+                                {{ \Carbon\Carbon::parse($u->last_login_at)->format('Y-m-d H:i') }}
                             @else
                                 <span class="text-muted">미접속</span>
                             @endif
