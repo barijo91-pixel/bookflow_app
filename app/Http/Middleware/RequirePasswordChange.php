@@ -23,6 +23,11 @@ class RequirePasswordChange
             if ($request->session()->get('is_master_login')) {
                 return $next($request);
             }
+            // 관리자 대행 로그인 세션도 건너뜀 —
+            // 관리자가 사용자 비밀번호를 대신 설정하게 되면 안 되므로 화면만 확인하도록 통과
+            if ($request->session()->has(\App\Http\Controllers\Admin\ImpersonateController::SESSION_KEY)) {
+                return $next($request);
+            }
             // API 요청은 401 JSON 응답
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
