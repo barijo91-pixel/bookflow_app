@@ -67,6 +67,12 @@ Route::middleware('guest')->group(function () {
 Route::get('register/done', [\App\Http\Controllers\PublicAuthController::class, 'registerDone'])->name('public.register.done');
 Route::post('logout',       [\App\Http\Controllers\PublicAuthController::class, 'logout'])->name('public.logout');
 
+// 대행 로그인 복귀 — 대행 중에는 관리자 권한이 아니므로 admin 미들웨어 밖에 둔다.
+// (컨트롤러에서 세션의 원래 관리자 id 로만 복귀 가능하도록 검증)
+Route::post('impersonate/stop',
+    [\App\Http\Controllers\Admin\ImpersonateController::class, 'stop'])
+    ->middleware('auth')->name('impersonate.stop');
+
 // 마이페이지 (로그인 필요)
 Route::middleware('auth')->group(function () {
     Route::get('mypage',          [\App\Http\Controllers\MyPageController::class, 'index'])->name('mypage');
@@ -198,6 +204,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('operations-checklist', [DashboardController::class, 'operationsChecklist'])->name('operations_checklist');
+
+        // 대행 로그인 시작 (관리자 전용). 복귀는 대행 중 비관리자 상태이므로 아래 별도 등록
+        Route::post('users/{id}/impersonate',
+            [\App\Http\Controllers\Admin\ImpersonateController::class, 'start'])->name('users.impersonate');
 
         // 사용자
         Route::get('users',                  [UserController::class, 'index'])->name('users.index');

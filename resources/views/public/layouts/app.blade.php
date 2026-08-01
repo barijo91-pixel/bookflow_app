@@ -198,6 +198,19 @@
                 } }}</span>
                 <code class="ms-1">{{ auth()->user()->login_id }}</code>
             </span>
+
+            {{-- 대행 로그인 중 표시 + 복귀 (관리자가 다른 사용자 화면을 볼 때) --}}
+            @if(session()->has(\App\Http\Controllers\Admin\ImpersonateController::SESSION_KEY))
+                <form method="POST" action="{{ route('impersonate.stop') }}" class="ms-auto d-flex align-items-center gap-2">
+                    @csrf
+                    <span class="badge" style="background:#f59e0b; color:#1f2937; font-weight:700;">
+                        <i class="bi bi-person-badge"></i> 대행 로그인 중
+                    </span>
+                    <button class="btn btn-sm btn-light" style="font-weight:600;">
+                        <i class="bi bi-box-arrow-left"></i> 관리자로 복귀
+                    </button>
+                </form>
+            @endif
         </header>
         <main class="public-content">
             <div style="max-width: @yield('max_width', '1400px');">

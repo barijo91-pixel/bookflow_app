@@ -134,6 +134,16 @@
                             @endif
                         </td>
                         <td class="text-end">
+                            {{-- 대행 로그인 — 활성 상태의 비관리자 계정만 --}}
+                            @if($u->status_code === 'active' && ! $u->isAdmin())
+                                <form method="POST" action="{{ route('admin.users.impersonate', $u->id) }}" class="d-inline me-1"
+                                      onsubmit="return confirm('[{{ $u->login_id }}] 계정으로 대행 로그인합니다.\n이 활동은 감사 로그에 기록됩니다.')">
+                                    @csrf
+                                    <button class="btn btn-sm btn-outline-navy" title="이 사용자 화면으로 전환">
+                                        <i class="bi bi-box-arrow-in-right"></i> 대행
+                                    </button>
+                                </form>
+                            @endif
                             @if($u->status_code === 'pending' && $canSuspend)
                                 <form method="POST" action="{{ route('admin.users.approve', $u) }}" class="d-inline">
                                     @csrf
