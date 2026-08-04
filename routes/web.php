@@ -285,6 +285,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // 도서
         Route::get('books',                     [BookController::class, 'index'])->name('books.index');
+        // 도서 마스터 엑셀 다운로드 (현재 필터 그대로 적용)
+        Route::get('books/export',              [\App\Http\Controllers\Admin\BookExportController::class, 'export'])->name('books.export');
         Route::get('books/create',              [BookController::class, 'create'])->name('books.create');
         Route::post('books',                    [BookController::class, 'store'])->name('books.store');
         Route::get('books/aladin/lookup',       [BookController::class, 'aladinLookup'])->name('books.aladin.lookup');

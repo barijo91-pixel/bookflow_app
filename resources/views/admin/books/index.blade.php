@@ -5,6 +5,11 @@
 <div class="page-header">
     <h1 class="h4 mb-0">도서 마스터 <small class="text-muted fs-6">전체 {{ number_format($books->total()) }}권</small></h1>
     <div class="d-flex gap-2">
+        {{-- 현재 필터가 그대로 적용된 상태로 내려받기 --}}
+        <a href="{{ route('admin.books.export', request()->only(['q','publisher','status','school','subject'])) }}"
+           class="btn btn-sm btn-outline-navy">
+            <i class="bi bi-download"></i> 엑셀 다운로드
+        </a>
         <a href="{{ route('admin.books.covers.show') }}" class="btn btn-sm btn-outline-navy">
             <i class="bi bi-images"></i> 표지 일괄 업로드
         </a>
