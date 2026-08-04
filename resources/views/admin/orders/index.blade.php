@@ -46,7 +46,7 @@
             </div>
             <div class="col-md-1">
                 <label class="form-label small text-muted mb-1">상태</label>
-                <select name="status" class="form-select form-select-sm">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($statusOptions as $s)
                         <option value="{{ $s->code }}" @selected($status === $s->code)>{{ $s->name }}</option>
@@ -55,7 +55,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">거래처</label>
-                <select name="vendor" class="form-select form-select-sm">
+                <select name="vendor" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($vendors as $v)
                         <option value="{{ $v->id }}" @selected($vendor == $v->id)>{{ $v->name }}</option>
@@ -64,7 +64,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">영업자</label>
-                <select name="agent" class="form-select form-select-sm">
+                <select name="agent" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($agents as $a)
                         <option value="{{ $a->id }}" @selected($agent == $a->id)>{{ $a->name }}</option>
@@ -73,7 +73,7 @@
             </div>
             <div class="col-md-1">
                 <label class="form-label small text-muted mb-1">총판</label>
-                <select name="dist" class="form-select form-select-sm">
+                <select name="dist" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($distributors as $d)
                         <option value="{{ $d->id }}" @selected($dist == $d->id)>{{ $d->name }}</option>

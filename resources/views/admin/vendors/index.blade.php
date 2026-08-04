@@ -14,7 +14,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">거래처 구분</label>
-                <select name="type" class="form-select form-select-sm">
+                <select name="type" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($typeOptions as $t)
                         <option value="{{ $t->code }}" @selected($type === $t->code)>{{ $t->name }}</option>
@@ -23,7 +23,7 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">상태</label>
-                <select name="status" class="form-select form-select-sm">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($statusOptions as $s)
                         <option value="{{ $s->code }}" @selected($status === $s->code)>{{ $s->name }}</option>

@@ -22,7 +22,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">출판사</label>
-                <select name="publisher" class="form-select form-select-sm">
+                <select name="publisher" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($publisherOptions as $p)
                         <option value="{{ $p->id }}" @selected($publisher == $p->id)>{{ $p->name }}</option>
@@ -31,7 +31,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">상태</label>
-                <select name="status" class="form-select form-select-sm">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($statusOptions as $s)
                         <option value="{{ $s->code }}" @selected($status === $s->code)>{{ $s->name }}</option>
@@ -40,7 +40,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">학교</label>
-                <select name="school" class="form-select form-select-sm">
+                <select name="school" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($schoolOptions as $s)
                         <option value="{{ $s->code }}" @selected($school === $s->code)>{{ $s->name }}</option>
@@ -49,7 +49,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">과목</label>
-                <select name="subject" class="form-select form-select-sm">
+                <select name="subject" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($subjectOptions as $s)
                         <option value="{{ $s->code }}" @selected($subject === $s->code)>{{ $s->name }}</option>

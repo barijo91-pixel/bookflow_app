@@ -18,7 +18,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">엔티티</label>
-                <select name="entity" class="form-select form-select-sm">
+                <select name="entity" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($entities as $e)
                         <option value="{{ $e }}" @selected($entity === $e)>{{ $e }}</option>
@@ -27,7 +27,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">액션</label>
-                <select name="action" class="form-select form-select-sm">
+                <select name="action" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($actions as $a)
                         <option value="{{ $a }}" @selected($action === $a)>{{ $a }}</option>
@@ -36,7 +36,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">사용자</label>
-                <select name="user" class="form-select form-select-sm">
+                <select name="user" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($userOptions as $u)
                         <option value="{{ $u->id }}" @selected($userId == $u->id)>{{ $u->name }}</option>

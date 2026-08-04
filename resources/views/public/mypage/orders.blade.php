@@ -66,7 +66,7 @@
             @if(! $isAcademy)
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">학원</label>
-                <select name="vendor_id" class="form-select form-select-sm">
+                <select name="vendor_id" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체 학원</option>
                     @foreach($vendorOptions as $vo)
                         <option value="{{ $vo->id }}" @selected((string) $selectedVendor === (string) $vo->id)>{{ $vo->name }}</option>
@@ -81,7 +81,7 @@
             @if(! $isAcademy)
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">거래구분</label>
-                <select name="trade_type" class="form-select form-select-sm">
+                <select name="trade_type" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     <option value="retail" @selected($tradeType === 'retail')>소매</option>
                     <option value="wholesale" @selected($tradeType === 'wholesale')>도매</option>

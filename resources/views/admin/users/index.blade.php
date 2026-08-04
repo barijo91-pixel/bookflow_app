@@ -20,7 +20,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">역할</label>
-                <select name="role" class="form-select form-select-sm">
+                <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($roleOptions as $r)
                         <option value="{{ $r->code }}" @selected($role === $r->code)>{{ $r->name }}</option>
@@ -29,7 +29,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">상태</label>
-                <select name="status" class="form-select form-select-sm">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($statusOptions as $s)
                         <option value="{{ $s->code }}" @selected($status === $s->code)>{{ $s->name }}</option>
@@ -38,7 +38,7 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">총판별 (산하 영업자·학원)</label>
-                <select name="distributor" class="form-select form-select-sm">
+                <select name="distributor" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($distributorOptions as $d)
                         <option value="{{ $d->id }}" @selected($distributor == $d->id)>{{ $d->name }} ({{ $d->login_id }})</option>

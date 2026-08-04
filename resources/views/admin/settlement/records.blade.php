@@ -49,7 +49,7 @@
         <form method="GET" class="row g-2 align-items-end">
             <div class="col-md-2">
                 <label class="small mb-1">상태</label>
-                <select name="status" class="form-select form-select-sm">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     <option value="computed" @selected($status === 'computed')>지급 대기</option>
                     <option value="paid_out" @selected($status === 'paid_out')>지급 완료</option>
@@ -58,7 +58,7 @@
             </div>
             <div class="col-md-2">
                 <label class="small mb-1">사입자</label>
-                <select name="agent_id" class="form-select form-select-sm">
+                <select name="agent_id" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($agents as $a)
                         <option value="{{ $a->id }}" @selected(request('agent_id') == $a->id)>{{ $a->name }}</option>

@@ -21,7 +21,7 @@
             <form method="GET" class="row g-2 align-items-end">
                 <div class="col-md-4">
                     <label class="small mb-1">담당 학원 선택 (거래구분 자동 적용)</label>
-                    <select name="vendor_id" class="form-select form-select-sm">
+                    <select name="vendor_id" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">학원 선택 안함 (도매·소매 모두 표시)</option>
                         @foreach($vendors as $v)
                             <option value="{{ $v->id }}" @selected($vendorId == $v->id)>

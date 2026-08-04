@@ -30,7 +30,7 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">시군구</label>
-                <select name="sigungu_id" class="form-select form-select-sm" @disabled(! $sidoId)>
+                <select name="sigungu_id" class="form-select form-select-sm" @disabled(! $sidoId) onchange="this.form.submit()">
                     <option value="">@if($sidoId) 전체 @else 시도 먼저 @endif</option>
                     @foreach($sigungus as $sg)
                         <option value="{{ $sg->id }}" @selected($sigungu == $sg->id)>{{ $sg->name }}</option>

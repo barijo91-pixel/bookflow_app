@@ -46,7 +46,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">총판</label>
-                <select name="distributor" class="form-select form-select-sm">
+                <select name="distributor" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($distributors as $d)
                         <option value="{{ $d->id }}" @selected($distributor == $d->id)>{{ $d->name }}</option>
@@ -55,7 +55,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">학교</label>
-                <select name="school" class="form-select form-select-sm">
+                <select name="school" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($schoolOptions as $s)
                         <option value="{{ $s->code }}" @selected($school === $s->code)>{{ $s->name }}</option>
@@ -64,7 +64,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">과목</label>
-                <select name="subject" class="form-select form-select-sm">
+                <select name="subject" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     @foreach($subjectOptions as $s)
                         <option value="{{ $s->code }}" @selected($subject === $s->code)>{{ $s->name }}</option>
