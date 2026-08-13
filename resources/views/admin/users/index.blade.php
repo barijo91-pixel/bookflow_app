@@ -68,10 +68,10 @@
                 <tr>
                     <th style="width:60px;"><x-sort-link field="id" label="#" :sort="$sort" :dir="$dir" /></th>
                     <th><x-sort-link field="name" label="이름" :sort="$sort" :dir="$dir" /></th>
+                    <th>소속</th>
                     <th><x-sort-link field="login_id" label="아이디" :sort="$sort" :dir="$dir" /></th>
                     <th><x-sort-link field="phone" label="연락처" :sort="$sort" :dir="$dir" /></th>
                     <th><x-sort-link field="role_code" label="역할" :sort="$sort" :dir="$dir" /></th>
-                    <th>소속</th>
                     <th><x-sort-link field="status_code" label="상태" :sort="$sort" :dir="$dir" /></th>
                     <th><x-sort-link field="last_login_at" label="최근 로그인" :sort="$sort" :dir="$dir" /></th>
                     <th class="text-end" style="width:240px;">조치</th>
@@ -92,11 +92,8 @@
                             </a>
                             @if($u->isSuperAdmin())<span class="badge bg-danger ms-1">SUPER</span>@endif
                             @if($isSelf)<span class="badge bg-primary ms-1">나</span>@endif
-                            {{-- 사업체명/학원명은 우측 '소속' 컬럼에 표시되므로 여기서는 생략 (1줄 유지) --}}
+                            {{-- 사업체명/학원명은 바로 옆 '소속' 컬럼에 표시되므로 여기서는 생략 (1줄 유지) --}}
                         </td>
-                        <td class="text-nowrap"><code>{{ $u->login_id }}</code></td>
-                        <td class="text-nowrap">{{ format_phone($u->phone) }}</td>
-                        <td><span class="badge bg-light text-dark">{{ $u->role_code }}</span></td>
                         <td>
                             @php $aff = $affiliations[$u->id] ?? null; @endphp
                             @if(! $aff)
@@ -117,6 +114,9 @@
                                 @endif
                             @endif
                         </td>
+                        <td class="text-nowrap"><code>{{ $u->login_id }}</code></td>
+                        <td class="text-nowrap">{{ format_phone($u->phone) }}</td>
+                        <td><span class="badge bg-light text-dark">{{ $u->role_code }}</span></td>
                         <td>
                             @switch($u->status_code)
                                 @case('active') <span class="badge bg-success">승인</span> @break
