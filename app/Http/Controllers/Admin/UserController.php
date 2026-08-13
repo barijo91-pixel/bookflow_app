@@ -44,25 +44,9 @@ class UserController extends Controller
             });
         }
         // 총판 필터: 그 총판 본인 + 산하 영업자 + 영업자가 담당하는 학원 사용자
+        // (범위 정의는 총판 본인 화면과 공유 — DistributorScopeService)
         if ($distributor) {
-            // 산하 영업자 ID
-            $agentIds = DB::table('user_relations')
-                ->where('parent_user_id', $distributor)
-                ->where('relation_type', 'distributor_agent')
-                ->where('status', 'active')
-                ->pluck('child_user_id')->toArray();
-            // 그 영업자들이 담당하는 vendor ID
-            $vendorIds = DB::table('agent_vendor_discounts')
-                ->whereIn('agent_user_id', $agentIds)
-                ->where('is_active', true)
-                ->pluck('vendor_id')->unique()->toArray();
-            // 그 vendor의 학원 사용자 ID
-            $academyIds = DB::table('vendor_users')
-                ->whereIn('vendor_id', $vendorIds)
-                ->pluck('user_id')->unique()->toArray();
-
-            $includeIds = array_unique(array_merge([$distributor], $agentIds, $academyIds));
-            $query->whereIn('id', $includeIds);
+            $query->whereIn('id', \App\Services\DistributorScopeService::userIds($distributor, true));
         }
 
         $users = $query->paginate(50)->withQueryString();

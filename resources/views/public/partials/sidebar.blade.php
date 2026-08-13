@@ -23,6 +23,16 @@
         }
     }
 
+    // 총판 사용자관리 — 산하 승인대기 건수 (사이드바 뱃지)
+    $userBadge = 0;
+    if ($user->role_code === 'distributor') {
+        $scopedIds = \App\Services\DistributorScopeService::userIds($user->id);
+        if ($scopedIds) {
+            $userBadge = DB::table('users')->whereIn('id', $scopedIds)
+                ->where('status_code', 'pending')->whereNull('deleted_at')->count();
+        }
+    }
+
     // 학원 거래구분 (도매면 학급/학생 메뉴 숨김 — 소매 B2C 전용)
     $academyTradeType = null;
     if ($user->role_code === 'academy') {
@@ -52,6 +62,10 @@
                 </a>
                 <a href="{{ route('my.agents.index') }}" class="nav-item {{ $startsWith('my.agents') }}">
                     <i class="bi bi-person-badge"></i> 영업자 관리
+                </a>
+                <a href="{{ route('my.users.index') }}" class="nav-item {{ $startsWith('my.users') }}">
+                    <i class="bi bi-people"></i> 사용자관리
+                    @if($userBadge > 0)<span class="badge bg-danger ms-auto">{{ $userBadge }}</span>@endif
                 </a>
                 <a href="{{ route('my.academies.index') }}" class="nav-item {{ $startsWith('my.academies') }}">
                     <i class="bi bi-building"></i> 거래처(학원)

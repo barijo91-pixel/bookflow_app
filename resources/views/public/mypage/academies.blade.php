@@ -44,7 +44,7 @@
                 @forelse($academies as $v)
                     <tr>
                         <td class="text-nowrap">
-                            <a href="{{ route('my.vendors.show', $v->id) }}" class="fw-bold text-decoration-none navy">{{ $v->name }}</a>
+                            <a href="{{ route('my.vendors.show', $v->id) }}" class="link-name">{{ $v->name }}</a>
                             @if($v->owner_name)
                                 <span class="text-muted small ms-2">원장 {{ $v->owner_name }}</span>
                             @endif

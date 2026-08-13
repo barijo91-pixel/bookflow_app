@@ -141,6 +141,14 @@ Route::middleware('auth')->group(function () {
         // 총판 산하 학원 목록 (소속 영업자들의 학원)
         Route::get('academies',      [\App\Http\Controllers\MyPageController::class, 'academiesIndex'])->name('academies.index');
 
+        // 총판 사용자관리 — 산하 영업자·학원 계정만 (총판별 분리)
+        Route::get('users',          [\App\Http\Controllers\Public\DistributorUserController::class, 'index'])->name('users.index');
+        Route::post('users/{user}/approve',        [\App\Http\Controllers\Public\DistributorUserController::class, 'approve'])->name('users.approve');
+        Route::post('users/{user}/reject',         [\App\Http\Controllers\Public\DistributorUserController::class, 'reject'])->name('users.reject');
+        Route::post('users/{user}/suspend',        [\App\Http\Controllers\Public\DistributorUserController::class, 'suspend'])->name('users.suspend');
+        Route::post('users/{user}/activate',       [\App\Http\Controllers\Public\DistributorUserController::class, 'activate'])->name('users.activate');
+        Route::post('users/{user}/reset-password', [\App\Http\Controllers\Public\DistributorUserController::class, 'resetPassword'])->name('users.reset_password');
+
         // 영업자 전용
         Route::get('vendors',    [\App\Http\Controllers\MyPageController::class, 'vendorsIndex'])->name('vendors.index');
         Route::get('vendors/create', [\App\Http\Controllers\Public\AgentVendorController::class, 'create'])->name('vendors.create');

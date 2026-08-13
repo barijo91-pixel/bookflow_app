@@ -17,6 +17,8 @@
             --navy-soft: #eaf0fa;
             --btn-blue: #2c5282;        /* 버튼 공통 — 딥네이비보다 밝은 톤 */
             --btn-blue-dark: #24446e;   /* 버튼 호버 */
+            --link-blue: #1b6ac9;       /* 리스트 이름 링크 — 클릭 가능함이 보이게 한 톤 밝게 */
+            --link-blue-dark: #12508f;  /* 링크 호버 */
             --sidebar-bg: #14264a;            /* 짙은 네이비 (coolenglish.kr 라이브 톤) */
             --sidebar-border: #22345c;
             --sidebar-text: #e8eefb;
@@ -39,6 +41,9 @@
         .btn-outline-navy { color: var(--btn-blue); border-color: var(--btn-blue); }
         .btn-outline-navy:hover { background: var(--btn-blue); color: #fff; }
         a { color: var(--navy); }
+        /* 리스트에서 상세로 들어가는 이름 링크 — 클릭 가능한 걸 색으로 알림 */
+        .link-name { color: var(--link-blue); text-decoration: none; font-weight: 700; }
+        .link-name:hover, .link-name:focus { color: var(--link-blue-dark); text-decoration: underline; }
         code { font-size: .85em; color: var(--navy); background: var(--navy-soft); padding: .1em .4em; border-radius: 4px; }
         .badge.bg-navy { background: var(--navy); color: #fff; }
         .card { border: 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }

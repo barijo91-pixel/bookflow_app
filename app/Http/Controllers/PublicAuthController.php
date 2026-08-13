@@ -103,8 +103,16 @@ class PublicAuthController extends Controller
         if (Auth::check()) {
             return $this->redirectAfterLogin(Auth::user());
         }
-        // 회원가입은 영업자/학원만 — 소속 총판 배정은 관리자가 처리
-        return view('public.auth.register');
+        // 회원가입은 영업자/학원만.
+        // 총판이 지역별로 여러 곳이라 영업자는 가입 때 소속 총판을 직접 고른다.
+        // (안 고르면 관리자가 나중에 배정)
+        $distributors = User::where('role_code', 'distributor')
+            ->where('status_code', 'active')
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('public.auth.register', compact('distributors'));
     }
 
     public function register(Request $request)

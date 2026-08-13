@@ -36,6 +36,20 @@
                 <small class="text-muted">총판 계정은 관리자가 직접 등록합니다.</small>
             </div>
 
+            {{-- 영업자만: 소속 총판 선택 (총판이 지역별로 여러 곳) --}}
+            @if($distributors->isNotEmpty())
+                <div class="mb-3" id="distributorBlock">
+                    <label class="form-label small text-muted">소속 총판</label>
+                    <select name="parent_user_id" class="form-select">
+                        <option value="">선택 안 함 (관리자가 배정)</option>
+                        @foreach($distributors as $d)
+                            <option value="{{ $d->id }}" @selected((string) old('parent_user_id') === (string) $d->id)>{{ $d->name }}</option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">거래할 총판을 고르면 승인이 빨라집니다. 모르면 비워두세요.</small>
+                </div>
+            @endif
+
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label small text-muted">이름 *</label>
@@ -95,4 +109,22 @@
 <div class="alert alert-info mt-3 small">
     <strong><i class="bi bi-info-circle"></i> 안내</strong> — 가입 후 관리자 승인이 있어야 로그인이 가능합니다.
 </div>
+
+@if($distributors->isNotEmpty())
+<script>
+// 소속 총판은 영업자에게만 해당 — 학원 선택 시 숨김
+(function () {
+    var block = document.getElementById('distributorBlock');
+    if (!block) return;
+    function sync() {
+        var agent = document.getElementById('role_agent');
+        block.style.display = (agent && agent.checked) ? '' : 'none';
+    }
+    document.querySelectorAll('input[name="role_code"]').forEach(function (el) {
+        el.addEventListener('change', sync);
+    });
+    sync();
+})();
+</script>
+@endif
 @endsection

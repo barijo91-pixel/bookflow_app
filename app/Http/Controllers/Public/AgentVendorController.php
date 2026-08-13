@@ -35,15 +35,10 @@ class AgentVendorController extends Controller
         }
 
         if ($user->role_code === 'distributor') {
-            // 산하 영업자(user_relations)가 담당하는 학원만
-            $ok = DB::table('agent_vendor_discounts as a')
-                ->join('user_relations as r', 'r.child_user_id', '=', 'a.agent_user_id')
-                ->where('r.parent_user_id', $user->id)
-                ->where('r.relation_type', 'distributor_agent')
-                ->where('r.status', 'active')
-                ->where('a.vendor_id', $vendorId)
-                ->exists();
-            if (! $ok) abort(404, '산하 학원이 아닙니다.');
+            // 산하 영업자가 담당하는 학원만 (범위 정의는 DistributorScopeService 한 곳)
+            if (! \App\Services\DistributorScopeService::ownsVendor($user->id, (int) $vendorId)) {
+                abort(404, '산하 학원이 아닙니다.');
+            }
             return $user;
         }
 
