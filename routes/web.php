@@ -196,6 +196,12 @@ Route::middleware('auth')->group(function () {
         Route::post('classes/{id}/students/import/{jobId}/run',
             [\App\Http\Controllers\Public\StudentImportController::class, 'run'])->name('classes.students.import.run');
 
+        // 영업자·총판이 담당 학원의 학급을 등록·수정 (학원 계정 화면과 별개 경로)
+        Route::post('vendors/{vendor}/classes',
+            [\App\Http\Controllers\Public\AgentClassController::class, 'store'])->name('agent.classes.store');
+        Route::put('agent-classes/{class}',
+            [\App\Http\Controllers\Public\AgentClassController::class, 'update'])->name('agent.classes.update');
+
         // 영업자 진입점 (학원·학급 선택)
         Route::get('student-import',
             [\App\Http\Controllers\Public\StudentImportController::class, 'agentSelect'])->name('agent.student.import');

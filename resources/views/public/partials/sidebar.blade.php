@@ -107,7 +107,7 @@
                     <i class="bi bi-building-add"></i> 학원 등록
                 </a>
                 <a href="{{ route('my.agent.student.import') }}" class="nav-item d-none d-md-flex {{ $is('my.agent.student.import') }}">
-                    <i class="bi bi-people"></i> 학생 등록
+                    <i class="bi bi-people"></i> 학급 · 학생 등록
                 </a>
                 @break
 

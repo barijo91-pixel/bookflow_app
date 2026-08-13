@@ -161,11 +161,14 @@ class StudentImportController extends Controller
                 ->where('vendor_id', $v->id)
                 ->where('status', 'active')
                 ->orderBy('name')
-                ->select('id', 'name', 'grade_code',
+                ->select('id', 'name', 'grade_code', 'memo',
                     DB::raw('(SELECT COUNT(*) FROM students WHERE class_id = academy_classes.id AND deleted_at IS NULL) as student_count'))
                 ->get();
         }
 
-        return view('public.mypage.student_import_agent_select', compact('user', 'vendors', 'vendorClasses'));
+        // 학급 등록/수정 폼의 학년 옵션
+        $grades = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get();
+
+        return view('public.mypage.student_import_agent_select', compact('user', 'vendors', 'vendorClasses', 'grades'));
     }
 }
