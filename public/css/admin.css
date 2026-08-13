@@ -4,6 +4,8 @@
     --accent-soft: #eaf0fa;
     --btn-blue: #2c5282;        /* 버튼 공통 — 딥네이비보다 밝은 톤 */
     --btn-blue-dark: #24446e;   /* 버튼 호버 */
+    --link-blue: #1b6ac9;       /* 리스트 이름 링크 — 공개화면과 동일 값 */
+    --link-blue-dark: #12508f;  /* 링크 호버 */
     --sidebar-bg: #14264a;            /* 짙은 네이비 (공개화면·coolenglish 톤 통일) */
     --sidebar-border: #22345c;        /* 구분선 */
     --sidebar-text: #e8eefb;          /* 거의 흰색 (푸른 기운) */
@@ -39,6 +41,11 @@ a { color: var(--accent); }
 }
 .btn-outline-navy { color: var(--btn-blue); border-color: var(--btn-blue); }
 .btn-outline-navy:hover { background: var(--btn-blue); color: #fff; }
+
+/* 리스트에서 상세로 들어가는 이름 링크 — 공개화면(.link-name)과 같은 색.
+   딥네이비는 본문 글씨와 구분이 안 돼 클릭 가능한지 보이지 않았다. */
+.link-name { color: var(--link-blue); text-decoration: none; font-weight: 700; }
+.link-name:hover, .link-name:focus { color: var(--link-blue-dark); text-decoration: underline; }
 
 /* ---------- Login ---------- */
 .login-body {

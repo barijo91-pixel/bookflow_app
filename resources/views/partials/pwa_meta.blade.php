@@ -132,6 +132,10 @@
     .section-card table tbody > tr > td.text-muted { color: #334155; }
     .section-card table tbody tr { transition: background .12s; }
     .section-card table tbody tr:hover { background: #f6f9fe; }
+    /* 배지 — 부트스트랩 기본값(.75em)이면 표(14.5px) 안에서 10.9px 라 읽기 어렵다.
+       관리자·공개 리스트 공통으로 한 단계 올린다. */
+    .section-card table .badge,
+    .admin-content .table .badge { font-size: 11.6px; }
 
     /* 타임라인 (상태 이력 등) — 점 + 세로선 */
     .timeline-list { list-style: none; padding: 0; margin: 0; position: relative; }

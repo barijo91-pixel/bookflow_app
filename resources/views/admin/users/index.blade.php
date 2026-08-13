@@ -87,7 +87,7 @@
                     <tr>
                         <td>{{ $u->id }}</td>
                         <td>
-                            <a href="{{ route('admin.users.show', $u) }}" class="text-decoration-none navy fw-bold">
+                            <a href="{{ route('admin.users.show', $u) }}" class="link-name">
                                 {{ $u->name }} <i class="bi bi-chevron-right small"></i>
                             </a>
                             @if($u->isSuperAdmin())<span class="badge bg-danger ms-1">SUPER</span>@endif

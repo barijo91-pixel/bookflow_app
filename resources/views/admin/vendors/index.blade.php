@@ -63,7 +63,7 @@
                     <tr>
                         <td>{{ $v->id }}</td>
                         <td>
-                            <a href="{{ route('admin.vendors.show', $v) }}" class="text-decoration-none navy fw-bold">
+                            <a href="{{ route('admin.vendors.show', $v) }}" class="link-name">
                                 {{ $v->name }} <i class="bi bi-chevron-right small"></i>
                             </a>
                         </td>
