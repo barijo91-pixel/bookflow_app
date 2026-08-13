@@ -103,7 +103,7 @@ class PublicAuthController extends Controller
         if (Auth::check()) {
             return $this->redirectAfterLogin(Auth::user());
         }
-        // 회원가입은 영업자/학원만.
+        // 공개 가입은 영업자만 (학원은 영업자 대행 등록, 총판은 관리자 등록).
         // 총판이 지역별로 여러 곳이라 영업자는 가입 때 소속 총판을 직접 고른다.
         // (안 고르면 관리자가 나중에 배정)
         $distributors = User::where('role_code', 'distributor')
@@ -123,7 +123,10 @@ class PublicAuthController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers(), 'max:50'],
             'name'     => ['required', 'string', 'max:100'],
             'phone'    => ['required', 'string', 'max:20'],
-            'role_code'=> ['required', Rule::in(['agent', 'academy'])], // 총판은 관리자가 직접 등록
+            // 공개 가입은 영업자만.
+            // 학원 계정은 담당 영업자가 학원 등록 시 함께 생성하고(AgentVendorController@store),
+            // 총판은 관리자가 직접 등록한다.
+            'role_code'=> ['required', Rule::in(['agent'])],
             'parent_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'agree_terms'    => ['accepted'],
         ], [

@@ -37,8 +37,9 @@
         </form>
 
         <div class="mt-3 text-center small">
-            아직 회원이 아니신가요?
-            <a href="{{ route('public.register') }}" class="navy fw-bold">회원가입</a>
+            영업자로 활동하시려면
+            <a href="{{ route('public.register') }}" class="navy fw-bold">영업자 가입</a>
+            <div class="text-muted mt-1">학원 계정은 담당 영업자가 만들어 드립니다.</div>
         </div>
     </div>
 </div>

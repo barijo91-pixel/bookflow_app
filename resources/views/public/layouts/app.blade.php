@@ -251,7 +251,7 @@
                     <i class="bi bi-box-arrow-in-right"></i> 로그인
                 </a>
                 <a href="{{ route('public.register') }}" class="btn btn-navy btn-sm">
-                    <i class="bi bi-person-plus"></i> 가입
+                    <i class="bi bi-person-plus"></i> 영업자 가입
                 </a>
             </nav>
         </div>

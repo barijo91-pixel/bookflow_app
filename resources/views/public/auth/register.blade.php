@@ -1,5 +1,5 @@
 @extends('public.layouts.app')
-@section('title', '회원가입')
+@section('title', '영업자 가입')
 @section('max_width', '560px')
 
 @section('content')
@@ -7,8 +7,8 @@
     <div class="card-body p-4">
         <div class="text-center mb-4">
             <i class="bi bi-person-plus navy" style="font-size:2.5rem"></i>
-            <h1 class="h4 navy mt-2 mb-1">회원가입</h1>
-            <p class="text-muted small mb-0">영업자 / 학원 가입 신청</p>
+            <h1 class="h4 navy mt-2 mb-1">영업자 가입</h1>
+            <p class="text-muted small mb-0">교재 영업자(사입자) 가입 신청</p>
         </div>
 
         @if ($errors->any())
@@ -24,21 +24,11 @@
         <form method="POST" action="{{ route('public.register.attempt') }}" autocomplete="on">
             @csrf
 
-            <div class="mb-3">
-                <label class="form-label small text-muted">역할 *</label>
-                <div class="btn-group w-100" role="group">
-                    <input type="radio" class="btn-check" name="role_code" id="role_agent" value="agent" @checked(old('role_code') === 'agent' || ! old('role_code'))>
-                    <label class="btn btn-outline-secondary" for="role_agent">영업자</label>
+            {{-- 가입은 영업자만. 학원 계정은 담당 영업자가 학원 등록 시 함께 만든다. --}}
+            <input type="hidden" name="role_code" value="agent">
 
-                    <input type="radio" class="btn-check" name="role_code" id="role_academy" value="academy" @checked(old('role_code') === 'academy')>
-                    <label class="btn btn-outline-secondary" for="role_academy">학원</label>
-                </div>
-                <small class="text-muted">총판 계정은 관리자가 직접 등록합니다.</small>
-            </div>
-
-            {{-- 영업자만: 소속 총판 선택 (총판이 지역별로 여러 곳) --}}
             @if($distributors->isNotEmpty())
-                <div class="mb-3" id="distributorBlock">
+                <div class="mb-3">
                     <label class="form-label small text-muted">소속 총판</label>
                     <select name="parent_user_id" class="form-select">
                         <option value="">선택 안 함 (관리자가 배정)</option>
@@ -107,24 +97,7 @@
 </div>
 
 <div class="alert alert-info mt-3 small">
-    <strong><i class="bi bi-info-circle"></i> 안내</strong> — 가입 후 관리자 승인이 있어야 로그인이 가능합니다.
+    <strong><i class="bi bi-info-circle"></i> 안내</strong> — 가입 후 총판/관리자 승인이 있어야 로그인이 가능합니다.<br>
+    <strong>학원</strong>은 직접 가입하지 않습니다. 담당 영업자가 학원을 등록하면서 계정을 함께 만들어 드립니다.
 </div>
-
-@if($distributors->isNotEmpty())
-<script>
-// 소속 총판은 영업자에게만 해당 — 학원 선택 시 숨김
-(function () {
-    var block = document.getElementById('distributorBlock');
-    if (!block) return;
-    function sync() {
-        var agent = document.getElementById('role_agent');
-        block.style.display = (agent && agent.checked) ? '' : 'none';
-    }
-    document.querySelectorAll('input[name="role_code"]').forEach(function (el) {
-        el.addEventListener('change', sync);
-    });
-    sync();
-})();
-</script>
-@endif
 @endsection
