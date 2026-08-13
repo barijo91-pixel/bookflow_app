@@ -84,7 +84,7 @@
             @case('agent')
                 <div class="nav-section">영업자 메뉴</div>
                 <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
-                    <i class="bi bi-receipt"></i> 주문확인
+                    <i class="bi bi-receipt"></i> 주문 확인
                     @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
                 <a href="{{ route('my.vendors.index') }}" class="nav-item {{ $is('my.vendors.index') }}">
@@ -104,10 +104,10 @@
                 </a>
                 {{-- 등록 작업은 자주 쓰지 않아 아래로 --}}
                 <a href="{{ route('my.vendors.create') }}" class="nav-item {{ $is('my.vendors.create') }}">
-                    <i class="bi bi-building-add"></i> 학원등록
+                    <i class="bi bi-building-add"></i> 학원 등록
                 </a>
                 <a href="{{ route('my.agent.student.import') }}" class="nav-item d-none d-md-flex {{ $is('my.agent.student.import') }}">
-                    <i class="bi bi-people"></i> 학생등록
+                    <i class="bi bi-people"></i> 학생 등록
                 </a>
                 @break
 
