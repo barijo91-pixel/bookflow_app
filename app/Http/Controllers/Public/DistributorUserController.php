@@ -97,6 +97,54 @@ class DistributorUserController extends Controller
         ));
     }
 
+    /** 계정 정보 수정 폼 (영업자·학원 공통 — 아이디·역할은 변경 불가) */
+    public function edit(User $user)
+    {
+        $me = $this->authorizeTarget($user);
+
+        // 학원 계정이면 소속 학원(수정은 학원 상세에서)
+        $vendor = null;
+        if ($user->role_code === 'academy') {
+            $vendor = DB::table('vendor_users as vu')
+                ->join('vendors as v', 'v.id', '=', 'vu.vendor_id')
+                ->where('vu.user_id', $user->id)
+                ->whereNull('v.deleted_at')
+                ->first(['v.id', 'v.name']);
+        }
+
+        return view('public.mypage.user_edit', [
+            'user'   => $me,        // 레이아웃(사이드바)용 로그인 사용자
+            'target' => $user,
+            'vendor' => $vendor,
+        ]);
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $this->authorizeTarget($user);
+
+        $data = $request->validate([
+            'name'        => ['required', 'string', 'max:80'],
+            'phone'       => ['required', 'string', 'max:20'],
+            'email'       => ['nullable', 'email', 'max:150'],
+            'status_code' => ['required', 'in:active,suspended'],
+        ], [], ['name' => '이름', 'phone' => '휴대폰']);
+
+        $before = $user->only(['name', 'phone', 'email', 'status_code']);
+        $user->update([
+            'name'        => $data['name'],
+            'phone'       => preg_replace('/[^0-9]/', '', (string) $data['phone']),
+            'email'       => $data['email'] ?? null,
+            'status_code' => $data['status_code'],
+        ]);
+
+        AuditLog::log('users', $user->id, 'distributor_update_user', $before,
+            $user->only(['name', 'phone', 'email', 'status_code']));
+
+        return redirect()->route('my.users.index')
+            ->with('success', "{$user->name}({$user->login_id}) 계정 정보가 수정되었습니다.");
+    }
+
     public function approve(User $user, NotificationService $notify)
     {
         $this->authorizeTarget($user);

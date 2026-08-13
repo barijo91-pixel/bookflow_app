@@ -70,7 +70,9 @@
             <tbody>
                 @forelse($users as $u)
                     <tr>
-                        <td class="text-nowrap fw-bold">{{ $u->name }}</td>
+                        <td class="text-nowrap">
+                            <a href="{{ route('my.users.edit', $u->id) }}" class="link-name">{{ $u->name }}</a>
+                        </td>
                         <td class="text-nowrap text-muted">{{ $u->login_id }}</td>
                         <td class="text-nowrap">
                             @if($u->role_code === 'agent')
@@ -94,6 +96,9 @@
                             {{ $u->last_login_at ? \Illuminate\Support\Carbon::parse($u->last_login_at)->format('Y-m-d H:i') : '-' }}
                         </td>
                         <td class="text-end text-nowrap">
+                            <a href="{{ route('my.users.edit', $u->id) }}" class="btn btn-sm btn-outline-navy" title="계정 수정">
+                                <i class="bi bi-pencil"></i>
+                            </a>
                             @if($u->status_code === 'pending')
                                 <form method="POST" action="{{ route('my.users.approve', $u->id) }}" class="d-inline">
                                     @csrf

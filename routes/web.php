@@ -143,6 +143,8 @@ Route::middleware('auth')->group(function () {
 
         // 총판 사용자관리 — 산하 영업자·학원 계정만 (총판별 분리)
         Route::get('users',          [\App\Http\Controllers\Public\DistributorUserController::class, 'index'])->name('users.index');
+        Route::get('users/{user}/edit', [\App\Http\Controllers\Public\DistributorUserController::class, 'edit'])->name('users.edit');
+        Route::put('users/{user}',       [\App\Http\Controllers\Public\DistributorUserController::class, 'update'])->name('users.update');
         Route::post('users/{user}/approve',        [\App\Http\Controllers\Public\DistributorUserController::class, 'approve'])->name('users.approve');
         Route::post('users/{user}/reject',         [\App\Http\Controllers\Public\DistributorUserController::class, 'reject'])->name('users.reject');
         Route::post('users/{user}/suspend',        [\App\Http\Controllers\Public\DistributorUserController::class, 'suspend'])->name('users.suspend');
