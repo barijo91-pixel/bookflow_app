@@ -5,9 +5,15 @@
 @section('content')
 <div class="mb-3 d-flex justify-content-between align-items-end flex-wrap gap-2">
     <div>
-        <a href="{{ route('my.vendors.index') }}" class="text-muted small text-decoration-none">
-            <i class="bi bi-arrow-left"></i> 거래처(학원) 목록
-        </a>
+        @if($user->role_code === 'distributor')
+            <a href="{{ route('my.academies.index') }}" class="text-muted small text-decoration-none">
+                <i class="bi bi-arrow-left"></i> 학원 목록
+            </a>
+        @else
+            <a href="{{ route('my.vendors.index') }}" class="text-muted small text-decoration-none">
+                <i class="bi bi-arrow-left"></i> 거래처(학원) 목록
+            </a>
+        @endif
         <h1 class="h4 navy mb-0 mt-1">
             <i class="bi bi-building"></i> {{ $vendor->name }}
             <small class="text-muted">#{{ $vendor->id }}</small>
@@ -159,7 +165,8 @@
 
     {{-- RIGHT: 본인 매핑 + 최근 주문 --}}
     <div class="col-lg-5">
-        {{-- 본인 매핑 할인율 (참고) --}}
+        {{-- 본인 매핑 할인율 (영업자) --}}
+        @if($myMapping)
         <div class="card section-card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-percent"></i> 본인 매핑 할인율</strong>
@@ -178,12 +185,41 @@
                 </div>
             </div>
         </div>
+        @endif
+
+        {{-- 담당 영업자·할인율 (총판 — 조회 전용) --}}
+        @if(($agentMappings ?? collect())->isNotEmpty())
+        <div class="card section-card mb-3">
+            <div class="card-header">
+                <strong><i class="bi bi-percent"></i> 담당 영업자 · 할인율</strong>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <tbody>
+                    @foreach($agentMappings as $m)
+                        <tr>
+                            <td>{{ $m->name }} <span class="text-muted small">{{ $m->login_id }}</span></td>
+                            <td class="text-end">
+                                <strong class="navy">{{ rtrim(rtrim($m->discount_rate, '0'), '.') }}%</strong>
+                                @if(! $m->is_active)
+                                    <span class="badge bg-warning text-dark ms-1">중단</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
 
         {{-- 최근 주문 --}}
         <div class="card section-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-receipt"></i> 최근 주문</strong>
-                <small class="text-muted">본인 주문 기준 {{ $recentOrders->count() }}건</small>
+                <small class="text-muted">
+                    {{ $user->role_code === 'distributor' ? '전체' : '본인 주문' }} 기준 {{ $recentOrders->count() }}건
+                </small>
             </div>
             <div class="card-body p-0">
                 @if($recentOrders->isEmpty())

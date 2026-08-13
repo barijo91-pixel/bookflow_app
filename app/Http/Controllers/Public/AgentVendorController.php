@@ -21,6 +21,35 @@ class AgentVendorController extends Controller
         return $user;
     }
 
+    /** 학원 상세/수정 접근 — 영업자(본인 담당) 또는 총판(산하 영업자 담당) */
+    private function authorizeVendorAccess($vendorId): User
+    {
+        $user = Auth::user();
+        if (! $user) abort(403);
+
+        if ($user->role_code === 'agent') {
+            $ok = DB::table('agent_vendor_discounts')
+                ->where('agent_user_id', $user->id)->where('vendor_id', $vendorId)->exists();
+            if (! $ok) abort(404, '담당 학원이 아닙니다.');
+            return $user;
+        }
+
+        if ($user->role_code === 'distributor') {
+            // 산하 영업자(user_relations)가 담당하는 학원만
+            $ok = DB::table('agent_vendor_discounts as a')
+                ->join('user_relations as r', 'r.child_user_id', '=', 'a.agent_user_id')
+                ->where('r.parent_user_id', $user->id)
+                ->where('r.relation_type', 'distributor_agent')
+                ->where('r.status', 'active')
+                ->where('a.vendor_id', $vendorId)
+                ->exists();
+            if (! $ok) abort(404, '산하 학원이 아닙니다.');
+            return $user;
+        }
+
+        abort(403, '영업자 또는 총판만 접근 가능합니다.');
+    }
+
     /** 새 학원 등록 폼 */
     public function create()
     {
@@ -194,16 +223,14 @@ class AgentVendorController extends Controller
     /** 학원 상세 — 본인 담당 학원만 (admin show와 동일 구조 / 영업자 권한 내) */
     public function show($vendorId)
     {
-        $user = $this->authorizeAgent();
+        // 영업자(본인 담당) 또는 총판(산하 영업자 담당) 접근 허용
+        $user = $this->authorizeVendorAccess($vendorId);
 
-        // 영업자 본인이 매핑된 학원만 접근 허용
+        // 할인율 카드는 영업자 본인 매핑이 있을 때만 의미가 있음 (총판은 조회만)
         $myMapping = DB::table('agent_vendor_discounts')
             ->where('agent_user_id', $user->id)
             ->where('vendor_id', $vendorId)
             ->first();
-        if (! $myMapping) {
-            abort(404, '담당 학원이 아닙니다.');
-        }
 
         $vendor = DB::table('vendors')->where('id', $vendorId)->whereNull('deleted_at')->first();
         if (! $vendor) abort(404);
@@ -220,33 +247,38 @@ class AgentVendorController extends Controller
             }
         }
 
-        // 본인이 한 최근 주문 (이 학원에 대한)
+        // 최근 주문 — 영업자는 본인 주문만, 총판은 이 학원의 주문 전체
         $recentOrders = DB::table('orders as o')
             ->where('o.vendor_id', $vendorId)
-            ->where('o.agent_user_id', $user->id)
+            ->when($user->role_code === 'agent', fn ($q) => $q->where('o.agent_user_id', $user->id))
             ->whereNull('o.deleted_at')
             ->orderByDesc('o.id')
             ->limit(10)
             ->select('o.id', 'o.order_no', 'o.status_code', 'o.total_amount', 'o.created_at')
             ->get();
 
+        // 총판: 이 학원을 담당하는 영업자·할인율 (조회 전용)
+        $agentMappings = collect();
+        if ($user->role_code === 'distributor') {
+            $agentMappings = DB::table('agent_vendor_discounts as a')
+                ->join('users as u', 'u.id', '=', 'a.agent_user_id')
+                ->where('a.vendor_id', $vendorId)
+                ->whereNull('u.deleted_at')
+                ->orderBy('u.name')
+                ->get(['u.name', 'u.login_id', 'a.discount_rate', 'a.is_active']);
+        }
+
         return view('public.mypage.vendor_show', compact(
             'user', 'vendor', 'sidos', 'sigungus', 'currentSidoId',
-            'myMapping', 'recentOrders'
+            'myMapping', 'recentOrders', 'agentMappings'
         ));
     }
 
     /** 학원 정보 수정 — 본인 담당 학원만 */
     public function update(Request $request, $vendorId)
     {
-        $user = $this->authorizeAgent();
-
-        // 권한 체크
-        $hasMapping = DB::table('agent_vendor_discounts')
-            ->where('agent_user_id', $user->id)
-            ->where('vendor_id', $vendorId)
-            ->exists();
-        if (! $hasMapping) abort(403);
+        // 영업자(본인 담당) 또는 총판(산하 영업자 담당)이면 학원정보 수정 가능
+        $user = $this->authorizeVendorAccess($vendorId);
 
         $data = $request->validate([
             'name'           => ['required', 'string', 'max:150'],
@@ -289,8 +321,9 @@ class AgentVendorController extends Controller
             'updated_at'     => now(),
         ]);
 
-        AuditLog::log('vendors', $vendorId, 'agent_update', null, [
-            'agent_user_id' => $user->id,
+        AuditLog::log('vendors', $vendorId, $user->role_code . '_update', null, [
+            'actor_user_id' => $user->id,
+            'actor_role'    => $user->role_code,
             'vendor_name'   => $data['name'],
         ]);
 
