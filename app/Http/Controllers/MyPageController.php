@@ -319,6 +319,7 @@ class MyPageController extends Controller
                 ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
                 ->where('avd.agent_user_id', $user->id)
                 ->where('avd.is_active', true)
+                ->whereNull('v.deleted_at')   // 삭제된 학원 제외
                 ->select('v.id', 'v.name', 'v.trade_type', 'avd.discount_rate')
                 ->orderBy('v.name')->get();
         } else {
@@ -1336,6 +1337,7 @@ class MyPageController extends Controller
             ->leftJoin('regions as r', 'r.id', '=', 'v.region_id')
             ->leftJoin('regions as p', 'p.id', '=', 'r.parent_id')
             ->where('avd.agent_user_id', $user->id)
+            ->whereNull('v.deleted_at')   // 삭제된 학원 제외
             ->select(
                 'avd.id as avd_id',
                 'v.id', 'v.name', 'v.owner_name', 'v.business_no',

@@ -62,6 +62,7 @@ class DashboardController extends Controller
         // 활성 학원 TOP 5
         $topVendors = DB::table('orders as o')
             ->join('vendors as v', 'v.id', '=', 'o.vendor_id')
+            ->whereNull('v.deleted_at')   // 삭제된 학원 제외
             ->whereDate('o.created_at', '>=', now()->subDays(30))
             ->whereNotIn('o.status_code', ['canceled'])
             ->selectRaw('v.id, v.name, COUNT(o.id) as orders_cnt, SUM(o.total_amount) as amount')

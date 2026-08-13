@@ -152,6 +152,7 @@ class StudentImportController extends Controller
             ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
             ->where('avd.agent_user_id', $user->id)
             ->where('avd.is_active', true)
+            ->whereNull('v.deleted_at')   // 삭제된 학원 제외
             ->select('v.id', 'v.name')->orderBy('v.name')->get();
 
         $vendorClasses = []; // [vendor_id => [classes]]
