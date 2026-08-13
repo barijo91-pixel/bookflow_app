@@ -148,12 +148,24 @@ class StudentImportController extends Controller
         $user = Auth::user();
         if ($user->role_code !== 'agent') abort(403, '영업자만 접근 가능합니다.');
 
+        // 도매 학원은 학원이 일괄 매입하는 구조라 학급·학생이 필요 없음
+        // (학원 계정 사이드바도 도매면 학급/학생 메뉴를 숨긴다)
         $vendors = DB::table('agent_vendor_discounts as avd')
             ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
             ->where('avd.agent_user_id', $user->id)
             ->where('avd.is_active', true)
             ->whereNull('v.deleted_at')   // 삭제된 학원 제외
+            ->where('v.trade_type', '!=', 'wholesale')
             ->select('v.id', 'v.name')->orderBy('v.name')->get();
+
+        // 도매라 숨긴 학원 수 (화면 안내용 — 왜 안 보이는지 알 수 있게)
+        $wholesaleHidden = DB::table('agent_vendor_discounts as avd')
+            ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
+            ->where('avd.agent_user_id', $user->id)
+            ->where('avd.is_active', true)
+            ->whereNull('v.deleted_at')
+            ->where('v.trade_type', 'wholesale')
+            ->count();
 
         $vendorClasses = []; // [vendor_id => [classes]]
         foreach ($vendors as $v) {
@@ -169,6 +181,7 @@ class StudentImportController extends Controller
         // 학급 등록/수정 폼의 학년 옵션
         $grades = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get();
 
-        return view('public.mypage.student_import_agent_select', compact('user', 'vendors', 'vendorClasses', 'grades'));
+        return view('public.mypage.student_import_agent_select',
+            compact('user', 'vendors', 'vendorClasses', 'grades', 'wholesaleHidden'));
     }
 }

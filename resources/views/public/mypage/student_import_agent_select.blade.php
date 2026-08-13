@@ -19,8 +19,13 @@
     <div class="card section-card">
         <div class="card-body text-center text-muted py-5">
             <i class="bi bi-building-x" style="font-size:2rem"></i>
-            <p class="mb-0 mt-2">담당 학원이 없습니다.</p>
-            <p class="small mb-0">관리자에게 학원 매핑 요청을 해주세요.</p>
+            @if($wholesaleHidden > 0)
+                <p class="mb-0 mt-2">담당 학원이 모두 도매입니다.</p>
+                <p class="small mb-0">도매 학원은 학원이 일괄 매입하므로 학급·학생 등록이 필요 없습니다.</p>
+            @else
+                <p class="mb-0 mt-2">담당 학원이 없습니다.</p>
+                <p class="small mb-0">관리자에게 학원 매핑 요청을 해주세요.</p>
+            @endif
         </div>
     </div>
 @else
@@ -92,8 +97,9 @@
 
             {{-- 학급 추가 --}}
             <div class="card-footer bg-white">
-                <a class="small text-decoration-none" data-bs-toggle="collapse" href="#classNew{{ $v->id }}" role="button">
-                    <i class="bi bi-plus-circle"></i> 학급 추가
+                <a class="link-name" style="font-size:1.05rem" data-bs-toggle="collapse"
+                   href="#classNew{{ $v->id }}" role="button">
+                    <i class="bi bi-plus-circle-fill"></i> 학급 추가
                 </a>
                 <div class="collapse mt-2" id="classNew{{ $v->id }}">
                     <form method="POST" action="{{ route('my.agent.classes.store', $v->id) }}" class="row g-2 align-items-end">
@@ -128,6 +134,9 @@
 <div class="alert alert-light border small text-muted mb-0">
     <i class="bi bi-info-circle"></i>
     <strong>안내</strong>:
+    @if($wholesaleHidden > 0)
+        도매 학원 {{ $wholesaleHidden }}곳은 학원이 일괄 매입하는 구조라 목록에서 제외됩니다.<br>
+    @endif
     여기서 만든 학급은 학원 계정 화면(학급/학생)에도 그대로 보입니다.
     학원과 학급 구성을 맞춘 뒤 진행하세요. 잘못 등록된 학생은 학원 측 학급 상세에서 개별 제거 가능합니다.
 </div>

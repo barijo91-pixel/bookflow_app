@@ -57,6 +57,12 @@ class AgentClassController extends Controller
     {
         $user = $this->authorizeVendor((int) $vendorId);
 
+        // 도매는 학원이 일괄 매입하는 구조 — 학급·학생 개념이 없다
+        $tradeType = DB::table('vendors')->where('id', $vendorId)->value('trade_type');
+        if ($tradeType === 'wholesale') {
+            return back()->with('error', '도매 학원은 학급·학생 등록이 필요 없습니다.');
+        }
+
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:100'],
             'grade_code' => ['nullable', 'string', 'max:30'],
