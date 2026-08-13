@@ -451,6 +451,24 @@
                                     </div>
                                 </div>
                             @endif
+                            {{-- 배송 방식 — 소매(학부모 결제) 학원만 선택. 도매는 항상 학원 수령 --}}
+                            @if(($vendor->trade_type ?? 'retail') !== 'wholesale')
+                                <div class="mb-2 p-2 rounded text-start" style="background:#f6f9fd; border:1px solid #d7e3f2;">
+                                    <div class="small fw-bold navy mb-1"><i class="bi bi-truck"></i> 배송 방식</div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="ship_to_type" value="parent" id="shipParent" checked>
+                                        <label class="form-check-label small" for="shipParent">
+                                            학부모에게 개별 배송 <span class="text-muted">(기본)</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="ship_to_type" value="vendor" id="shipVendor">
+                                        <label class="form-check-label small" for="shipVendor">
+                                            학원으로 일괄 배송 <span class="text-muted">(학원에서 학생에게 전달)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            @endif
                             <button type="submit" class="btn btn-navy w-100 btn-lg">
                                 <i class="bi bi-check-lg"></i> 주문하기
                             </button>

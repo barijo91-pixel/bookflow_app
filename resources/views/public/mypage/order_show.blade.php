@@ -56,6 +56,15 @@
                     <dd class="col-8">{{ $agent->name ?? '-' }}</dd>
                     <dt class="col-4 text-muted">총판</dt>
                     <dd class="col-8">{{ $dist->name ?? '(미배정)' }}</dd>
+                    <dt class="col-4 text-muted">수령처</dt>
+                    <dd class="col-8">
+                        @if(($order->ship_to_type ?? 'parent') === 'vendor')
+                            <span class="badge bg-primary"><i class="bi bi-building"></i> 학원 일괄</span>
+                            <span class="text-muted small ms-1">학원에서 학생에게 전달</span>
+                        @else
+                            <span class="badge bg-info text-dark"><i class="bi bi-house"></i> 학부모 개별</span>
+                        @endif
+                    </dd>
                     <dt class="col-4 text-muted">배송 방식</dt>
                     <dd class="col-8 mb-0">
                         @if(($order->delivery_type ?? 'parcel') === 'direct')

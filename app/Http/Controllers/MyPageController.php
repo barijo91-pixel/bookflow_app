@@ -1873,6 +1873,8 @@ class MyPageController extends Controller
             'student_ids.*' => ['integer'],
             'qty' => ['nullable', 'array'],
             'qty.*' => ['integer', 'min:0', 'max:9999'],
+            // 배송지: parent=학부모 개별(소매 기본), vendor=학원 일괄
+            'ship_to_type' => ['nullable', 'in:parent,vendor'],
         ]);
 
         $cart = $request->session()->get($data['cart_key'], []);
@@ -1980,12 +1982,19 @@ class MyPageController extends Controller
             return back()->with('error', '주문 가능한 도서가 없습니다.');
         }
 
+        // 배송지 유형 — 도매(학원 매입)는 항상 학원 수령, 소매는 학원장이 선택(기본 학부모)
+        $tradeType = DB::table('vendors')->where('id', $vendorId)->value('trade_type');
+        $shipToType = $tradeType === 'wholesale'
+            ? 'vendor'
+            : (($data['ship_to_type'] ?? 'parent') === 'vendor' ? 'vendor' : 'parent');
+
         $orderId = null;
-        DB::transaction(function () use ($orderNo, $vendorId, $classId, $agentRow, $distId, $subtotal, $itemRows, $studentRows, $user, &$orderId) {
+        DB::transaction(function () use ($orderNo, $vendorId, $classId, $agentRow, $distId, $subtotal, $itemRows, $studentRows, $user, $shipToType, &$orderId) {
             $orderId = DB::table('orders')->insertGetId([
                 'order_no'            => $orderNo,
                 'vendor_id'           => $vendorId,
                 'class_id'            => $classId,
+                'ship_to_type'        => $shipToType,
                 'agent_user_id'       => $agentRow->agent_user_id,
                 'distributor_user_id' => $distId,
                 'subtotal_amount'     => $subtotal,
