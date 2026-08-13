@@ -57,14 +57,14 @@
             @case('distributor')
                 <div class="nav-section">총판 메뉴</div>
                 <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
-                    <i class="bi bi-receipt"></i> 주문관리
+                    <i class="bi bi-receipt"></i> 주문 관리
                     @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
                 <a href="{{ route('my.agents.index') }}" class="nav-item {{ $startsWith('my.agents') }}">
                     <i class="bi bi-person-badge"></i> 영업자 관리
                 </a>
                 <a href="{{ route('my.users.index') }}" class="nav-item {{ $startsWith('my.users') }}">
-                    <i class="bi bi-people"></i> 사용자관리
+                    <i class="bi bi-people"></i> 사용자 관리
                     @if($userBadge > 0)<span class="badge bg-danger ms-auto">{{ $userBadge }}</span>@endif
                 </a>
                 <a href="{{ route('my.academies.index') }}" class="nav-item {{ $startsWith('my.academies') }}">
@@ -77,7 +77,7 @@
                     <i class="bi bi-cash-stack"></i> 정산 내역
                 </a>
                 <a href="{{ route('my.stocks.index') }}" class="nav-item {{ $startsWith('my.stocks') }}">
-                    <i class="bi bi-box-seam"></i> 재고관리
+                    <i class="bi bi-box-seam"></i> 재고 관리
                 </a>
                 @break
 
@@ -114,10 +114,10 @@
             @case('academy')
                 <div class="nav-section">학원 메뉴</div>
                 <a href="{{ route('my.order_new') }}" class="nav-item {{ $is('my.order_new') }}">
-                    <i class="bi bi-bag-plus"></i> 도서주문
+                    <i class="bi bi-bag-plus"></i> 도서 주문
                 </a>
                 <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
-                    <i class="bi bi-clipboard-data"></i> 주문내역
+                    <i class="bi bi-clipboard-data"></i> 주문 내역
                     @if($orderBadge > 0)<span class="badge bg-secondary ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
                 {{-- 심사용 교재구매 메뉴 — 카카오(카카오페이) 심사 계정(katest)에만 노출.
@@ -139,7 +139,7 @@
 
         <div class="nav-section">계정</div>
         <a href="{{ route('mypage.profile') }}" class="nav-item {{ $is('mypage.profile') }}">
-            <i class="bi bi-person"></i> 정보수정
+            <i class="bi bi-person"></i> 정보 수정
         </a>
         <form method="POST" action="{{ route('public.logout') }}" class="m-0">
             @csrf
@@ -149,7 +149,7 @@
         </form>
         {{-- PWA 설치 — JS가 미설치 시에만 표시 --}}
         <button type="button" id="sidebarInstallBtn" class="nav-item w-100 border-0 bg-transparent text-start" style="display:none; margin-top:1.5rem;">
-            <i class="bi bi-download"></i> 북시스 앱설치
+            <i class="bi bi-download"></i> 북시스 앱 설치
         </button>
         <div id="sidebarInstalledHint" class="small mt-2 px-3" style="display:none; color:#94a3b8;">
             <i class="bi bi-check-circle"></i> 설치 완료

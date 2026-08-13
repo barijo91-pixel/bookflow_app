@@ -73,7 +73,7 @@
                 @if($cartCount > 0)<span class="mbn-badge">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>@endif
             </a>
             <a href="{{ route('my.orders.index') }}" class="mbn-item {{ $rs('my.orders') ? 'active' : '' }}">
-                <i class="bi bi-clipboard-data"></i><span>주문내역</span>
+                <i class="bi bi-clipboard-data"></i><span>주문 내역</span>
                 @if($navBadge > 0)<span class="mbn-badge">{{ $navBadge > 99 ? '99+' : $navBadge }}</span>@endif
             </a>
             @break
