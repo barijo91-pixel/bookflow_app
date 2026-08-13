@@ -90,12 +90,6 @@
                 <a href="{{ route('my.vendors.index') }}" class="nav-item {{ $is('my.vendors.index') }}">
                     <i class="bi bi-building"></i> 거래처(학원)
                 </a>
-                <a href="{{ route('my.vendors.create') }}" class="nav-item {{ $is('my.vendors.create') }}">
-                    <i class="bi bi-building-add"></i> 학원등록
-                </a>
-                <a href="{{ route('my.agent.student.import') }}" class="nav-item d-none d-md-flex {{ $is('my.agent.student.import') }}">
-                    <i class="bi bi-people"></i> 학생등록
-                </a>
                 <a href="{{ route('my.discounts.index') }}" class="nav-item {{ $startsWith('my.discounts') }}">
                     <i class="bi bi-percent"></i> 할인율 관리
                 </a>
@@ -107,6 +101,13 @@
                 </a>
                 <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
                     <i class="bi bi-cash-stack"></i> 정산 내역
+                </a>
+                {{-- 등록 작업은 자주 쓰지 않아 아래로 --}}
+                <a href="{{ route('my.vendors.create') }}" class="nav-item {{ $is('my.vendors.create') }}">
+                    <i class="bi bi-building-add"></i> 학원등록
+                </a>
+                <a href="{{ route('my.agent.student.import') }}" class="nav-item d-none d-md-flex {{ $is('my.agent.student.import') }}">
+                    <i class="bi bi-people"></i> 학생등록
                 </a>
                 @break
 
