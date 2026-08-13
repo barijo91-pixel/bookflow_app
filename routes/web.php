@@ -65,6 +65,16 @@ Route::middleware('guest')->group(function () {
     Route::get('register',  [\App\Http\Controllers\PublicAuthController::class, 'showRegister'])->name('public.register');
 });
 Route::get('register/done', [\App\Http\Controllers\PublicAuthController::class, 'registerDone'])->name('public.register.done');
+
+// 영업자 초대 링크로 학원이 직접 가입 (메뉴에 노출되지 않는 링크 — 영업자가 개별 발송)
+Route::middleware('guest')->group(function () {
+    Route::get('join/{token}', [\App\Http\Controllers\Public\AcademyJoinController::class, 'show'])->name('academy.join');
+    Route::middleware('throttle:5,1')->post('join/{token}',
+        [\App\Http\Controllers\Public\AcademyJoinController::class, 'store'])->name('academy.join.attempt');
+});
+Route::get('join-done', [\App\Http\Controllers\Public\AcademyJoinController::class, 'done'])->name('academy.join.done');
+// 가입 폼용 시군구 조회 (로그인 전에도 필요 — 지역 목록은 공개 정보)
+Route::get('regions/sigungu', [\App\Http\Controllers\Admin\RegionController::class, 'sigungu'])->name('public.regions.sigungu');
 Route::post('logout',       [\App\Http\Controllers\PublicAuthController::class, 'logout'])->name('public.logout');
 
 // 대행 로그인 복귀 — 대행 중에는 관리자 권한이 아니므로 admin 미들웨어 밖에 둔다.
@@ -195,6 +205,10 @@ Route::middleware('auth')->group(function () {
             [\App\Http\Controllers\Public\StudentImportController::class, 'preview'])->name('classes.students.import.preview');
         Route::post('classes/{id}/students/import/{jobId}/run',
             [\App\Http\Controllers\Public\StudentImportController::class, 'run'])->name('classes.students.import.run');
+
+        // 영업자 학원 가입 링크 (학원에 보내는 초대 URL)
+        Route::get('invite',            [\App\Http\Controllers\Public\AgentInviteController::class, 'show'])->name('invite.show');
+        Route::post('invite/regenerate',[\App\Http\Controllers\Public\AgentInviteController::class, 'regenerate'])->name('invite.regenerate');
 
         // 영업자·총판이 담당 학원의 학급을 등록·수정 (학원 계정 화면과 별개 경로)
         Route::post('vendors/{vendor}/classes',

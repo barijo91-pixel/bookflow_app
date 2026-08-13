@@ -109,6 +109,9 @@
                 <a href="{{ route('my.agent.student.import') }}" class="nav-item d-none d-md-flex {{ $is('my.agent.student.import') }}">
                     <i class="bi bi-people"></i> 학급&학생
                 </a>
+                <a href="{{ route('my.invite.show') }}" class="nav-item {{ $startsWith('my.invite') }}">
+                    <i class="bi bi-link-45deg"></i> 학원 가입 링크
+                </a>
                 @break
 
             @case('academy')
