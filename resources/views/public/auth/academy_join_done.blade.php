@@ -1,6 +1,7 @@
 @extends('public.layouts.app')
 @section('title', '가입 완료')
 @section('max_width', '560px')
+@section('hide_guest_nav', true)
 
 @section('content')
 <div class="card mt-3">

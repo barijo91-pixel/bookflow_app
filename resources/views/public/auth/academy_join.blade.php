@@ -1,13 +1,14 @@
 @extends('public.layouts.app')
 @section('title', '학원 가입')
 @section('max_width', '640px')
+{{-- 학원은 이 링크로만 들어오므로 상단 로그인/영업자가입 버튼을 숨긴다 --}}
+@section('hide_guest_nav', true)
 
 @section('content')
 <div class="card mt-3">
     <div class="card-body p-4">
         <div class="text-center mb-4">
-            <i class="bi bi-building-add navy" style="font-size:2.5rem"></i>
-            <h1 class="h4 navy mt-2 mb-1">학원 가입</h1>
+            <h1 class="h4 navy mb-1">학원 가입</h1>
             <p class="text-muted small mb-0">
                 담당 영업자 <strong class="navy">{{ $agent->name }}</strong> 님을 통한 가입입니다.
             </p>

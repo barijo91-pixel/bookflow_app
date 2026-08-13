@@ -246,14 +246,18 @@
             <a href="/" class="brand">
                 <i class="bi bi-book-half"></i> BookSys
             </a>
-            <nav class="d-flex align-items-center gap-2">
-                <a href="{{ route('public.login') }}" class="btn btn-outline-navy btn-sm">
-                    <i class="bi bi-box-arrow-in-right"></i> 로그인
-                </a>
-                <a href="{{ route('public.register') }}" class="btn btn-navy btn-sm">
-                    <i class="bi bi-person-plus"></i> 영업자 가입
-                </a>
-            </nav>
+            {{-- 초대 링크로 들어온 학원 가입 화면 등에서는 숨긴다 (@section('hide_guest_nav')) --}}
+            @hasSection('hide_guest_nav')
+            @else
+                <nav class="d-flex align-items-center gap-2">
+                    <a href="{{ route('public.login') }}" class="btn btn-outline-navy btn-sm">
+                        <i class="bi bi-box-arrow-in-right"></i> 로그인
+                    </a>
+                    <a href="{{ route('public.register') }}" class="btn btn-navy btn-sm">
+                        <i class="bi bi-person-plus"></i> 영업자 가입
+                    </a>
+                </nav>
+            @endif
         </div>
     </header>
     <main class="guest-main">
