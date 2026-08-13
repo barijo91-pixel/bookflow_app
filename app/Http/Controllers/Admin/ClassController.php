@@ -71,7 +71,9 @@ class ClassController extends Controller
 
     public function create()
     {
-        $vendors = DB::table('vendors')->where('status_code', 'active')->orderBy('name')->get(['id', 'name']);
+        $vendors = DB::table('vendors')->where('status_code', 'active')
+            ->whereNull('deleted_at')   // 삭제된 학원 제외
+            ->orderBy('name')->get(['id', 'name']);
         $grades  = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get();
         return view('admin.classes.create', compact('vendors', 'grades'));
     }

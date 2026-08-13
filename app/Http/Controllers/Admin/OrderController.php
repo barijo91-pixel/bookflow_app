@@ -83,7 +83,8 @@ class OrderController extends Controller
         $orders = $query->paginate(50)->withQueryString();
 
         $statusOptions = DB::table('codes')->where('group_code', 'order_status')->orderBy('sort_order')->get();
-        $vendors = DB::table('vendors')->orderBy('name')->get(['id', 'name']);
+        $vendors = DB::table('vendors')->whereNull('deleted_at')   // 삭제된 학원 제외
+            ->orderBy('name')->get(['id', 'name']);
         $agents = DB::table('users')->where('role_code', 'agent')->orderBy('name')->get(['id', 'name']);
         $distributors = DB::table('users')->where('role_code', 'distributor')->orderBy('name')->get(['id', 'name']);
 

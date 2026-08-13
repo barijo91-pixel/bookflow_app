@@ -39,6 +39,7 @@ class MyPageController extends Controller
                     ->pluck('vendor_id');
                 $context['my_vendors'] = DB::table('vendors')
                     ->whereIn('id', $vendorIds)
+                    ->whereNull('deleted_at')   // 삭제된 학원 제외
                     ->select('id', 'name', 'mobile', 'status_code')
                     ->orderBy('name')->limit(10)->get();
                 $context['recent_orders'] = $this->recentOrders($user);
@@ -106,6 +107,7 @@ class MyPageController extends Controller
                 $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id');
                 $context['my_academies'] = DB::table('vendors')
                     ->whereIn('id', $vendorIds)
+                    ->whereNull('deleted_at')   // 삭제된 학원 제외
                     ->select('id', 'name', 'mobile', 'status_code')
                     ->orderBy('name')->get();
                 $context['my_agents'] = DB::table('agent_vendor_discounts as avd')
