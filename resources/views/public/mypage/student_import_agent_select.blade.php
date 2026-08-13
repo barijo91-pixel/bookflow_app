@@ -1,10 +1,10 @@
 @extends('public.layouts.app')
-@section('title', '학급 · 학생 등록 (담당 학원)')
+@section('title', '학급&학생 (담당 학원)')
 @section('max_width', '900px')
 
 @section('content')
 <div class="mb-3">
-    <h1 class="h4 navy mb-1"><i class="bi bi-people"></i> 학급 · 학생 등록</h1>
+    <h1 class="h4 navy mb-1"><i class="bi bi-people"></i> 학급&학생</h1>
     <p class="text-muted small mb-0">담당 학원의 학급을 만들고, 학급별로 학생을 엑셀로 일괄 등록합니다.</p>
 </div>
 
