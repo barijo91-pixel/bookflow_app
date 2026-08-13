@@ -1982,11 +1982,13 @@ class MyPageController extends Controller
             return back()->with('error', '주문 가능한 도서가 없습니다.');
         }
 
-        // 배송지 유형 — 도매(학원 매입)는 항상 학원 수령, 소매는 학원장이 선택(기본 학부모)
-        $tradeType = DB::table('vendors')->where('id', $vendorId)->value('trade_type');
-        $shipToType = $tradeType === 'wholesale'
+        // 배송지 유형 — 도매(학원 매입)는 항상 학원 수령.
+        // 소매는 주문에서 선택한 값, 없으면 학원 설정의 기본 배송지를 따른다.
+        $vendorRow = DB::table('vendors')->where('id', $vendorId)
+            ->first(['trade_type', 'default_ship_to_type']);
+        $shipToType = ($vendorRow->trade_type ?? 'retail') === 'wholesale'
             ? 'vendor'
-            : (($data['ship_to_type'] ?? 'parent') === 'vendor' ? 'vendor' : 'parent');
+            : ((($data['ship_to_type'] ?? $vendorRow->default_ship_to_type ?? 'parent') === 'vendor') ? 'vendor' : 'parent');
 
         $orderId = null;
         DB::transaction(function () use ($orderNo, $vendorId, $classId, $agentRow, $distId, $subtotal, $itemRows, $studentRows, $user, $shipToType, &$orderId) {

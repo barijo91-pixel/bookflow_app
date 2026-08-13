@@ -453,19 +453,26 @@
                             @endif
                             {{-- 배송 방식 — 소매(학부모 결제) 학원만 선택. 도매는 항상 학원 수령 --}}
                             @if(($vendor->trade_type ?? 'retail') !== 'wholesale')
+                                {{-- 학원 설정(기본 배송지)이 기본 선택됨. 이번 주문만 다르게 하려면 변경 --}}
+                                @php $defaultShip = $vendor->default_ship_to_type ?? 'parent'; @endphp
                                 <div class="mb-2 p-2 rounded text-start" style="background:#f6f9fd; border:1px solid #d7e3f2;">
                                     <div class="small fw-bold navy mb-1"><i class="bi bi-truck"></i> 배송 방식</div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ship_to_type" value="parent" id="shipParent" checked>
+                                        <input class="form-check-input" type="radio" name="ship_to_type" value="parent" id="shipParent"
+                                               @checked($defaultShip !== 'vendor')>
                                         <label class="form-check-label small" for="shipParent">
-                                            학부모에게 개별 배송 <span class="text-muted">(기본)</span>
+                                            학부모에게 개별 배송
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ship_to_type" value="vendor" id="shipVendor">
+                                        <input class="form-check-input" type="radio" name="ship_to_type" value="vendor" id="shipVendor"
+                                               @checked($defaultShip === 'vendor')>
                                         <label class="form-check-label small" for="shipVendor">
                                             학원으로 일괄 배송 <span class="text-muted">(학원에서 학생에게 전달)</span>
                                         </label>
+                                    </div>
+                                    <div class="small text-muted mt-1" style="font-size:.72rem;">
+                                        학원 설정의 기본 배송지가 선택되어 있습니다.
                                     </div>
                                 </div>
                             @endif

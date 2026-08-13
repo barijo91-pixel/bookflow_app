@@ -50,6 +50,23 @@
                                 </div>
                             </div>
                         </div>
+                        {{-- 기본 배송지 — 주문 화면에서 이 값이 기본 선택됨 (건별 변경 가능). 도매는 항상 학원 수령 --}}
+                        <div class="col-md-6" id="defaultShipWrap">
+                            <label class="form-label small text-muted">기본 배송지</label>
+                            <div class="d-flex gap-3 pt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="default_ship_to_type" id="shipParentDefault" value="parent"
+                                           @checked(old('default_ship_to_type', $vendor->default_ship_to_type ?? 'parent') === 'parent')>
+                                    <label class="form-check-label" for="shipParentDefault">학부모 개별</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="default_ship_to_type" id="shipVendorDefault" value="vendor"
+                                           @checked(old('default_ship_to_type', $vendor->default_ship_to_type ?? 'parent') === 'vendor')>
+                                    <label class="form-check-label" for="shipVendorDefault">학원 일괄</label>
+                                </div>
+                            </div>
+                            <div class="form-text small">주문 시 기본으로 선택됩니다. (주문에서 변경 가능)</div>
+                        </div>
                         <div class="col-md-3">
                             <label class="form-label small text-muted">대표자</label>
                             <input type="text" name="owner_name" class="form-control" value="{{ old('owner_name', $vendor->owner_name) }}" maxlength="100">
