@@ -1573,6 +1573,16 @@ class MyPageController extends Controller
                 ->pluck('discount_rate', 'book_id');
         }
 
+        // 3-1. 담당 영업자의 소속 총판 — 주문은 그 총판이 취급(재고 등록)하는 교재만 가능하다.
+        //      총판에 없는 교재를 담아 주문하면 출고할 수 없는 주문이 된다.
+        $orderDistributorId = $selectedAgent
+            ? DB::table('user_relations')
+                ->where('child_user_id', $selectedAgent->id)
+                ->where('relation_type', 'distributor_agent')
+                ->where('status', 'active')
+                ->value('parent_user_id')
+            : null;
+
         // 4. 도서 검색 + 필터 + 목록
         $q        = trim((string) $request->query('q'));
         $school   = $request->query('school');     // 분류 (elementary/middle/high/general)
@@ -1586,6 +1596,16 @@ class MyPageController extends Controller
             ->where('books.status_code', 'selling')
             ->leftJoin('publishers as p', 'p.id', '=', 'books.publisher_id')
             ->select('books.*', 'p.name as publisher_name');
+
+        // 소속 총판이 취급하는 교재만 (총판이 없으면 주문할 수 있는 교재도 없다)
+        if ($orderDistributorId) {
+            $booksQuery->whereIn('books.id', function ($sq) use ($orderDistributorId) {
+                $sq->select('book_id')->from('book_stocks')
+                   ->where('distributor_user_id', $orderDistributorId);
+            });
+        } else {
+            $booksQuery->whereRaw('1 = 0');
+        }
         if ($q !== '') {
             $booksQuery->where(function ($w) use ($q) {
                 $w->where('books.title', 'like', "%{$q}%")
@@ -1640,10 +1660,19 @@ class MyPageController extends Controller
             'subject'  => DB::table('codes')->where('group_code', 'subject')->orderBy('sort_order')->get(['code','name']),
             'grade'    => $filteredGrades,
             'semester' => DB::table('codes')->where('group_code', 'semester')->orderBy('sort_order')->get(['code','name']),
+            // 출판사 옵션도 총판 취급 범위로 — 안 파는 출판사를 고르면 0건만 나온다
             'publisher' => DB::table('publishers as p')
-                ->whereIn('p.id', function ($sq) {
+                ->whereIn('p.id', function ($sq) use ($orderDistributorId) {
                     $sq->select('publisher_id')->from('books')
                        ->whereNull('deleted_at')->where('status_code', 'selling')->whereNotNull('publisher_id');
+                    if ($orderDistributorId) {
+                        $sq->whereIn('id', function ($s2) use ($orderDistributorId) {
+                            $s2->select('book_id')->from('book_stocks')
+                               ->where('distributor_user_id', $orderDistributorId);
+                        });
+                    } else {
+                        $sq->whereRaw('1 = 0');
+                    }
                 })
                 ->orderBy('p.name')->get(['p.id as code', 'p.name']),   // 이름순(가나다)
         ];
@@ -1703,6 +1732,7 @@ class MyPageController extends Controller
             'classes'        => $classes,
             'actingAsAgent'  => $actingAsAgent,   // 영업자 대행 주문 여부
             'myVendors'      => $myVendors,       // 대행 시 학원 선택 목록
+            'hasDistributor' => (bool) $orderDistributorId, // 취급 총판 유무 (빈 목록 사유 안내)
         ]);
     }
 

@@ -367,8 +367,14 @@
                             </tr>
                         @empty
                             <tr><td colspan="5" class="text-center text-muted py-4">
-                                @if($q) "{{ $q }}" 검색 결과가 없습니다.
-                                @else 등록된 도서가 없습니다. @endif
+                                @if(! $hasDistributor)
+                                    담당 영업자에게 소속 총판이 없어 주문 가능한 교재가 없습니다.<br>
+                                    <small>관리자에게 총판 배정을 요청해주세요.</small>
+                                @elseif($q)
+                                    "{{ $q }}" 검색 결과가 없습니다.
+                                @else
+                                    총판이 취급하는 교재가 아직 등록되지 않았습니다.
+                                @endif
                             </td></tr>
                         @endforelse
                     </tbody>
