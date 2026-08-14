@@ -31,6 +31,20 @@ class BookCatalogController extends Controller
     {
         $user = $this->authorize();
 
+        // 취급 교재는 총판마다 다르다(book_stocks 가 총판별).
+        // 영업자는 자기 소속 총판이 등록한 교재만 팔 수 있으므로 그 범위로 제한한다.
+        $distributorId = $user->role_code === 'distributor'
+            ? $user->id
+            : DB::table('user_relations')
+                ->where('child_user_id', $user->id)
+                ->where('relation_type', 'distributor_agent')
+                ->where('status', 'active')
+                ->value('parent_user_id');
+
+        $distributor = $distributorId
+            ? DB::table('users')->where('id', $distributorId)->first(['id', 'name', 'business_name'])
+            : null;
+
         // 담당(산하) 학원 — 고르면 그 학원 공급가를 계산해 보여준다
         $vendors = $user->role_code === 'agent'
             ? DB::table('agent_vendor_discounts as a')
@@ -71,6 +85,17 @@ class BookCatalogController extends Controller
                 'b.price', 'b.school_code', 'b.subject_code', 'b.cover_path',
                 'p.name as publisher_name');
 
+        // 소속 총판이 취급(재고 등록)하는 교재만.
+        // 총판이 없으면 팔 수 있는 교재도 없으므로 빈 목록이 맞다.
+        if ($distributorId) {
+            $query->whereIn('b.id', function ($sq) use ($distributorId) {
+                $sq->select('book_id')->from('book_stocks')
+                   ->where('distributor_user_id', $distributorId);
+            });
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
         if ($q !== '') {
             $query->where(function ($w) use ($q) {
                 $w->where('b.title', 'like', "%{$q}%")
@@ -98,6 +123,7 @@ class BookCatalogController extends Controller
 
         return view('public.mypage.books', [
             'user'           => $user,
+            'distributor'    => $distributor,
             'books'          => $books,
             'vendors'        => $vendors,
             'selectedVendor' => $selectedVendor,

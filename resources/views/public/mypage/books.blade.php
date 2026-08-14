@@ -8,9 +8,24 @@
         <small class="text-muted fs-6">{{ number_format($books->total()) }}권</small>
     </h1>
     <p class="text-muted small mb-0">
-        판매 중인 교재입니다. 학원을 고르면 그 학원의 <strong>공급가</strong>까지 함께 보여줍니다.
+        @if($distributor)
+            <strong>{{ filled($distributor->business_name) ? $distributor->business_name.'('.$distributor->name.')' : $distributor->name }}</strong>
+            총판이 취급하는 교재입니다. 학원을 고르면 그 학원의 <strong>공급가</strong>까지 함께 보여줍니다.
+        @else
+            소속 총판이 없어 표시할 교재가 없습니다.
+        @endif
     </p>
 </div>
+
+@if(session('info'))<div class="alert alert-info py-2 small">{{ session('info') }}</div>@endif
+
+@unless($distributor)
+    <div class="alert alert-warning py-2 small">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>소속 총판이 배정되지 않았습니다.</strong>
+        교재는 총판이 취급하는 것만 판매할 수 있어 목록이 비어 있습니다. 관리자에게 총판 배정을 요청해주세요.
+    </div>
+@endunless
 
 <form method="GET" action="{{ route('my.books.index') }}" class="card section-card mb-3">
     <div class="card-body py-3">
@@ -124,7 +139,12 @@
                 @empty
                     <tr>
                         <td colspan="{{ $selectedVendor ? 6 : 4 }}" class="text-center text-muted py-5">
-                            조건에 맞는 교재가 없습니다.
+                            @if($distributor)
+                                조건에 맞는 교재가 없습니다.<br>
+                                <small>총판이 취급 교재(재고)를 등록하면 여기에 표시됩니다.</small>
+                            @else
+                                소속 총판이 배정되어야 교재가 표시됩니다.
+                            @endif
                         </td>
                     </tr>
                 @endforelse

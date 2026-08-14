@@ -244,7 +244,8 @@
                                 @foreach($availableDistributors as $d)
                                     <option value="{{ $d->id }}"
                                         @selected($currentDistributor && $currentDistributor->id === $d->id)>
-                                        {{ $d->name }} ({{ $d->login_id }})
+                                        {{-- 상호가 있으면 상호명(이름) — 거래처는 상호로 인식한다 --}}
+                                        {{ filled($d->business_name) ? $d->business_name.'('.$d->name.')' : $d->name }}
                                     </option>
                                 @endforeach
                             </select>
