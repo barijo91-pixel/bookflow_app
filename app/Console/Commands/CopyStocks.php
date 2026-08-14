@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 class CopyStocks extends Command
 {
     protected $signature = 'booksys:copy-stocks
-        {from : 원본 총판 login_id}
+        {from : 원본 총판 login_id (또는 all = 판매중 교재 전체를 취급 등록)}
         {to : 대상 총판 login_id}
         {--qty= : 복사 시 수량을 이 값으로 고정 (미지정이면 원본 수량 그대로)}
         {--apply : 실제 반영 (기본은 미리보기)}
@@ -28,14 +28,10 @@ class CopyStocks extends Command
 
     public function handle(): int
     {
-        $from = $this->distributor($this->argument('from'));
-        $to   = $this->distributor($this->argument('to'));
-        if (! $from || ! $to) return self::FAILURE;
+        $fromAll = strtolower($this->argument('from')) === 'all';
 
-        if ($from->id === $to->id) {
-            $this->error('원본과 대상이 같은 총판입니다.');
-            return self::FAILURE;
-        }
+        $to = $this->distributor($this->argument('to'));
+        if (! $to) return self::FAILURE;
 
         $apply = (bool) $this->option('apply');
 
@@ -43,11 +39,31 @@ class CopyStocks extends Command
             return $this->undo($to, $apply);
         }
 
-        $src = DB::table('book_stocks')->where('distributor_user_id', $from->id)
-            ->get(['book_id', 'qty', 'low_stock_threshold']);
+        if ($fromAll) {
+            // 원본 총판이 하나도 없을 때 — 판매중 교재 전체를 취급으로 등록한다.
+            // 수량은 미지정 시 0 (취급은 하지만 재고는 아직 없음)
+            $from = (object) ['id' => null, 'login_id' => 'all', 'name' => '판매중 교재 전체'];
+            $src = DB::table('books')->whereNull('deleted_at')->where('status_code', 'selling')
+                ->orderBy('id')
+                ->get(['id as book_id'])
+                ->map(fn ($b) => (object) ['book_id' => $b->book_id, 'qty' => 0, 'low_stock_threshold' => 5]);
+        } else {
+            $from = $this->distributor($this->argument('from'));
+            if (! $from) return self::FAILURE;
+
+            if ($from->id === $to->id) {
+                $this->error('원본과 대상이 같은 총판입니다.');
+                return self::FAILURE;
+            }
+
+            $src = DB::table('book_stocks')->where('distributor_user_id', $from->id)
+                ->get(['book_id', 'qty', 'low_stock_threshold']);
+        }
 
         if ($src->isEmpty()) {
-            $this->error("원본 총판 {$from->login_id} 에 재고가 없습니다.");
+            $this->error($fromAll
+                ? '판매중 상태인 교재가 없습니다.'
+                : "원본 총판 {$from->login_id} 에 재고가 없습니다.");
             return self::FAILURE;
         }
 
@@ -58,7 +74,7 @@ class CopyStocks extends Command
         $skip = $src->count() - $new->count();
         $qty  = $this->option('qty');
 
-        $this->info("원본 {$from->name}({$from->login_id}) → 대상 {$to->name}({$to->login_id})");
+        $this->info("원본 {$from->name}" . ($fromAll ? '' : "({$from->login_id})") . " → 대상 {$to->name}({$to->login_id})");
         $this->line("  원본 취급 {$src->count()}종 / 새로 넣을 것 {$new->count()}종"
             . ($skip ? " / 이미 있어 건너뜀 {$skip}종" : ''));
         if ($qty !== null) $this->line("  수량을 전부 {$qty} 로 고정");
@@ -98,6 +114,9 @@ class CopyStocks extends Command
         $this->newLine();
         $this->info('완료 — ' . count($rows) . '종 복사됨.');
         $this->line("되돌리려면: php artisan booksys:copy-stocks {$from->login_id} {$to->login_id} --undo --apply");
+        if ($fromAll) {
+            $this->line('수량은 0입니다 — 실제 입고 수량은 관리자 > 재고관리에서 조정하세요.');
+        }
         return self::SUCCESS;
     }
 
