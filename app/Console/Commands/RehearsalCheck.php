@@ -55,6 +55,35 @@ class RehearsalCheck extends Command
                 $maps->map(fn ($r) => [$r->login_id, $r->vname, rtrim(rtrim($r->discount_rate, '0'), '.') . '%'])->all());
         }
 
+        // 2-1) 영업자 ↔ 총판 소속 (영업자 1명 = 총판 1곳 정책)
+        $this->warn('▸ 영업자 소속 총판 (1명 = 1곳)');
+        $agents = DB::table('users as u')
+            ->where('u.role_code', 'agent')->whereNull('u.deleted_at')
+            ->leftJoin('user_relations as r', function ($j) {
+                $j->on('r.child_user_id', '=', 'u.id')
+                  ->where('r.relation_type', 'distributor_agent')
+                  ->where('r.status', 'active');
+            })
+            ->leftJoin('users as d', 'd.id', '=', 'r.parent_user_id')
+            ->groupBy('u.id', 'u.login_id', 'u.name')
+            ->selectRaw('u.login_id, u.name, COUNT(r.id) as cnt, GROUP_CONCAT(d.name) as dists')
+            ->get();
+
+        $bad = 0;
+        foreach ($agents as $a) {
+            if ((int) $a->cnt === 1) continue;
+            $bad++;
+            if ((int) $a->cnt === 0) {
+                $this->error("  {$a->login_id}({$a->name}) — 소속 총판 없음 → 이 영업자 학원은 주문 불가");
+            } else {
+                $this->error("  {$a->login_id}({$a->name}) — 총판 {$a->cnt}곳 소속({$a->dists})"
+                    . " → 주문이 첫 총판으로만 감. 총판별로 아이디를 분리할 것");
+            }
+        }
+        if ($bad === 0) {
+            $this->line('  이상 없음 — 모든 영업자가 총판 1곳에 소속');
+        }
+
         // 3) 학급/학생 (소매 결제요청에 필요)
         $classCnt   = DB::table('academy_classes')->count();
         $studentCnt = DB::table('students')->whereNull('deleted_at')->count();

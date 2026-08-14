@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 
 class MyPageController extends Controller
@@ -1938,13 +1939,28 @@ class MyPageController extends Controller
             return back()->with('error', '유효하지 않은 영업자입니다.');
         }
 
-        // 총판 결정 (agent의 첫 distributor)
-        $distId = DB::table('user_relations')
+        // 총판 결정 — 영업자 계정 1개는 총판 1곳에만 소속된다(운영 정책).
+        // 두 총판과 거래하는 사람은 총판별로 아이디를 따로 쓴다.
+        $distIds = DB::table('user_relations')
             ->where('child_user_id', $agentRow->agent_user_id)
             ->where('relation_type', 'distributor_agent')
             ->where('status', 'active')
             ->orderBy('id')
-            ->value('parent_user_id');
+            ->pluck('parent_user_id');
+
+        // 미배정이면 주문을 만들지 않는다. 만들면 distributor_user_id 가 null 이라
+        // 어느 총판 화면에도 안 보이고 접수·출고를 아무도 못 하는 주문이 된다.
+        if ($distIds->isEmpty()) {
+            return back()->with('error',
+                '담당 영업자에게 소속 총판이 배정되지 않아 주문할 수 없습니다. 관리자에게 문의해주세요.');
+        }
+        if ($distIds->count() > 1) {
+            Log::warning('영업자가 총판 2곳 이상에 소속됨 — 첫 총판으로 처리', [
+                'agent_user_id' => $agentRow->agent_user_id,
+                'distributor_ids' => $distIds->all(),
+            ]);
+        }
+        $distId = $distIds->first();
 
         // 책별 할인율
         $bookDiscounts = DB::table('agent_vendor_book_discounts')
