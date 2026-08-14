@@ -118,17 +118,17 @@
             </div>
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">로그인 아이디</label>
-                    <input type="text" name="user_login_id" class="form-control" value="{{ old('user_login_id') }}"
-                           pattern="[a-zA-Z0-9]{6,50}" placeholder="영문+숫자 6~50자">
+                    <label class="form-label small text-muted mb-1">로그인 아이디 <span class="text-danger acct-req">*</span></label>
+                    <input type="text" name="user_login_id" class="form-control acct-required" value="{{ old('user_login_id') }}"
+                           pattern="[a-zA-Z0-9]{6,50}" title="영문과 숫자만, 6자 이상" placeholder="영문+숫자 6~50자">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">이름 (사장님)</label>
-                    <input type="text" name="user_name" class="form-control" value="{{ old('user_name') }}" maxlength="80">
+                    <label class="form-label small text-muted mb-1">이름 (사장님) <span class="text-danger acct-req">*</span></label>
+                    <input type="text" name="user_name" class="form-control acct-required" value="{{ old('user_name') }}" maxlength="80">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">휴대폰</label>
-                    <input type="text" name="user_phone" class="form-control" value="{{ old('user_phone') }}" maxlength="20" placeholder="010-0000-0000">
+                    <label class="form-label small text-muted mb-1">휴대폰 <span class="text-danger acct-req">*</span></label>
+                    <input type="text" name="user_phone" class="form-control acct-required" value="{{ old('user_phone') }}" maxlength="20" placeholder="010-0000-0000">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-muted mb-1">이메일 (선택)</label>
@@ -206,13 +206,19 @@ function openAddrSearch() {
 }
 
 // 계정 만들기 토글
+// 계정을 함께 만들 때 아이디·이름·휴대폰은 서버에서 필수다.
+// 그대로 두면 빈 칸으로 제출 → 서버까지 갔다가 되돌아와 이유를 놓치기 쉬우므로
+// 브라우저가 그 자리에서 잡도록 required 를 같이 켜고 끈다.
 (function() {
     const tog = document.getElementById('createAccount');
     const wrap = document.getElementById('accountFields');
     if (!tog) return;
     function sync() {
-        wrap.style.opacity = tog.checked ? '1' : '0.4';
-        wrap.querySelectorAll('input').forEach(i => i.disabled = !tog.checked);
+        const on = tog.checked;
+        wrap.style.opacity = on ? '1' : '0.4';
+        wrap.querySelectorAll('input').forEach(i => i.disabled = !on);
+        wrap.querySelectorAll('.acct-required').forEach(i => i.required = on);
+        document.querySelectorAll('.acct-req').forEach(s => s.style.display = on ? '' : 'none');
     }
     tog.addEventListener('change', sync);
     sync();

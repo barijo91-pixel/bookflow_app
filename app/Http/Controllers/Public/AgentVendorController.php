@@ -99,8 +99,16 @@ class AgentVendorController extends Controller
                 if (empty($data[$f])) $missing[] = $f;
             }
             if ($missing) {
+                // 어느 칸이 비었는지 짚어준다 — "필요합니다"만 보면 어디를 채울지 모른다
+                $labels = [
+                    'user_login_id' => '로그인 아이디',
+                    'user_name'     => '이름(사장님)',
+                    'user_phone'    => '휴대폰',
+                ];
+                $names = implode(', ', array_map(fn ($f) => $labels[$f] ?? $f, $missing));
                 return back()->withInput()->with('error',
-                    '학원 계정을 만들려면 아이디·이름·휴대폰이 필요합니다.');
+                    "학원 계정을 만들려면 다음 항목이 필요합니다 — {$names}. "
+                    . "계정을 나중에 만들려면 '계정 함께 만들기'를 꺼주세요.");
             }
             // login_id 중복 체크
             $exists = DB::table('users')->where('login_id', strtolower($data['user_login_id']))->exists();
