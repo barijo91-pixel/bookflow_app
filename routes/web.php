@@ -206,6 +206,9 @@ Route::middleware('auth')->group(function () {
         Route::post('classes/{id}/students/import/{jobId}/run',
             [\App\Http\Controllers\Public\StudentImportController::class, 'run'])->name('classes.students.import.run');
 
+        // 교재 조회 (영업자·총판) — 학원 없이도 판매 가능한 교재를 둘러본다
+        Route::get('books', [\App\Http\Controllers\Public\BookCatalogController::class, 'index'])->name('books.index');
+
         // 영업자 학원 가입 링크 (학원에 보내는 초대 URL)
         Route::get('invite',            [\App\Http\Controllers\Public\AgentInviteController::class, 'show'])->name('invite.show');
         Route::post('invite/regenerate',[\App\Http\Controllers\Public\AgentInviteController::class, 'regenerate'])->name('invite.regenerate');

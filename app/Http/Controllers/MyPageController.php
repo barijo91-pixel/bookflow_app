@@ -1532,8 +1532,9 @@ class MyPageController extends Controller
                 ->get(['v.id', 'v.name', 'v.trade_type']);
 
             if ($myVendors->isEmpty()) {
-                return redirect()->route('my.vendors.index')
-                    ->with('info', '담당 학원이 없어 주문할 수 없습니다. 학원을 먼저 등록해주세요.');
+                // 교재를 보려던 것일 수 있으니 교재 조회로 안내한다 (거기선 학원 없이도 볼 수 있음)
+                return redirect()->route('my.books.index')
+                    ->with('info', '담당 학원이 없어 대행 주문은 할 수 없습니다. 판매 가능한 교재는 여기서 확인하세요.');
             }
 
             $requested = (int) $request->query('vendor_id');
