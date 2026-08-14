@@ -276,7 +276,8 @@ class UserController extends Controller
                 ->where('status_code', 'active')
                 ->whereNull('deleted_at')
                 ->orderBy('name')
-                ->get(['id', 'name', 'login_id']);
+                // business_name 은 셀렉트 라벨(상호명(이름))에 쓰인다 — 빠지면 뷰에서 500
+                ->get(['id', 'name', 'login_id', 'business_name']);
         }
 
         // 최근 주문 (역할별)
