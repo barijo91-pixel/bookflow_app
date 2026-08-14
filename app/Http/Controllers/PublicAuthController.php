@@ -104,15 +104,9 @@ class PublicAuthController extends Controller
             return $this->redirectAfterLogin(Auth::user());
         }
         // 공개 가입은 영업자만 (학원은 영업자 대행 등록, 총판은 관리자 등록).
-        // 총판이 지역별로 여러 곳이라 영업자는 가입 때 소속 총판을 직접 고른다.
-        // (안 고르면 관리자가 나중에 배정)
-        $distributors = User::where('role_code', 'distributor')
-            ->where('status_code', 'active')
-            ->whereNull('deleted_at')
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        return view('public.auth.register', compact('distributors'));
+        // 소속 총판은 가입 화면에서 고르지 않는다 — 총판이 여러 곳이어도
+        // 관리자가 /admin/users/{id} 에서 배정한다.
+        return view('public.auth.register');
     }
 
     public function register(Request $request)
@@ -127,7 +121,6 @@ class PublicAuthController extends Controller
             // 학원 계정은 담당 영업자가 학원 등록 시 함께 생성하고(AgentVendorController@store),
             // 총판은 관리자가 직접 등록한다.
             'role_code'=> ['required', Rule::in(['agent'])],
-            'parent_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'agree_terms'    => ['accepted'],
         ], [
             'login_id.min'      => '아이디는 6자 이상이어야 합니다.',
@@ -149,21 +142,8 @@ class PublicAuthController extends Controller
             'status_code' => 'pending',
         ]);
 
-        // 영업자가 총판 선택해서 가입한 경우 user_relations 등록
-        if ($data['role_code'] === 'agent' && ! empty($data['parent_user_id'])) {
-            $parent = User::find($data['parent_user_id']);
-            if ($parent && $parent->role_code === 'distributor') {
-                DB::table('user_relations')->insert([
-                    'parent_user_id' => $parent->id,
-                    'child_user_id'  => $user->id,
-                    'relation_type'  => 'distributor_agent',
-                    'status'         => 'active',
-                    'started_at'     => now()->toDateString(),
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
-                ]);
-            }
-        }
+        // 소속 총판은 여기서 정하지 않는다. 가입 요청에 parent_user_id 가 실려와도 무시.
+        // 관리자가 /admin/users/{id} > 소속 총판 지정 에서 배정한다.
 
         AuditLog::log('users', $user->id, 'self_register', null, [
             'login_id' => $user->login_id, 'role_code' => $user->role_code,

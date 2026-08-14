@@ -24,21 +24,9 @@
         <form method="POST" action="{{ route('public.register.attempt') }}" autocomplete="on">
             @csrf
 
-            {{-- 가입은 영업자만. 학원 계정은 담당 영업자가 학원 등록 시 함께 만든다. --}}
+            {{-- 가입은 영업자만. 학원 계정은 담당 영업자가 학원 등록 시 함께 만든다.
+                 소속 총판은 가입자가 고르지 않는다 — 총판이 여러 곳이어도 관리자가 배정한다. --}}
             <input type="hidden" name="role_code" value="agent">
-
-            @if($distributors->isNotEmpty())
-                <div class="mb-3">
-                    <label class="form-label small text-muted">소속 총판</label>
-                    <select name="parent_user_id" class="form-select">
-                        <option value="">선택 안 함 (관리자가 배정)</option>
-                        @foreach($distributors as $d)
-                            <option value="{{ $d->id }}" @selected((string) old('parent_user_id') === (string) $d->id)>{{ $d->name }}</option>
-                        @endforeach
-                    </select>
-                    <small class="text-muted">거래할 총판을 고르면 승인이 빨라집니다. 모르면 비워두세요.</small>
-                </div>
-            @endif
 
             <div class="row g-3">
                 <div class="col-md-6">
