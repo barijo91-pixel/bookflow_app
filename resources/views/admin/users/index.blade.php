@@ -88,7 +88,13 @@
                         <td>{{ $u->id }}</td>
                         <td>
                             <a href="{{ route('admin.users.show', $u) }}" class="link-name">
-                                {{ $u->name }} <i class="bi bi-chevron-right small"></i>
+                                {{-- 사업자명이 있으면 사업자명(이름) — 거래 상대를 상호로 먼저 인식한다 --}}
+                                @if(filled($u->business_name))
+                                    {{ $u->business_name }}({{ $u->name }})
+                                @else
+                                    {{ $u->name }}
+                                @endif
+                                <i class="bi bi-chevron-right small"></i>
                             </a>
                             @if($u->isSuperAdmin())<span class="badge bg-danger ms-1">SUPER</span>@endif
                             @if($isSelf)<span class="badge bg-primary ms-1">나</span>@endif
