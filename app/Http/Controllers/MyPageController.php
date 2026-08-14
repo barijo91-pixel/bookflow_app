@@ -1511,21 +1511,41 @@ class MyPageController extends Controller
     public function orderNew(Request $request)
     {
         $user = Auth::user();
-        if ($user->role_code !== 'academy') {
-            // 주문 생성은 학원만. 영업자/총판은 주문 목록으로, 그 외는 대시보드로 안내
-            if (in_array($user->role_code, ['agent', 'distributor'])) {
-                return redirect()->route('my.orders.index')
-                    ->with('info', '도서 주문은 학원 계정에서 올립니다. 영업자/총판은 올라온 주문을 확인·처리하세요.');
-            }
+
+        // 영업자는 담당 학원을 골라 대행 주문할 수 있다 (학원등록·학급·학생과 같은 대행 흐름).
+        $actingAsAgent = $user->role_code === 'agent';
+        $myVendors = collect();
+
+        if (! $actingAsAgent && $user->role_code !== 'academy') {
             return redirect()->route('mypage')
-                ->with('info', '도서 주문은 학원 계정에서만 가능합니다.');
+                ->with('info', '도서 주문은 학원 또는 담당 영업자만 올릴 수 있습니다.');
         }
 
-        // 1. 학원의 vendor 찾기 (첫 번째 매핑)
-        $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
+        if ($actingAsAgent) {
+            // 1. 담당 학원 목록 → 선택된 학원 (없으면 첫 번째)
+            $myVendors = DB::table('agent_vendor_discounts as avd')
+                ->join('vendors as v', 'v.id', '=', 'avd.vendor_id')
+                ->where('avd.agent_user_id', $user->id)
+                ->where('avd.is_active', true)
+                ->whereNull('v.deleted_at')
+                ->orderBy('v.name')
+                ->get(['v.id', 'v.name', 'v.trade_type']);
+
+            if ($myVendors->isEmpty()) {
+                return redirect()->route('my.vendors.index')
+                    ->with('info', '담당 학원이 없어 주문할 수 없습니다. 학원을 먼저 등록해주세요.');
+            }
+
+            $requested = (int) $request->query('vendor_id');
+            $vendorId  = $myVendors->firstWhere('id', $requested)->id ?? $myVendors->first()->id;
+        } else {
+            // 1. 학원의 vendor 찾기 (첫 번째 매핑)
+            $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
+        }
         $vendor = $vendorId ? DB::table('vendors')->find($vendorId) : null;
 
         // 2. 영업자 매핑 (이 vendor에 매핑된 active agent들, 첫 번째 자동 선택)
+        //    대행 주문이면 담당 영업자는 본인으로 고정한다.
         $agents = collect();
         $selectedAgent = null;
         if ($vendor) {
@@ -1533,9 +1553,12 @@ class MyPageController extends Controller
                 ->join('users as u', 'u.id', '=', 'avd.agent_user_id')
                 ->where('avd.vendor_id', $vendorId)
                 ->where('avd.is_active', true)
+                ->when($actingAsAgent, fn ($q) => $q->where('avd.agent_user_id', $user->id))
                 ->select('u.id', 'u.name', 'u.login_id', 'avd.discount_rate as general_rate')
                 ->get();
-            $selectedAgentId = $request->query('agent_id', $agents->first()->id ?? null);
+            $selectedAgentId = $actingAsAgent
+                ? ($agents->first()->id ?? null)
+                : $request->query('agent_id', $agents->first()->id ?? null);
             $selectedAgent = $agents->firstWhere('id', $selectedAgentId);
         }
 
@@ -1677,6 +1700,8 @@ class MyPageController extends Controller
             'showGradeRow'   => $showGradeRow,
             'showSemesterRow'=> $showSemesterRow,
             'classes'        => $classes,
+            'actingAsAgent'  => $actingAsAgent,   // 영업자 대행 주문 여부
+            'myVendors'      => $myVendors,       // 대행 시 학원 선택 목록
         ]);
     }
 
@@ -1868,11 +1893,13 @@ class MyPageController extends Controller
     public function storeOrder(Request $request, \App\Services\NotificationService $notify)
     {
         $user = Auth::user();
-        if ($user->role_code !== 'academy') abort(403);
+        // 학원 본인 주문 + 영업자 대행 주문
+        if (! in_array($user->role_code, ['academy', 'agent'], true)) abort(403);
 
         $data = $request->validate([
             'cart_key' => ['required', 'string'],
             'agent_id' => ['required', 'integer'],
+            'vendor_id'=> ['nullable', 'integer'],   // 영업자 대행 주문에서 대상 학원
             'class_id' => ['nullable', 'integer'],
             'student_ids' => ['nullable', 'array'],
             'student_ids.*' => ['integer'],
@@ -1903,9 +1930,23 @@ class MyPageController extends Controller
             return back()->with('error', '장바구니가 비어있습니다. 수량을 1 이상으로 입력하거나 도서를 담아주세요.');
         }
 
-        $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
-        if (! $vendorId) {
-            return back()->with('error', '학원 매핑이 없습니다.');
+        if ($user->role_code === 'agent') {
+            // 대행 주문 — 본인이 담당(active)하는 학원만 허용
+            $vendorId = DB::table('agent_vendor_discounts')
+                ->where('agent_user_id', $user->id)
+                ->where('vendor_id', (int) ($data['vendor_id'] ?? 0))
+                ->where('is_active', true)
+                ->value('vendor_id');
+            if (! $vendorId) {
+                return back()->with('error', '담당 학원이 아니거나 학원이 선택되지 않았습니다.');
+            }
+            // 담당 영업자는 본인으로 고정 (남의 이름으로 주문 못 함)
+            $data['agent_id'] = $user->id;
+        } else {
+            $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
+            if (! $vendorId) {
+                return back()->with('error', '학원 매핑이 없습니다.');
+            }
         }
 
         // 학급(선택) 검증 — 본인 학원의 학급만 허용
@@ -2019,6 +2060,7 @@ class MyPageController extends Controller
                 'ship_to_type'        => $shipToType,
                 'agent_user_id'       => $agentRow->agent_user_id,
                 'distributor_user_id' => $distId,
+                'created_by_user_id'  => $user->id,   // 학원 본인 / 영업자 대행 구분용
                 'subtotal_amount'     => $subtotal,
                 'shipping_fee'        => 0,
                 'total_amount'        => $subtotal,

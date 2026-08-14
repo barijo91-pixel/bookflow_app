@@ -87,6 +87,9 @@
                     <i class="bi bi-receipt"></i> 주문 확인
                     @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
+                <a href="{{ route('my.order_new') }}" class="nav-item {{ $is('my.order_new') }}">
+                    <i class="bi bi-bag-plus"></i> 도서 주문(대행)
+                </a>
                 <a href="{{ route('my.vendors.index') }}" class="nav-item {{ $is('my.vendors.index') }}">
                     <i class="bi bi-building"></i> 거래처(학원)
                 </a>

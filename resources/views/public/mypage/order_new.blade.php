@@ -5,7 +5,10 @@
 <div class="mb-3">
     <h1 class="h4 navy mb-1"><i class="bi bi-bag-plus"></i> 도서 주문하기</h1>
     <p class="text-muted small mb-0">
-        @if($vendor)
+        @if($vendor && $actingAsAgent)
+            <span class="badge bg-warning text-dark">대행 주문</span>
+            <strong>{{ $vendor->name }}</strong> 학원 이름으로 주문합니다. 학원을 확인하고 도서를 담아주세요.
+        @elseif($vendor)
             <strong>{{ $vendor->name }}</strong> · 영업자 선택 후 도서를 담아 주문하세요.
         @else
             <span class="text-danger">학원 매핑이 없습니다. 관리자에게 문의해주세요.</span>
@@ -53,17 +56,31 @@
 <div class="card section-card mb-3 filter-card">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('my.order_new') }}" class="row g-2 align-items-end">
-            {{-- 영업자 --}}
-            <div class="col-md-3">
-                <label class="form-label small text-muted mb-1">영업자 (담당)</label>
-                <select name="agent_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                    @foreach($agents as $a)
-                        <option value="{{ $a->id }}" @selected($selectedAgent && $a->id == $selectedAgent->id)>
-                            {{ $a->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+            @if($actingAsAgent)
+                {{-- 대행 주문 — 영업자는 본인 고정, 대신 대상 학원을 고른다 --}}
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">학원 (대행 대상)</label>
+                    <select name="vendor_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                        @foreach($myVendors as $v)
+                            <option value="{{ $v->id }}" @selected($vendor && $v->id == $vendor->id)>
+                                {{ $v->name }}{{ $v->trade_type === 'wholesale' ? ' (도매)' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @else
+                {{-- 영업자 --}}
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">영업자 (담당)</label>
+                    <select name="agent_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                        @foreach($agents as $a)
+                            <option value="{{ $a->id }}" @selected($selectedAgent && $a->id == $selectedAgent->id)>
+                                {{ $a->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
             {{-- 출판사 --}}
             <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">출판사</label>
@@ -434,6 +451,10 @@
                             @csrf
                             <input type="hidden" name="cart_key" value="{{ $cartKey }}">
                             <input type="hidden" name="agent_id" value="{{ $selectedAgent->id }}">
+                            @if($actingAsAgent)
+                                {{-- 대행 주문 대상 학원 (서버에서 담당 여부 재검증) --}}
+                                <input type="hidden" name="vendor_id" value="{{ $vendor->id }}">
+                            @endif
                             @if($classes->isNotEmpty())
                                 <div class="mb-2 p-2 rounded" style="background:#eaf1f8; border:1px solid #1f3a5f;">
                                     <label class="form-label small fw-bold navy mb-1" for="orderClassSelect">
