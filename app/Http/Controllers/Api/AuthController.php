@@ -110,8 +110,9 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:8', 'max:50', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
             'name'     => ['required', 'string', 'max:100'],
             'phone'    => ['required', 'string'],
-            'role_code'=> ['required', Rule::in(['distributor','agent','academy'])],
-            'parent_user_id' => ['nullable', 'integer', 'exists:users,id'],
+            // 웹 /register 와 동일 정책 — 공개 가입은 영업자만.
+            // 학원은 영업자 대행 등록(또는 초대 링크), 총판은 관리자가 등록한다.
+            'role_code'=> ['required', Rule::in(['agent'])],
             'verification_token' => ['required', 'string'],
         ]);
         $phone = preg_replace('/[^0-9]/', '', $data['phone']);
@@ -140,21 +141,9 @@ class AuthController extends Controller
             'status_code' => 'pending', // 가입 시 대기 (관리자/총판 승인 후 active)
         ]);
 
-        // 영업자가 총판 선택해서 가입한 경우 user_relations 등록 (대기 상태)
-        if (! empty($data['parent_user_id']) && $data['role_code'] === 'agent') {
-            $parent = User::find($data['parent_user_id']);
-            if ($parent && $parent->role_code === 'distributor') {
-                DB::table('user_relations')->insert([
-                    'parent_user_id' => $parent->id,
-                    'child_user_id'  => $user->id,
-                    'relation_type'  => 'distributor_agent',
-                    'status'         => 'active',
-                    'started_at'     => now()->toDateString(),
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
-                ]);
-            }
-        }
+        // 소속 총판은 가입 시 정하지 않는다 (웹 /register 와 동일 정책).
+        // 영업자 1명 = 총판 1곳이며, 관리자가 /admin/users/{id} 에서 배정한다.
+        // 요청에 parent_user_id 가 실려와도 무시한다.
 
         return response()->json([
             'ok' => true,
