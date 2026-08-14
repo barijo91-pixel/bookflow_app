@@ -110,15 +110,26 @@ class BookCatalogController extends Controller
 
         $books = $query->orderBy('p.name')->orderBy('b.title')->paginate(60)->withQueryString();
 
+        // 필터 옵션도 "이 총판이 취급하는 교재" 범위로 만든다.
+        // 전체 기준으로 만들면 고를 수는 있는데 결과가 0건인 출판사·과목이 목록에 남는다.
+        $scoped = DB::table('books as b')
+            ->whereNull('b.deleted_at')
+            ->where('b.status_code', 'selling')
+            ->when($distributorId, fn ($q) => $q->whereIn('b.id', function ($sq) use ($distributorId) {
+                $sq->select('book_id')->from('book_stocks')->where('distributor_user_id', $distributorId);
+            }), fn ($q) => $q->whereRaw('1 = 0'));
+
+        $usedPublishers = (clone $scoped)->whereNotNull('b.publisher_id')->distinct()->pluck('b.publisher_id');
+        $usedSchools    = (clone $scoped)->whereNotNull('b.school_code')->distinct()->pluck('b.school_code');
+        $usedSubjects   = (clone $scoped)->whereNotNull('b.subject_code')->distinct()->pluck('b.subject_code');
+
         $filterOptions = [
-            'school'    => DB::table('codes')->where('group_code', 'school')->orderBy('sort_order')->get(['code', 'name']),
-            'subject'   => DB::table('codes')->where('group_code', 'subject')->orderBy('sort_order')->get(['code', 'name']),
-            'publisher' => DB::table('publishers as p')
-                ->whereIn('p.id', function ($sq) {
-                    $sq->select('publisher_id')->from('books')
-                       ->whereNull('deleted_at')->where('status_code', 'selling')->whereNotNull('publisher_id');
-                })
-                ->orderBy('p.name')->get(['p.id', 'p.name']),
+            'school'    => DB::table('codes')->where('group_code', 'school')
+                ->whereIn('code', $usedSchools)->orderBy('sort_order')->get(['code', 'name']),
+            'subject'   => DB::table('codes')->where('group_code', 'subject')
+                ->whereIn('code', $usedSubjects)->orderBy('sort_order')->get(['code', 'name']),
+            'publisher' => DB::table('publishers')
+                ->whereIn('id', $usedPublishers)->orderBy('name')->get(['id', 'name']),
         ];
 
         return view('public.mypage.books', [
