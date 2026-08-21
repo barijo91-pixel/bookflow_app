@@ -97,6 +97,9 @@ class ImpersonateController extends Controller
         Auth::login($admin);
         $request->session()->regenerate();
         $request->session()->forget(self::SESSION_KEY);
+        // 대행 중에는 관리자가 아니라 활동시간이 갱신되지 않는다.
+        // 복귀 직후 유휴 만료로 튕기지 않도록 여기서 갱신한다.
+        $request->session()->put('admin_last_activity', now()->getTimestamp());
 
         return redirect()->route('admin.users.index')
             ->with('success', '관리자 계정으로 복귀했습니다.');

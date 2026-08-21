@@ -15,12 +15,20 @@ use Illuminate\Support\Facades\DB;
 class CleanDemoData extends Command
 {
     protected $signature = 'booksys:clean-demo
-                            {--confirm : 실제 삭제 실행 (이 옵션 없으면 dry-run)}';
+                            {--confirm : 실제 삭제 실행 (이 옵션 없으면 dry-run)}
+        {--production : 운영 환경에서 실행할 때 반드시 함께 지정}';
 
     protected $description = '시드된 데모 사용자/주문/도서를 정리합니다 (운영 진입 전 사용)';
 
     public function handle(): int
     {
+        // 운영(production) 환경에서는 --production 을 함께 요구한다.
+        // 과거 운영 데이터를 대량 삭제해 기록이 사라진 사고가 있었다.
+        if (app()->environment('production') && ! $this->option('production')) {
+            $this->error('운영(production) 환경입니다. 정말 실행하려면 --production 을 함께 붙이세요.');
+            return self::FAILURE;
+        }
+
         $dryRun = ! $this->option('confirm');
 
         $this->info('=== BookSys 데모 데이터 정리 ===');

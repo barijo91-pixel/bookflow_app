@@ -508,6 +508,39 @@ class MyPageController extends Controller
     }
 
     /** 주문 수정 화면 — 도서 추가용 검색 (제목/ISBN, 판매중만) */
+    /**
+     * 지금 로그인한 사용자가 속한 총판 id.
+     * 학원 → 담당 영업자 → 총판, 영업자 → 소속 총판, 총판 → 본인.
+     * 취급 교재 범위를 판정하는 기준이 되므로 한 곳에서만 계산한다.
+     */
+    private function currentDistributorId(): ?int
+    {
+        $user = Auth::user();
+        if (! $user) return null;
+
+        if ($user->role_code === 'distributor') return (int) $user->id;
+
+        $agentId = null;
+        if ($user->role_code === 'agent') {
+            $agentId = $user->id;
+        } elseif ($user->role_code === 'academy') {
+            $vendorId = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
+            if ($vendorId) {
+                $agentId = DB::table('agent_vendor_discounts')
+                    ->where('vendor_id', $vendorId)->where('is_active', true)
+                    ->value('agent_user_id');
+            }
+        }
+        if (! $agentId) return null;
+
+        $id = DB::table('user_relations')
+            ->where('child_user_id', $agentId)
+            ->where('relation_type', 'distributor_agent')
+            ->where('status', 'active')
+            ->value('parent_user_id');
+
+        return $id ? (int) $id : null;
+    }
     public function orderBookSearch(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
@@ -515,9 +548,25 @@ class MyPageController extends Controller
         if (mb_strlen($q) < 1 && ! $publisherId) {
             return response()->json([]);
         }
+
+        // 주문에 담을 교재이므로 소속 총판이 취급하는 것만.
+        // (목록·주문 화면은 총판 범위로 막았는데 이 검색만 열려 있으면 우회가 된다)
+        $distributorId = $this->currentDistributorId();
+
         $books = DB::table('books')
             ->whereNull('deleted_at')
             ->where('status_code', 'selling');
+
+        if (Auth::user()->role_code !== 'admin') {
+            if ($distributorId) {
+                $books->whereIn('id', function ($sq) use ($distributorId) {
+                    $sq->select('book_id')->from('book_stocks')
+                       ->where('distributor_user_id', $distributorId);
+                });
+            } else {
+                $books->whereRaw('1 = 0');
+            }
+        }
         if ($publisherId) {
             $books->where('publisher_id', $publisherId);
         }

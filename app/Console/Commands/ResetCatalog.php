@@ -28,12 +28,20 @@ class ResetCatalog extends Command
 {
     protected $signature = 'booksys:reset-catalog
                             {--keep-isbn=* : 남길 도서 ISBN (여러 개 가능). 미지정 시 최신 판매도서 3건 유지}
-                            {--confirm : 실제 삭제 실행 (미지정 시 dry-run)}';
+                            {--confirm : 실제 삭제 실행 (미지정 시 dry-run)}
+        {--production : 운영 환경에서 실행할 때 반드시 함께 지정}';
 
     protected $description = 'PG 심사용 도서만 남기고 나머지 도서 + 모든 거래 데이터를 삭제 (새 엑셀 업로드 전 초기화)';
 
     public function handle(): int
     {
+        // 운영(production) 환경에서는 --production 을 함께 요구한다.
+        // 과거 운영 데이터를 대량 삭제해 기록이 사라진 사고가 있었다.
+        if (app()->environment('production') && ! $this->option('production')) {
+            $this->error('운영(production) 환경입니다. 정말 실행하려면 --production 을 함께 붙이세요.');
+            return self::FAILURE;
+        }
+
         $dryRun = ! $this->option('confirm');
 
         $this->info('=== BookSys 도서 카탈로그 초기화 ===');

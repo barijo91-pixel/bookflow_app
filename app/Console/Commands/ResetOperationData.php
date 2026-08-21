@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
  */
 class ResetOperationData extends Command
 {
-    protected $signature = 'booksys:reset-operations {--confirm : 실제 삭제 실행 (미지정 시 dry-run)}';
+    protected $signature = 'booksys:reset-operations {--confirm : 실제 삭제 실행 (미지정 시 dry-run)}{--production : 운영 환경에서 실행할 때 반드시 함께 지정}';
     protected $description = '오픈 전 거래 데이터 초기화 (회원·도서·재고·기본정보는 유지)';
 
     /** 삭제 순서 — 자식 → 부모 (FK 제약 회피) */
@@ -54,6 +54,13 @@ class ResetOperationData extends Command
 
     public function handle(): int
     {
+        // 운영(production) 환경에서는 --production 을 함께 요구한다.
+        // 과거 운영 데이터를 대량 삭제해 기록이 사라진 사고가 있었다.
+        if (app()->environment('production') && ! $this->option('production')) {
+            $this->error('운영(production) 환경입니다. 정말 실행하려면 --production 을 함께 붙이세요.');
+            return self::FAILURE;
+        }
+
         $dryRun = ! $this->option('confirm');
 
         $this->info('=== BookSys 운영 데이터 초기화 ===');
