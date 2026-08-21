@@ -149,41 +149,58 @@
                 </table>
             </div>
             <div class="card-footer">
-                <button type="button" class="small mb-2 navy fw-bold py-1 px-2 rounded d-flex align-items-center justify-content-between border-0 w-100"
-                        style="background:#d4e0ee; border-left:3px solid #1f3a5f !important; cursor:pointer;"
-                        onclick="toggleStudentForm()">
-                    <span><i class="bi bi-person-plus"></i> 학생 등록</span>
-                    <i class="bi bi-chevron-down" id="studentFormChevron"></i>
+                <button type="button" class="btn btn-primary btn-sm"
+                        data-bs-toggle="modal" data-bs-target="#studentBulkModal">
+                    <i class="bi bi-person-plus"></i> 학생 등록
                 </button>
-                <form method="POST" action="{{ route('my.classes.students.attach', $class->id) }}" class="row g-2" id="studentAddForm" style="display:none;">
-                    @csrf
-                    <div class="col-md-3">
-                        <input type="text" name="student_name" class="form-control form-control-sm" placeholder="학생 이름" required>
-                    </div>
-                    <div class="col-md-2">
-                        <select name="grade_code" class="form-select form-select-sm">
-                            <option value="">학년</option>
-                            @foreach($grades as $g)
-                                <option value="{{ $g->code }}">{{ $g->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" name="parent_name" class="form-control form-control-sm" placeholder="학부모 이름" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="tel" name="parent_phone" class="form-control form-control-sm" placeholder="학부모 휴대폰" required>
-                    </div>
-                    <div class="col-md-5">
-                        <input type="text" name="parent_address" class="form-control form-control-sm" placeholder="학부모 주소 (소매 배송지 — 선택)">
-                    </div>
-                    <div class="col-md-4">
-                        <input type="text" name="parent_address_detail" class="form-control form-control-sm" placeholder="상세주소">
-                    </div>
-                    <div class="col-md-3 d-grid">
-                        <button class="btn btn-sm btn-navy"><i class="bi bi-plus-lg"></i> 학생 추가</button>
-                    </div>
-                </form>
+                <span class="small text-muted ms-2">여러 명을 한 번에 등록할 수 있습니다.</span>
+            </div>
+        </div>
+
+        {{-- 학생 여러 명 등록 모달 — 학급 목록의 등록 모달과 같은 방식 --}}
+        <div class="modal fade" id="studentBulkModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('my.classes.students.attach_bulk', $class->id) }}">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title navy">
+                                <i class="bi bi-person-plus"></i> 학생 등록
+                                <small class="text-muted">— {{ $class->name }}</small>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <div class="table-responsive" style="max-height:380px; overflow-y:auto;">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width:32px;"></th>
+                                            <th style="width:14%;">학생 이름</th>
+                                            <th style="width:14%;">학부모 이름</th>
+                                            <th style="width:17%;">학부모 연락처</th>
+                                            <th>주소</th>
+                                            <th style="width:36px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bulkStudentRows"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between">
+                            <div class="small text-muted">
+                                <strong>학부모 이름·연락처</strong> 필수 (결제 요청 발송) · 빈 줄은 저장 안 됨
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-navy" id="bulkAddRow">
+                                    <i class="bi bi-plus-lg"></i> 줄 추가
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
+                                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 등록</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -327,15 +344,7 @@ document.addEventListener('click', (e) => {
     bootstrap.Modal.getOrCreateInstance(document.getElementById('studentEditModal')).show();
 });
 
-// 학생 등록 폼 접기/펼치기 (기본 접힘)
-function toggleStudentForm() {
-    var b = document.getElementById('studentAddForm');
-    var c = document.getElementById('studentFormChevron');
-    if (!b) return;
-    var show = b.style.display === 'none';
-    b.style.display = show ? '' : 'none';
-    if (c) { c.classList.toggle('bi-chevron-down', !show); c.classList.toggle('bi-chevron-up', show); }
-}
+
 // 저장 검증 오류가 있으면 자동으로 펼침
 @if($errors->any())
 document.addEventListener('DOMContentLoaded', function(){
@@ -398,6 +407,49 @@ document.addEventListener('DOMContentLoaded', function(){
     let timer = null;
     input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(apply, 150); });
     if (pub) pub.addEventListener('change', apply);
+})();
+
+// 학생 여러 명 등록 모달 — 줄 추가/삭제, 엑셀처럼 이어서 입력
+(function () {
+    const tbody = document.getElementById('bulkStudentRows');
+    const addBtn = document.getElementById('bulkAddRow');
+    if (! tbody || ! addBtn) return;
+    let seq = 0;
+
+    function bulkRender() {
+        const i = seq++;
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td class="text-muted small text-center row-no"></td>' +
+            '<td><input type="text" name="students[' + i + '][student_name]" class="form-control form-control-sm" maxlength="80"></td>' +
+            '<td><input type="text" name="students[' + i + '][parent_name]" class="form-control form-control-sm" maxlength="80"></td>' +
+            '<td><input type="tel" name="students[' + i + '][parent_phone]" class="form-control form-control-sm" placeholder="01012345678" maxlength="20"></td>' +
+            '<td><input type="text" name="students[' + i + '][parent_address]" class="form-control form-control-sm" maxlength="255"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-secondary row-del" title="줄 삭제">&times;</button></td>';
+        tbody.appendChild(tr);
+        renumber();
+    }
+    function renumber() {
+        [...tbody.rows].forEach((r, idx) => {
+            const c = r.querySelector('.row-no');
+            if (c) c.textContent = idx + 1;
+        });
+    }
+    tbody.addEventListener('click', function (e) {
+        const btn = e.target.closest('.row-del');
+        if (! btn) return;
+        btn.closest('tr').remove();
+        if (tbody.rows.length === 0) bulkRender();
+        renumber();
+    });
+    tbody.addEventListener('input', function (e) {
+        const tr = e.target.closest('tr');
+        if (! tr || tr !== tbody.rows[tbody.rows.length - 1]) return;
+        if (e.target.value.trim() !== '') bulkRender();
+    });
+    addBtn.addEventListener('click', bulkRender);
+
+    for (let i = 0; i < 5; i++) bulkRender();
 })();
 </script>
 @endpush

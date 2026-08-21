@@ -192,6 +192,8 @@ Route::middleware('auth')->group(function () {
         Route::put('classes/{id}',            [\App\Http\Controllers\MyPageController::class, 'classesUpdate'])->name('classes.update');
         Route::delete('classes/{id}',         [\App\Http\Controllers\MyPageController::class, 'classesDestroy'])->name('classes.destroy');
         Route::post('classes/{id}/students',          [\App\Http\Controllers\MyPageController::class, 'classAttachStudent'])->name('classes.students.attach');
+        // 학생 여러 명 한 번에 추가 (모달)
+        Route::post('classes/{id}/students/bulk',     [\App\Http\Controllers\MyPageController::class, 'classAttachStudents'])->name('classes.students.attach_bulk');
         Route::put('classes/{id}/students/{sid}',     [\App\Http\Controllers\MyPageController::class, 'classUpdateStudent'])->name('classes.students.update');
         Route::delete('classes/{id}/students/{sid}',  [\App\Http\Controllers\MyPageController::class, 'classDetachStudent'])->name('classes.students.detach');
         Route::post('classes/{id}/books',             [\App\Http\Controllers\MyPageController::class, 'classAttachBook'])->name('classes.books.attach');

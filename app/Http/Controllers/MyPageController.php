@@ -2586,6 +2586,79 @@ class MyPageController extends Controller
         return back()->with('success', '학생이 추가되었습니다.');
     }
 
+    /**
+     * 기존 학급에 학생 여러 명을 한 번에 추가 (모달).
+     * 한 명씩 넣던 classAttachStudent 는 수정 폼에서 계속 쓰므로 그대로 둔다.
+     */
+    public function classAttachStudents(Request $request, $id)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
+        if (! $class) abort(404);
+
+        $data = $request->validate([
+            'students'                  => ['nullable', 'array'],
+            'students.*.student_name'   => ['nullable', 'string', 'max:80'],
+            'students.*.parent_name'    => ['nullable', 'string', 'max:80'],
+            'students.*.parent_phone'   => ['nullable', 'string', 'max:20'],
+            'students.*.parent_address' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $rows = collect($data['students'] ?? [])
+            ->filter(fn ($r) => filled($r['student_name'] ?? null))
+            ->values();
+
+        if ($rows->isEmpty()) {
+            return back()->with('error', '등록할 학생이 없습니다. 학생 이름을 입력해주세요.');
+        }
+
+        $missing = [];
+        foreach ($rows as $i => $r) {
+            if (blank($r['parent_name'] ?? null) || blank($r['parent_phone'] ?? null)) {
+                $missing[] = ($i + 1) . '번째(' . $r['student_name'] . ')';
+            }
+        }
+        if ($missing) {
+            return back()->with('error',
+                '학부모 이름과 연락처가 필요합니다 — ' . implode(', ', $missing)
+                . '. 학부모 결제 요청이 이 연락처로 나갑니다.');
+        }
+
+        $now = now();
+        DB::transaction(function () use ($rows, $id, $vendorId, $class, $now) {
+            foreach ($rows as $r) {
+                $phone = preg_replace('/[^0-9]/', '', (string) $r['parent_phone']);
+
+                $parentId = DB::table('parents')->where('phone', $phone)->whereNull('deleted_at')->value('id');
+                if (! $parentId) {
+                    $parentId = DB::table('parents')->insertGetId([
+                        'name'       => $r['parent_name'],
+                        'phone'      => $phone,
+                        'address'    => $r['parent_address'] ?? null,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                } elseif (filled($r['parent_address'] ?? null)) {
+                    DB::table('parents')->where('id', $parentId)->update([
+                        'address'    => $r['parent_address'],
+                        'updated_at' => $now,
+                    ]);
+                }
+
+                DB::table('students')->insert([
+                    'vendor_id'  => $vendorId,
+                    'class_id'   => $id,
+                    'parent_id'  => $parentId,
+                    'name'       => $r['student_name'],
+                    'grade_code' => $class->grade_code,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
+        });
+
+        return back()->with('success', "학생 {$rows->count()}명이 추가되었습니다.");
+    }
     /** 학생 제거 (soft delete) */
     public function classDetachStudent($id, $sid)
     {
