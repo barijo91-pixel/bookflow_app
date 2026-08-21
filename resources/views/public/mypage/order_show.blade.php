@@ -54,8 +54,11 @@
                     @endif
                     <dt class="col-4 text-muted">영업자</dt>
                     <dd class="col-8">{{ $agent->name ?? '-' }}</dd>
-                    <dt class="col-4 text-muted">총판</dt>
-                    <dd class="col-8">{{ $dist->name ?? '(미배정)' }}</dd>
+                    {{-- 총판은 학원에게 감춘다 — 학원은 영업자와 거래하고 총판은 내부 유통 단계 --}}
+                    @if($user->role_code !== 'academy')
+                        <dt class="col-4 text-muted">총판</dt>
+                        <dd class="col-8">{{ $dist->name ?? '(미배정)' }}</dd>
+                    @endif
                     <dt class="col-4 text-muted">수령처</dt>
                     <dd class="col-8">
                         @if(($order->ship_to_type ?? 'parent') === 'vendor')
@@ -194,7 +197,7 @@
                             <div class="alert alert-success small mb-2">
                                 <i class="bi bi-check-circle-fill"></i>
                                 @if($order->status_code === 'confirmed')
-                                    주문이 <strong>확정</strong>되어 총판({{ $dist->name ?? '총판' }})에 전달되었습니다.
+                                    주문이 <strong>확정</strong>되어 총판@if($user->role_code !== 'academy')({{ $dist->name ?? '총판' }})@endif에 전달되었습니다.
                                     기본 <strong>택배</strong>로 출고되며 영업자가 더 할 일은 없습니다.
                                 @else
                                     총판이 <strong>접수</strong>했습니다. 기본 <strong>택배</strong>로 출고됩니다.

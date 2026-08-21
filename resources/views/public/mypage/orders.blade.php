@@ -111,7 +111,8 @@
                     @if($user->role_code !== 'agent')
                         <th><x-sort-link field="agent" label="영업자" :sort="$sort" :dir="$dir" /></th>
                     @endif
-                    @if($user->role_code !== 'distributor')
+                    {{-- 총판 컬럼은 학원에게 감춘다 (학원은 영업자와 거래) --}}
+                    @if(! in_array($user->role_code, ['distributor', 'academy'], true))
                         <th><x-sort-link field="distributor" label="총판" :sort="$sort" :dir="$dir" /></th>
                     @endif
                     <th class="text-end"><x-sort-link field="amount" label="금액" :sort="$sort" :dir="$dir" /></th>
@@ -141,7 +142,7 @@
                         @if($user->role_code !== 'agent')
                             <td class="small text-muted">{{ $o->agent_name ?? '-' }}</td>
                         @endif
-                        @if($user->role_code !== 'distributor')
+                        @if(! in_array($user->role_code, ['distributor', 'academy'], true))
                             <td class="small text-muted">{{ $o->distributor_name ?? '-' }}</td>
                         @endif
                         <td class="text-end">{{ number_format($o->total_amount) }}원</td>
@@ -189,7 +190,7 @@
                 <div class="d-flex justify-content-between align-items-end">
                     <div class="small text-muted">
                         @if($user->role_code !== 'agent' && $o->agent_name){{ $o->agent_name }} · @endif
-                        @if($user->role_code !== 'distributor' && $o->distributor_name){{ $o->distributor_name }} · @endif
+                        @if(! in_array($user->role_code, ['distributor', 'academy'], true) && $o->distributor_name){{ $o->distributor_name }} · @endif
                         <span class="navy fw-bold">{{ number_format($o->total_amount) }}원</span>
                     </div>
                     <div class="text-muted" style="font-size:.72rem">
