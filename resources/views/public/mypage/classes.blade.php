@@ -80,38 +80,89 @@
     </div>
 </div>
 
-{{-- 학급 추가 모달 --}}
+{{-- 학급 추가 모달 — 학급 정보와 학생을 한 번에 등록 --}}
 <div class="modal fade" id="classCreateModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <form method="POST" action="{{ route('my.classes.store') }}">
+            <form method="POST" action="{{ route('my.classes.store_with_students') }}">
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title navy"><i class="bi bi-plus-lg"></i> 새 학급 추가</h5>
+                    <h5 class="modal-title navy"><i class="bi bi-plus-lg"></i> 새 학급 · 학생 등록</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label small text-muted">학급명 *</label>
-                        <input type="text" name="name" class="form-control" placeholder="예: 초3 영어반 A" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small text-muted">학년</label>
-                        <select name="grade_code" class="form-select">
-                            <option value="">선택 안 함</option>
-                            @foreach($grades as $g)
-                                <option value="{{ $g->code }}">{{ $g->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mt-3">
-                        <label class="form-label small text-muted">메모</label>
-                        <textarea name="memo" class="form-control" rows="2"></textarea>
+                    <div class="row g-3">
+                        {{-- 왼쪽: 학급 정보 --}}
+                        <div class="col-lg-4">
+                            <div class="card section-card h-100">
+                                <div class="card-header"><strong><i class="bi bi-mortarboard"></i> 학급 정보</strong></div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted">학급명 *</label>
+                                        <input type="text" name="name" class="form-control" value="{{ old('name') }}"
+                                               placeholder="예: 초3 영어반 A" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted">학년</label>
+                                        <select name="grade_code" class="form-select">
+                                            <option value="">선택 안 함</option>
+                                            @foreach($grades as $g)
+                                                <option value="{{ $g->code }}" @selected(old('grade_code') === $g->code)>{{ $g->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small text-muted">설명 / 메모</label>
+                                        <textarea name="memo" class="form-control" rows="3">{{ old('memo') }}</textarea>
+                                    </div>
+                                    <div class="alert alert-light border small text-muted mb-0">
+                                        <i class="bi bi-info-circle"></i>
+                                        학생 <strong id="studentCountLabel">0</strong>명 입력됨.
+                                        지금 안 넣어도 나중에 학급 상세에서 추가할 수 있습니다.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- 오른쪽: 학생 여러 명 --}}
+                        <div class="col-lg-8">
+                            <div class="card section-card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <strong><i class="bi bi-people"></i> 학생 등록</strong>
+                                    <button type="button" class="btn btn-sm btn-outline-navy" id="addStudentRow">
+                                        <i class="bi bi-plus-lg"></i> 줄 추가
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive" style="max-height:340px; overflow-y:auto;">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:36px;"></th>
+                                                    <th>학생 이름</th>
+                                                    <th>학부모 이름</th>
+                                                    <th>학부모 연락처</th>
+                                                    <th>주소</th>
+                                                    <th style="width:40px;"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="studentRows"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white small text-muted">
+                                    학생을 넣으려면 <strong>학부모 이름·연락처</strong>가 필요합니다 —
+                                    교재 결제 요청이 이 연락처로 나갑니다. 빈 줄은 저장되지 않습니다.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
-                    <button type="submit" class="btn btn-navy">학급 추가</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> 등록
+                    </button>
                 </div>
             </form>
         </div>
@@ -133,6 +184,63 @@
         const day = String(d.getDate()).padStart(2, '0');
         endEl.value = `${y}-${m}-${day}`;
     });
+})();
+
+// 학생 줄 추가/삭제 — 학급과 학생을 한 화면에서 등록
+(function () {
+    const tbody = document.getElementById('studentRows');
+    const addBtn = document.getElementById('addStudentRow');
+    const label = document.getElementById('studentCountLabel');
+    if (! tbody || ! addBtn) return;
+
+    let seq = 0;
+
+    function renderRow() {
+        const i = seq++;
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td class="text-muted small text-center row-no"></td>' +
+            '<td><input type="text" name="students[' + i + '][student_name]" class="form-control form-control-sm" maxlength="80"></td>' +
+            '<td><input type="text" name="students[' + i + '][parent_name]" class="form-control form-control-sm" maxlength="80"></td>' +
+            '<td><input type="tel" name="students[' + i + '][parent_phone]" class="form-control form-control-sm" placeholder="01012345678" maxlength="20"></td>' +
+            '<td><input type="text" name="students[' + i + '][parent_address]" class="form-control form-control-sm" maxlength="255"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-secondary row-del" title="줄 삭제">&times;</button></td>';
+        tbody.appendChild(tr);
+        renumber();
+    }
+
+    function renumber() {
+        [...tbody.rows].forEach((r, idx) => {
+            const c = r.querySelector('.row-no');
+            if (c) c.textContent = idx + 1;
+        });
+        countFilled();
+    }
+
+    function countFilled() {
+        const n = [...tbody.querySelectorAll('input[name$="[student_name]"]')]
+            .filter(i => i.value.trim() !== '').length;
+        if (label) label.textContent = n;
+    }
+
+    tbody.addEventListener('click', function (e) {
+        const btn = e.target.closest('.row-del');
+        if (! btn) return;
+        btn.closest('tr').remove();
+        if (tbody.rows.length === 0) renderRow();
+        renumber();
+    });
+    tbody.addEventListener('input', countFilled);
+    addBtn.addEventListener('click', renderRow);
+
+    // 마지막 줄에 입력이 들어오면 새 줄을 자동으로 하나 더 (엑셀처럼 이어서 입력)
+    tbody.addEventListener('input', function (e) {
+        const tr = e.target.closest('tr');
+        if (! tr || tr !== tbody.rows[tbody.rows.length - 1]) return;
+        if (e.target.value.trim() !== '') renderRow();
+    });
+
+    for (let i = 0; i < 5; i++) renderRow();   // 기본 5줄
 })();
 </script>
 @endpush

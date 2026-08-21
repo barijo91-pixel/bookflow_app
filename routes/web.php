@@ -186,6 +186,8 @@ Route::middleware('auth')->group(function () {
         // 학급/학생 (학원) — Phase B-8
         Route::get('classes',                 [\App\Http\Controllers\MyPageController::class, 'classesIndex'])->name('classes.index');
         Route::post('classes',                [\App\Http\Controllers\MyPageController::class, 'classesStore'])->name('classes.store');
+        // 학급 + 학생 여러 명 한 번에 등록 (모달)
+        Route::post('classes/with-students', [\App\Http\Controllers\MyPageController::class, 'classesStoreWithStudents'])->name('classes.store_with_students');
         Route::get('classes/{id}',            [\App\Http\Controllers\MyPageController::class, 'classesShow'])->name('classes.show');
         Route::put('classes/{id}',            [\App\Http\Controllers\MyPageController::class, 'classesUpdate'])->name('classes.update');
         Route::delete('classes/{id}',         [\App\Http\Controllers\MyPageController::class, 'classesDestroy'])->name('classes.destroy');

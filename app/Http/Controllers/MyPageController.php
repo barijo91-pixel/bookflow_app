@@ -2279,6 +2279,101 @@ class MyPageController extends Controller
         return redirect()->route('my.classes.show', $id)->with('success', '학급이 등록되었습니다.');
     }
 
+    /**
+     * 학급 + 학생 여러 명을 한 번에 등록.
+     * 기존에는 학급을 만들고 → 상세로 들어가 → 학생을 한 명씩 추가해야 했다.
+     * 학기 초에 반을 통째로 올리는 흐름이라 한 화면에서 끝내는 편이 맞다.
+     */
+    public function classesStoreWithStudents(Request $request)
+    {
+        [$user, $vendorId] = $this->academyVendor();
+
+        $data = $request->validate([
+            'name'        => ['required', 'string', 'max:100'],
+            'grade_code'  => ['nullable', 'string', 'max:30'],
+            'memo'        => ['nullable', 'string', 'max:1000'],
+            'students'                  => ['nullable', 'array'],
+            'students.*.student_name'   => ['nullable', 'string', 'max:80'],
+            'students.*.parent_name'    => ['nullable', 'string', 'max:80'],
+            'students.*.parent_phone'   => ['nullable', 'string', 'max:20'],
+            'students.*.parent_address' => ['nullable', 'string', 'max:255'],
+        ], [], ['name' => '학급명']);
+
+        // 이름이 있는 행만 실제 등록 대상 (빈 줄은 무시)
+        $rows = collect($data['students'] ?? [])
+            ->filter(fn ($r) => filled($r['student_name'] ?? null))
+            ->values();
+
+        // 학생을 넣는다면 학부모 이름·연락처는 필수 — 결제요청이 학부모에게 나가기 때문
+        $missing = [];
+        foreach ($rows as $i => $r) {
+            if (blank($r['parent_name'] ?? null) || blank($r['parent_phone'] ?? null)) {
+                $missing[] = ($i + 1) . '번째(' . $r['student_name'] . ')';
+            }
+        }
+        if ($missing) {
+            return back()->withInput()->with('error',
+                '학부모 이름과 연락처가 필요합니다 — ' . implode(', ', $missing)
+                . '. 학부모 결제 요청이 이 연락처로 나갑니다.');
+        }
+
+        $classId = null;
+        $now = now();
+
+        DB::transaction(function () use ($data, $rows, $vendorId, $now, &$classId) {
+            $classId = DB::table('academy_classes')->insertGetId([
+                'vendor_id'  => $vendorId,
+                'name'       => $data['name'],
+                'grade_code' => $data['grade_code'] ?? null,
+                'memo'       => $data['memo'] ?? null,
+                'status'     => 'active',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            foreach ($rows as $r) {
+                $phone = preg_replace('/[^0-9]/', '', (string) $r['parent_phone']);
+
+                // 학부모: 같은 번호면 재사용 (형제자매가 같은 학부모를 공유)
+                $parentId = DB::table('parents')->where('phone', $phone)->whereNull('deleted_at')->value('id');
+                if (! $parentId) {
+                    $parentId = DB::table('parents')->insertGetId([
+                        'name'       => $r['parent_name'],
+                        'phone'      => $phone,
+                        'address'    => $r['parent_address'] ?? null,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                } elseif (filled($r['parent_address'] ?? null)) {
+                    DB::table('parents')->where('id', $parentId)->update([
+                        'address'    => $r['parent_address'],
+                        'updated_at' => $now,
+                    ]);
+                }
+
+                DB::table('students')->insert([
+                    'vendor_id'  => $vendorId,
+                    'class_id'   => $classId,
+                    'parent_id'  => $parentId,
+                    'name'       => $r['student_name'],
+                    'grade_code' => $data['grade_code'] ?? null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
+        });
+
+        AuditLog::log('academy_classes', $classId, 'create_with_students', null, [
+            'name'          => $data['name'],
+            'student_count' => $rows->count(),
+        ]);
+
+        $msg = $rows->isEmpty()
+            ? "학급 「{$data['name']}」이(가) 등록되었습니다."
+            : "학급 「{$data['name']}」과 학생 {$rows->count()}명이 등록되었습니다.";
+
+        return redirect()->route('my.classes.show', $classId)->with('success', $msg);
+    }
     /** 학급 상세 */
     public function classesShow($id)
     {
