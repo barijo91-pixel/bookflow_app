@@ -5,7 +5,7 @@
 @section('content')
 <div class="mb-3">
     <h1 class="h4 navy mb-1"><i class="bi bi-people"></i> 학급&학생</h1>
-    <p class="text-muted small mb-0">담당 학원의 학급을 만들고, 학급별로 학생을 엑셀로 일괄 등록합니다.</p>
+    <p class="text-muted small mb-0">담당 학원의 학급을 만들고 학생을 등록합니다. 인원이 많으면 엑셀로도 올릴 수 있습니다.</p>
 </div>
 
 @if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif
@@ -56,9 +56,13 @@
                                             data-bs-toggle="collapse" data-bs-target="#classEdit{{ $c->id }}" title="학급 수정">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <a href="{{ route('my.classes.students.import.show', $c->id) }}"
-                                       class="btn btn-sm btn-primary">
+                                    <button type="button" class="btn btn-sm btn-primary"
+                                            data-bs-toggle="modal" data-bs-target="#bulkModal{{ $c->id }}">
                                         <i class="bi bi-people-fill"></i> 학생 등록
+                                    </button>
+                                    <a href="{{ route('my.classes.students.import.show', $c->id) }}"
+                                       class="btn btn-sm btn-outline-secondary" title="엑셀로 일괄 등록">
+                                        <i class="bi bi-file-earmark-spreadsheet"></i>
                                     </a>
                                 </div>
                             </div>
@@ -89,6 +93,53 @@
                                         <button class="btn btn-sm btn-primary w-100"><i class="bi bi-check-lg"></i> 저장</button>
                                     </div>
                                 </form>
+                            </div>
+
+                            {{-- 학생 여러 명 등록 모달 (학급마다 하나) --}}
+                            <div class="modal fade" id="bulkModal{{ $c->id }}" tabindex="-1">
+                                <div class="modal-dialog modal-xl">
+                                    <div class="modal-content">
+                                        <form method="POST" action="{{ route('my.agent.classes.students', $c->id) }}">
+                                            @csrf
+                                            <div class="modal-header">
+                                                <h5 class="modal-title navy">
+                                                    <i class="bi bi-person-plus"></i> 학생 등록
+                                                    <small class="text-muted">— {{ $v->name }} / {{ $c->name }}</small>
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-0">
+                                                <div class="table-responsive" style="max-height:380px; overflow-y:auto;">
+                                                    <table class="table table-sm align-middle mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th style="width:32px;"></th>
+                                                                <th style="width:14%;">학생 이름</th>
+                                                                <th style="width:14%;">학부모 이름</th>
+                                                                <th style="width:17%;">학부모 연락처</th>
+                                                                <th>주소</th>
+                                                                <th style="width:36px;"></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="bulk-rows"></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer d-flex justify-content-between">
+                                                <div class="small text-muted">
+                                                    <strong>학부모 이름·연락처</strong> 필수 (결제 요청 발송) · 빈 줄은 저장 안 됨
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-navy bulk-add">
+                                                        <i class="bi bi-plus-lg"></i> 줄 추가
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
+                                                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 등록</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -140,4 +191,56 @@
     여기서 만든 학급은 학원 계정 화면(학급/학생)에도 그대로 보입니다.
     학원과 학급 구성을 맞춘 뒤 진행하세요. 잘못 등록된 학생은 학원 측 학급 상세에서 개별 제거 가능합니다.
 </div>
+
+<script>
+// 학생 여러 명 등록 모달 — 학급마다 하나씩 있으므로 공통 초기화
+(function () {
+    function initBulk(modal) {
+        const tbody = modal.querySelector('.bulk-rows');
+        const addBtn = modal.querySelector('.bulk-add');
+        if (! tbody || tbody.dataset.ready) return;
+        tbody.dataset.ready = '1';
+        let seq = 0;
+
+        function render() {
+            const i = seq++;
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td class="text-muted small text-center row-no"></td>' +
+                '<td><input type="text" name="students[' + i + '][student_name]" class="form-control form-control-sm" maxlength="80"></td>' +
+                '<td><input type="text" name="students[' + i + '][parent_name]" class="form-control form-control-sm" maxlength="80"></td>' +
+                '<td><input type="tel" name="students[' + i + '][parent_phone]" class="form-control form-control-sm" placeholder="01012345678" maxlength="20"></td>' +
+                '<td><input type="text" name="students[' + i + '][parent_address]" class="form-control form-control-sm" maxlength="255"></td>' +
+                '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-secondary row-del" title="줄 삭제">&times;</button></td>';
+            tbody.appendChild(tr);
+            renumber();
+        }
+        function renumber() {
+            [...tbody.rows].forEach((r, idx) => {
+                const c = r.querySelector('.row-no');
+                if (c) c.textContent = idx + 1;
+            });
+        }
+        tbody.addEventListener('click', function (e) {
+            const btn = e.target.closest('.row-del');
+            if (! btn) return;
+            btn.closest('tr').remove();
+            if (tbody.rows.length === 0) render();
+            renumber();
+        });
+        tbody.addEventListener('input', function (e) {
+            const tr = e.target.closest('tr');
+            if (! tr || tr !== tbody.rows[tbody.rows.length - 1]) return;
+            if (e.target.value.trim() !== '') render();
+        });
+        if (addBtn) addBtn.addEventListener('click', render);
+        for (let i = 0; i < 5; i++) render();
+    }
+
+    // 모달이 열릴 때 준비 (학급이 많아도 필요한 것만 만든다)
+    document.querySelectorAll('.modal[id^="bulkModal"]').forEach(function (m) {
+        m.addEventListener('show.bs.modal', function () { initBulk(m); });
+    });
+})();
+</script>
 @endsection

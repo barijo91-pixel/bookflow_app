@@ -88,6 +88,83 @@ class AgentClassController extends Controller
             ->with('success', "학급 「{$data['name']}」이(가) 등록되었습니다. 이제 학생을 등록할 수 있습니다.");
     }
 
+    /**
+     * 담당 학원의 학급에 학생 여러 명을 한 번에 등록.
+     * 학원 계정 화면(MyPageController::classAttachStudents)과 같은 동작이지만
+     * 권한 기준이 달라(담당/산하 학원) 별도로 둔다.
+     */
+    public function attachStudents(Request $request, $classId)
+    {
+        [$user, $class] = $this->authorizeClass((int) $classId);
+
+        $data = $request->validate([
+            'students'                  => ['nullable', 'array'],
+            'students.*.student_name'   => ['nullable', 'string', 'max:80'],
+            'students.*.parent_name'    => ['nullable', 'string', 'max:80'],
+            'students.*.parent_phone'   => ['nullable', 'string', 'max:20'],
+            'students.*.parent_address' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $rows = collect($data['students'] ?? [])
+            ->filter(fn ($r) => filled($r['student_name'] ?? null))
+            ->values();
+
+        if ($rows->isEmpty()) {
+            return back()->with('error', '등록할 학생이 없습니다. 학생 이름을 입력해주세요.');
+        }
+
+        $missing = [];
+        foreach ($rows as $i => $r) {
+            if (blank($r['parent_name'] ?? null) || blank($r['parent_phone'] ?? null)) {
+                $missing[] = ($i + 1) . '번째(' . $r['student_name'] . ')';
+            }
+        }
+        if ($missing) {
+            return back()->with('error',
+                '학부모 이름과 연락처가 필요합니다 — ' . implode(', ', $missing)
+                . '. 학부모 결제 요청이 이 연락처로 나갑니다.');
+        }
+
+        $now = now();
+        DB::transaction(function () use ($rows, $class, $now) {
+            foreach ($rows as $r) {
+                $phone = preg_replace('/[^0-9]/', '', (string) $r['parent_phone']);
+
+                $parentId = DB::table('parents')->where('phone', $phone)->whereNull('deleted_at')->value('id');
+                if (! $parentId) {
+                    $parentId = DB::table('parents')->insertGetId([
+                        'name'       => $r['parent_name'],
+                        'phone'      => $phone,
+                        'address'    => $r['parent_address'] ?? null,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                } elseif (filled($r['parent_address'] ?? null)) {
+                    DB::table('parents')->where('id', $parentId)->update([
+                        'address'    => $r['parent_address'],
+                        'updated_at' => $now,
+                    ]);
+                }
+
+                DB::table('students')->insert([
+                    'vendor_id'  => $class->vendor_id,
+                    'class_id'   => $class->id,
+                    'parent_id'  => $parentId,
+                    'name'       => $r['student_name'],
+                    'grade_code' => $class->grade_code,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
+        });
+
+        AuditLog::log('academy_classes', (int) $class->id, $user->role_code . '_attach_students', null, [
+            'count' => $rows->count(),
+        ]);
+
+        return redirect()->route('my.agent.student.import')
+            ->with('success', "「{$class->name}」에 학생 {$rows->count()}명이 등록되었습니다.");
+    }
     /** 학급 수정 (이름·학년·메모) */
     public function update(Request $request, $classId)
     {

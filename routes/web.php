@@ -222,6 +222,8 @@ Route::middleware('auth')->group(function () {
             [\App\Http\Controllers\Public\AgentClassController::class, 'store'])->name('agent.classes.store');
         Route::put('agent-classes/{class}',
             [\App\Http\Controllers\Public\AgentClassController::class, 'update'])->name('agent.classes.update');
+        Route::post('agent-classes/{class}/students',
+            [\App\Http\Controllers\Public\AgentClassController::class, 'attachStudents'])->name('agent.classes.students');
 
         // 영업자 진입점 (학원·학급 선택)
         Route::get('student-import',
