@@ -93,7 +93,7 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         {{-- 왼쪽: 학급 정보 --}}
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <div class="card section-card h-100">
                                 <div class="card-header"><strong><i class="bi bi-mortarboard"></i> 학급 정보</strong></div>
                                 <div class="card-body">
@@ -125,7 +125,7 @@
                         </div>
 
                         {{-- 오른쪽: 학생 여러 명 --}}
-                        <div class="col-lg-8">
+                        <div class="col-lg-9">
                             <div class="card section-card h-100">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <strong><i class="bi bi-people"></i> 학생 등록</strong>
@@ -138,12 +138,12 @@
                                         <table class="table table-sm align-middle mb-0">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th style="width:36px;"></th>
-                                                    <th>학생 이름</th>
-                                                    <th>학부모 이름</th>
-                                                    <th>학부모 연락처</th>
+                                                    <th style="width:32px;"></th>
+                                                    <th style="width:14%;">학생 이름</th>
+                                                    <th style="width:14%;">학부모 이름</th>
+                                                    <th style="width:17%;">학부모 연락처</th>
                                                     <th>주소</th>
-                                                    <th style="width:40px;"></th>
+                                                    <th style="width:36px;"></th>
                                                 </tr>
                                             </thead>
                                             <tbody id="studentRows"></tbody>
