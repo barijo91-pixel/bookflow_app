@@ -114,10 +114,10 @@
                                                         <thead class="table-light">
                                                             <tr>
                                                                 <th style="width:32px;"></th>
-                                                                <th style="width:14%;">학생 이름</th>
-                                                                <th style="width:14%;">학부모 이름</th>
-                                                                <th style="width:17%;">학부모 연락처</th>
-                                                                <th>주소</th>
+                                                                <th style="width:14%;">학생 이름 *</th>
+                                                                <th style="width:14%;">학부모 이름 *</th>
+                                                                <th style="width:17%;">학부모 연락처 *</th>
+                                                                <th>주소 *</th>
                                                                 <th style="width:36px;"></th>
                                                             </tr>
                                                         </thead>
@@ -127,7 +127,7 @@
                                             </div>
                                             <div class="modal-footer d-flex justify-content-between">
                                                 <div class="small text-muted">
-                                                    <strong>학부모 이름·연락처</strong> 필수 (결제 요청 발송) · 빈 줄은 저장 안 됨
+                                                    <strong>4개 항목 모두 필수</strong> · 빈 줄은 저장 안 됨
                                                 </div>
                                                 <div class="d-flex gap-2">
                                                     <button type="button" class="btn btn-sm btn-outline-navy bulk-add">

@@ -56,18 +56,14 @@
         <div class="card section-card">
             <div class="card-header"><strong>안내</strong></div>
             <div class="card-body small">
-                <p class="mb-2"><strong>필수 컬럼</strong></p>
+                <p class="mb-2"><strong>컬럼 4개 — 모두 필수</strong></p>
                 <ul class="mb-2 ps-3">
                     <li>학생이름</li>
                     <li>학부모이름</li>
                     <li>학부모휴대폰 (숫자만, 자동 정제)</li>
+                    <li>주소 (학부모 개별 배송지)</li>
                 </ul>
-                <p class="mb-2"><strong>선택 컬럼</strong></p>
-                <ul class="mb-2 ps-3">
-                    <li>학년 (예: 초3, 중1)</li>
-                    <li>학부모이메일</li>
-                    <li>메모</li>
-                </ul>
+                <p class="mb-2 text-muted">학년은 이 학급의 학년을 따릅니다.</p>
                 <hr>
                 <p class="mb-0 text-muted">
                     <i class="bi bi-info"></i> 같은 휴대폰을 가진 학부모는 자동으로 하나로 묶임 (형제·자매 연결).

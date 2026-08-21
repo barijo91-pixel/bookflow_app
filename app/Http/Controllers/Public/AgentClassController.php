@@ -115,14 +115,15 @@ class AgentClassController extends Controller
 
         $missing = [];
         foreach ($rows as $i => $r) {
-            if (blank($r['parent_name'] ?? null) || blank($r['parent_phone'] ?? null)) {
+            if (blank($r['parent_name'] ?? null) || blank($r['parent_phone'] ?? null)
+                || blank($r['parent_address'] ?? null)) {
                 $missing[] = ($i + 1) . '번째(' . $r['student_name'] . ')';
             }
         }
         if ($missing) {
             return back()->with('error',
-                '학부모 이름과 연락처가 필요합니다 — ' . implode(', ', $missing)
-                . '. 학부모 결제 요청이 이 연락처로 나갑니다.');
+                '학부모 이름·연락처·주소가 모두 필요합니다 — ' . implode(', ', $missing)
+                . '. 결제 요청은 연락처로, 교재는 주소로 배송됩니다.');
         }
 
         $now = now();

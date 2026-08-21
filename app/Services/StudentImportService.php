@@ -29,8 +29,12 @@ class StudentImportService
         '비고'            => 'memo',
     ];
 
+    /**
+     * 템플릿 컬럼 — 전부 필수. 선택 컬럼을 두면 뭘 채워야 하는지 헷갈려서 없앴다.
+     * 화면 모달(학생 등록)과 같은 4개 항목으로 맞춘다.
+     */
     public const TEMPLATE_HEADERS = [
-        '학생이름', '학년', '학급명', '학부모이름', '학부모휴대폰', '학부모이메일', '학부모주소', '상세주소', '메모',
+        '학생이름', '학부모이름', '학부모휴대폰', '주소',
     ];
 
     /** 학년 코드 매핑 (한글명 → code) */
@@ -56,11 +60,11 @@ class StudentImportService
             $sheet->setCellValue($col.'1', $h);
         }
 
-        // 예시 행 (학생이름, 학년, 학급명, 학부모이름, 학부모휴대폰, 학부모이메일, 학부모주소, 상세주소, 메모)
+        // 예시 행 (학생이름, 학부모이름, 학부모휴대폰, 주소)
         $samples = [
-            ['김민준', '초3', '초3-A반', '김아빠', '01012340001', null, '서울 강남구 역삼로 109', '101동 502호', '영어 회화반'],
-            ['이서윤', '초3', '초3-A반', '이엄마', '01012340002', 'mom@example.com', '경기 수원시 팔달구 매산로 1', '', null],
-            ['박지호', '초4', '초4-B반', '박아빠', '01012340003', null, '', '', '수학 보충'],
+            ['김민준', '김아빠', '01012340001', '서울 강남구 역삼로 109 101동 502호'],
+            ['이서윤', '이엄마', '01012340002', '경기 수원시 팔달구 매산로 1'],
+            ['박지호', '박아빠', '01012340003', '부산 해운대구 센텀중앙로 90'],
         ];
         foreach ($samples as $rowIdx => $sample) {
             foreach ($sample as $colIdx => $val) {
@@ -83,15 +87,12 @@ class StudentImportService
         $info->setTitle('안내');
         $info->setCellValue('A1', '학생 일괄 등록 가이드');
         $info->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $info->setCellValue('A3', '필수 컬럼: 학생이름, 학부모이름, 학부모휴대폰');
-        $info->setCellValue('A4', '선택 컬럼: 학년, 학급명, 학부모이메일, 학부모주소, 상세주소, 메모');
-        $info->setCellValue('A5', '※ 학부모주소=도로명/지번(예: 서울 강남구 역삼로 109), 상세주소=동·호수(예: 101동 502호). 소매 학원 개별배송에 사용.');
-        $info->setCellValue('A6', '학년 예시: 초1, 초2, 초3, 초4, 초5, 초6, 중1, 중2, 중3, 고1, 고2, 고3');
-        $info->setCellValue('A7', '학년은 한글명 또는 code 어느 쪽이든 입력 가능');
-        $info->setCellValue('A9', '학급명: 빈 칸이면 업로드 페이지에서 선택한 학급에 등록');
-        $info->setCellValue('A10', '학급명이 있으면 메모로 기록됨 (학급별 자동 분류는 추후 지원)');
-        $info->setCellValue('A12', '학부모 휴대폰이 같으면 한 학부모로 인식 (형제·자매 자동 연결)');
-        $info->setCellValue('A13', '한 행에 학생 1명. 형제·자매도 행을 따로 만드세요 (학부모는 자동 묶임)');
+        $info->setCellValue('A3', '컬럼 4개 모두 채워주세요 — 학생이름, 학부모이름, 학부모휴대폰, 주소');
+        $info->setCellValue('A5', '학부모휴대폰: 숫자만 남기고 자동 정제 (010-1234-5678 → 01012345678)');
+        $info->setCellValue('A6', '주소: 교재를 학부모에게 개별 배송할 때 쓰는 배송지입니다.');
+        $info->setCellValue('A8', '학부모 휴대폰이 같으면 한 학부모로 인식 (형제·자매 자동 연결)');
+        $info->setCellValue('A9', '한 행에 학생 1명. 형제·자매도 행을 따로 만드세요 (학부모는 자동 묶임)');
+        $info->setCellValue('A10', '학년은 업로드 페이지에서 고른 학급의 학년을 따릅니다.');
         $info->getColumnDimension('A')->setAutoSize(true);
 
         $spreadsheet->setActiveSheetIndex(0);
@@ -163,7 +164,12 @@ class StudentImportService
             if (! $pphone || strlen($pphone) < 9 || strlen($pphone) > 13) $rowErrors[] = '학부모휴대폰 형식 오류';
             $row['parent_phone'] = $pphone;
 
-            // 학부모 이메일
+            // 주소 — 교재를 학부모에게 개별 배송하는 배송지라 필수
+            $paddr = trim((string) ($row['parent_address'] ?? ''));
+            if ($paddr === '') $rowErrors[] = '주소 누락';
+            $row['parent_address'] = $paddr;
+
+            // 학부모 이메일 (옛 템플릿 호환 — 값이 있으면 형식만 확인)
             if (! empty($row['parent_email']) && ! filter_var($row['parent_email'], FILTER_VALIDATE_EMAIL)) {
                 $rowErrors[] = '학부모이메일 형식 오류';
             }
