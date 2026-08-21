@@ -92,6 +92,54 @@
             border-left-color: #93c5fd;
         }
         .public-nav .nav-item.active i { opacity: 1; }
+        /* ---------- 사이드바 아이콘 색상 ----------
+           메뉴를 색으로 먼저 찾게 한다. 아이콘 종류로 매핑해서 뷰 수정 없이 적용된다.
+           본문은 무채색+네이비 액센트 유지 — 색은 사이드바 안에서만 쓴다. */
+        .nav-item i.bi-speedometer2,
+        .public-nav .nav-item i.bi-speedometer2      { color: #93c5fd; }  /* 종합현황 — 하늘 */
+        .nav-item i.bi-receipt,
+        .nav-item i.bi-clipboard-data,
+        .nav-item i.bi-bag-plus,
+        .nav-item i.bi-bag-heart,
+        .public-nav .nav-item i.bi-receipt,
+        .public-nav .nav-item i.bi-clipboard-data,
+        .public-nav .nav-item i.bi-bag-plus,
+        .public-nav .nav-item i.bi-bag-heart         { color: #fbbf24; }  /* 주문 — 앰버 */
+        .nav-item i.bi-journals,
+        .nav-item i.bi-book-half,
+        .public-nav .nav-item i.bi-journals,
+        .public-nav .nav-item i.bi-book-half         { color: #5eead4; }  /* 교재·도서 — 민트 */
+        .nav-item i.bi-building,
+        .nav-item i.bi-building-add,
+        .public-nav .nav-item i.bi-building,
+        .public-nav .nav-item i.bi-building-add      { color: #c4b5fd; }  /* 학원·거래처 — 라벤더 */
+        .nav-item i.bi-people,
+        .nav-item i.bi-person-badge,
+        .nav-item i.bi-person-plus,
+        .nav-item i.bi-mortarboard,
+        .public-nav .nav-item i.bi-people,
+        .public-nav .nav-item i.bi-person-badge,
+        .public-nav .nav-item i.bi-mortarboard       { color: #f0abfc; }  /* 사람 — 연보라 */
+        .nav-item i.bi-percent,
+        .public-nav .nav-item i.bi-percent           { color: #f9a8d4; }  /* 할인율 — 핑크 */
+        .nav-item i.bi-graph-up-arrow,
+        .public-nav .nav-item i.bi-graph-up-arrow    { color: #fdba74; }  /* 수익 — 오렌지 */
+        .nav-item i.bi-cash-stack,
+        .nav-item i.bi-calculator,
+        .public-nav .nav-item i.bi-cash-stack        { color: #86efac; }  /* 정산 — 그린 */
+        .nav-item i.bi-box-seam,
+        .public-nav .nav-item i.bi-box-seam          { color: #7dd3fc; }  /* 재고 — 스카이 */
+        .nav-item i.bi-receipt-cutoff,
+        .public-nav .nav-item i.bi-receipt-cutoff    { color: #cbd5e1; }  /* 세무 — 실버 */
+        .nav-item i.bi-link-45deg,
+        .public-nav .nav-item i.bi-link-45deg        { color: #67e8f9; }  /* 링크 — 시안 */
+        .nav-item i.bi-bell,
+        .nav-item i.bi-chat-dots                     { color: #fca5a5; }  /* 알림 — 살몬 */
+        .nav-item i.bi-gear,
+        .nav-item i.bi-tags,
+        .nav-item i.bi-geo-alt                       { color: #a5b4fc; }  /* 설정·코드·지역 — 인디고 */
+        .nav-item i.bi-shield-check,
+        .nav-item i.bi-clipboard-check               { color: #fcd34d; }  /* 감사·점검 — 골드 */
         .public-main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; }
         .public-topbar {
             background: var(--sidebar-bg); border-bottom: 1px solid var(--sidebar-border);
