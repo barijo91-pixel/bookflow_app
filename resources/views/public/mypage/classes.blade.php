@@ -150,9 +150,8 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="card-footer bg-white small text-muted">
-                                    학생을 넣으려면 <strong>학부모 이름·연락처</strong>가 필요합니다 —
-                                    교재 결제 요청이 이 연락처로 나갑니다. 빈 줄은 저장되지 않습니다.
+                                <div class="card-footer bg-white small text-muted text-nowrap">
+                                    <strong>학부모 이름·연락처</strong> 필수 (결제 요청 발송) · 빈 줄은 저장 안 됨
                                 </div>
                             </div>
                         </div>
