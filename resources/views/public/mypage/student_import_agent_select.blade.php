@@ -61,8 +61,8 @@
                                         <i class="bi bi-people-fill"></i> 학생 등록
                                     </button>
                                     <a href="{{ route('my.classes.students.import.show', $c->id) }}"
-                                       class="btn btn-sm btn-outline-secondary" title="엑셀로 일괄 등록">
-                                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                                       class="btn btn-sm btn-outline-navy" title="인원이 많으면 엑셀로 한 번에 등록">
+                                        <i class="bi bi-file-earmark-spreadsheet"></i> 엑셀
                                     </a>
                                 </div>
                             </div>
