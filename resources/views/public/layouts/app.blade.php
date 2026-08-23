@@ -341,6 +341,24 @@
         el.addEventListener('click', () => { if (window.innerWidth <= 768) closeMobileMenu(); });
     });
 </script>
+<script>
+// students-row-required
+// 학생 여러 명 등록 표 — 한 줄에 뭐라도 입력하면 그 줄의 4개 항목을 필수로 만든다.
+// 빈 줄은 저장 대상이 아니므로 필수를 걸지 않는다.
+// 이렇게 해야 브라우저가 제출 전에 잡아줘서 모달이 닫히지 않고 입력값도 남는다.
+document.addEventListener('input', function (e) {
+    var cell = e.target.closest('td');
+    if (! cell) return;
+    var row = cell.parentElement;
+    if (! row) return;
+    var inputs = row.querySelectorAll('input[name^="students["]');
+    if (inputs.length < 4) return;
+
+    var filled = false;
+    inputs.forEach(function (i) { if (i.value.trim() !== '') filled = true; });
+    inputs.forEach(function (i) { i.required = filled; });
+});
+</script>
 @stack('scripts')
 </body>
 </html>
