@@ -108,9 +108,17 @@
         <div class="card section-card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-people"></i> 학생/학부모 (<span id="studentCount">{{ $students->count() }}</span>)</strong>
-                <a href="{{ route('my.classes.students.import.show', $selectedClass->id) }}" class="btn btn-sm btn-outline-navy d-none d-md-inline-block">
-                    <i class="bi bi-file-earmark-spreadsheet"></i> 엑셀 일괄 등록
-                </a>
+                <div class="d-flex gap-1">
+                    <button type="button" class="btn btn-sm btn-primary"
+                            data-bs-toggle="modal" data-bs-target="#studentBulkModal">
+                        <i class="bi bi-person-plus"></i> 학생 등록
+                    </button>
+                    <a href="{{ route('my.classes.students.import.show', $selectedClass->id) }}"
+                       class="btn btn-sm btn-outline-navy d-none d-md-inline-block"
+                       title="인원이 많으면 엑셀로 한 번에 등록">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> 엑셀
+                    </a>
+                </div>
             </div>
             @if($students->isNotEmpty())
                 <div class="px-3 py-2 border-bottom" style="background:#fafbfc;">
@@ -161,19 +169,13 @@
                         @empty
                             <tr class="empty-row"><td colspan="4" class="text-center small">
                                 <i class="bi bi-people d-block mb-1"></i>
-                                등록된 학생이 없습니다. 아래에서 추가하거나 엑셀로 일괄 등록하세요.
+                                등록된 학생이 없습니다. 위의 「학생 등록」으로 추가하세요.
                             </td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer">
-                <button type="button" class="btn btn-primary btn-sm"
-                        data-bs-toggle="modal" data-bs-target="#studentBulkModal">
-                    <i class="bi bi-person-plus"></i> 학생 등록
-                </button>
-                <span class="small text-muted ms-2">여러 명을 한 번에 등록할 수 있습니다.</span>
-            </div>
+
         </div>
 
         {{-- 학생 여러 명 등록 모달 — 학급 목록의 등록 모달과 같은 방식 --}}
