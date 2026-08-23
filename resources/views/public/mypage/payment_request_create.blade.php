@@ -21,7 +21,7 @@
 
 <div class="row g-3">
     {{-- LEFT: 학급 선택 + 학생/학부모 + 금액 --}}
-    <div class="col-lg-7">
+    <div class="col-lg-5">
         <form method="POST" action="{{ route('my.orders.payment.store', $order->id) }}" id="payReqForm">
             @csrf
 
@@ -94,7 +94,7 @@
     </div>
 
     {{-- RIGHT: 주문 도서 + 이미 보낸 이력 --}}
-    <div class="col-lg-5">
+    <div class="col-lg-7">
         <div class="card section-card mb-3">
             <div class="card-header"><strong>주문 도서</strong></div>
             <div class="table-responsive">
