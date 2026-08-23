@@ -105,6 +105,7 @@
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
+                    <th><x-sort-link field="date" label="주문일" :sort="$sort" :dir="$dir" /></th>
                     {{-- 주문번호에 학급을 함께 표기 (학급 컬럼 별도 운용 안 함) --}}
                     <th><x-sort-link field="order_no" label="주문번호 (학급)" :sort="$sort" :dir="$dir" /></th>
                     <th>주문교재</th>
@@ -118,18 +119,23 @@
                     @if(! in_array($user->role_code, ['distributor', 'academy'], true))
                         <th><x-sort-link field="distributor" label="총판" :sort="$sort" :dir="$dir" /></th>
                     @endif
-                    <th><x-sort-link field="date" label="주문일" :sort="$sort" :dir="$dir" /></th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($orders as $o)
                     <tr class="order-row" style="cursor:pointer" onclick="location.href='{{ route('my.orders.show', $o->id) }}'">
+                        <td class="small text-muted text-nowrap">
+                            {{ \Carbon\Carbon::parse($o->requested_at ?? $o->created_at)->format('Y-m-d H:i') }}
+                        </td>
                         <td class="text-nowrap">
                             <a href="{{ route('my.orders.show', $o->id) }}" class="text-decoration-none navy fw-bold" onclick="event.stopPropagation()">
                                 <code>{{ $o->order_no }}</code>
                             </a>
                             @if($o->class_name)
                                 <span class="text-muted small">({{ $o->class_name }})</span>
+                            @elseif(($o->trade_type ?? 'retail') !== 'wholesale')
+                                {{-- 소매인데 학급이 없는 건 학급 필수 적용 전에 만들어진 주문 --}}
+                                <span class="text-muted small">(학급 미지정)</span>
                             @endif
                         </td>
                         <td class="small">
@@ -159,9 +165,6 @@
                         @if(! in_array($user->role_code, ['distributor', 'academy'], true))
                             <td class="small text-muted">{{ $o->distributor_name ?? '-' }}</td>
                         @endif
-                        <td class="small text-muted">
-                            {{ $o->requested_at ? \Carbon\Carbon::parse($o->requested_at)->format('Y-m-d H:i') : \Carbon\Carbon::parse($o->created_at)->format('Y-m-d H:i') }}
-                        </td>
                     </tr>
                 @empty
                     <tr>
