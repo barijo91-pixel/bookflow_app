@@ -105,9 +105,12 @@
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
-                    <th><x-sort-link field="order_no" label="주문번호" :sort="$sort" :dir="$dir" /></th>
-                    <th><x-sort-link field="class" label="학급" :sort="$sort" :dir="$dir" /></th>
+                    {{-- 주문번호에 학급을 함께 표기 (학급 컬럼 별도 운용 안 함) --}}
+                    <th><x-sort-link field="order_no" label="주문번호 (학급)" :sort="$sort" :dir="$dir" /></th>
+                    <th>주문교재</th>
                     @if($user->role_code !== 'academy')<th><x-sort-link field="vendor" label="학원" :sort="$sort" :dir="$dir" /></th><th>구분</th>@endif
+                    <th class="text-end"><x-sort-link field="amount" label="금액" :sort="$sort" :dir="$dir" /></th>
+                    <th><x-sort-link field="status" label="상태" :sort="$sort" :dir="$dir" /></th>
                     @if($user->role_code !== 'agent')
                         <th><x-sort-link field="agent" label="영업자" :sort="$sort" :dir="$dir" /></th>
                     @endif
@@ -115,22 +118,28 @@
                     @if(! in_array($user->role_code, ['distributor', 'academy'], true))
                         <th><x-sort-link field="distributor" label="총판" :sort="$sort" :dir="$dir" /></th>
                     @endif
-                    <th class="text-end"><x-sort-link field="amount" label="금액" :sort="$sort" :dir="$dir" /></th>
-                    <th><x-sort-link field="status" label="상태" :sort="$sort" :dir="$dir" /></th>
                     <th><x-sort-link field="date" label="주문일" :sort="$sort" :dir="$dir" /></th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($orders as $o)
                     <tr class="order-row" style="cursor:pointer" onclick="location.href='{{ route('my.orders.show', $o->id) }}'">
-                        <td>
+                        <td class="text-nowrap">
                             <a href="{{ route('my.orders.show', $o->id) }}" class="text-decoration-none navy fw-bold" onclick="event.stopPropagation()">
-                                <code>{{ $o->order_no }}</code> <i class="bi bi-chevron-right small"></i>
+                                <code>{{ $o->order_no }}</code>
                             </a>
+                            @if($o->class_name)
+                                <span class="text-muted small">({{ $o->class_name }})</span>
+                            @endif
                         </td>
                         <td class="small">
-                            @if($o->class_name)
-                                <span class="badge bg-light text-dark"><i class="bi bi-mortarboard"></i> {{ $o->class_name }}</span>
+                            @php $sum = $itemSummaries[$o->id] ?? null; @endphp
+                            @if($sum)
+                                {{ $sum['first'] }}
+                                @if($sum['kinds'] > 1)
+                                    <span class="text-muted">외 {{ $sum['kinds'] - 1 }}종</span>
+                                @endif
+                                <span class="text-muted">· {{ number_format($sum['qty']) }}권</span>
                             @else
                                 <span class="text-muted">-</span>
                             @endif
@@ -139,24 +148,24 @@
                             <td class="small">{{ $o->vendor_name ?? '-' }}</td>
                             <td><span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span></td>
                         @endif
+                        <td class="text-end">{{ number_format($o->total_amount) }}원</td>
+                        <td>
+                            @php $opt = $statusOptions[$o->status_code] ?? [$o->status_code, 'bg-light text-dark']; @endphp
+                            <span class="badge {{ $opt[1] }}">{{ $opt[0] }}</span>
+                        </td>
                         @if($user->role_code !== 'agent')
                             <td class="small text-muted">{{ $o->agent_name ?? '-' }}</td>
                         @endif
                         @if(! in_array($user->role_code, ['distributor', 'academy'], true))
                             <td class="small text-muted">{{ $o->distributor_name ?? '-' }}</td>
                         @endif
-                        <td class="text-end">{{ number_format($o->total_amount) }}원</td>
-                        <td>
-                            @php $opt = $statusOptions[$o->status_code] ?? [$o->status_code, 'bg-light text-dark']; @endphp
-                            <span class="badge {{ $opt[1] }}">{{ $opt[0] }}</span>
-                        </td>
                         <td class="small text-muted">
                             {{ $o->requested_at ? \Carbon\Carbon::parse($o->requested_at)->format('Y-m-d H:i') : \Carbon\Carbon::parse($o->created_at)->format('Y-m-d H:i') }}
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ 6 + ($user->role_code !== 'agent' ? 1 : 0) + ($user->role_code !== 'distributor' ? 1 : 0) - ($user->role_code === 'academy' ? 1 : 0) + ($user->role_code !== 'academy' ? 1 : 0) }}"
+                        <td colspan="{{ 5 + ($user->role_code !== 'academy' ? 2 : 0) + ($user->role_code !== 'agent' ? 1 : 0) + (! in_array($user->role_code, ['distributor','academy'], true) ? 1 : 0) }}"
                             class="text-center text-muted py-5">
                             <i class="bi bi-inbox" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">

@@ -1110,9 +1110,28 @@ class MyPageController extends Controller
         $statusCounts = $statusBaseQuery->select('status_code', DB::raw('count(*) as cnt'))
             ->groupBy('status_code')->pluck('cnt', 'status_code');
 
+        // 주문별 교재 요약 — 목록에서 "무슨 책을 시켰는지" 바로 보이게.
+        // 행마다 조회하면 N+1 이라 한 번에 모아온다.
+        $orderIds = collect($orders->items() ?? $orders)->pluck('id')->all();
+        $itemSummaries = [];
+        if ($orderIds) {
+            $rows = DB::table('order_items')
+                ->whereIn('order_id', $orderIds)
+                ->select('order_id', 'title_snapshot', 'qty', 'id')
+                ->orderBy('order_id')->orderBy('id')
+                ->get();
+            foreach ($rows->groupBy('order_id') as $oid => $g) {
+                $itemSummaries[$oid] = [
+                    'first' => $g->first()->title_snapshot,
+                    'kinds' => $g->count(),                       // 교재 종수
+                    'qty'   => (int) $g->sum('qty'),              // 총 권수
+                ];
+            }
+        }
         return view('public.mypage.orders', [
             'user'   => $user,
             'orders' => $orders,
+            'itemSummaries' => $itemSummaries,
             'title'  => $title,
             'status' => $status,
             'dateFrom' => $dateFrom,
