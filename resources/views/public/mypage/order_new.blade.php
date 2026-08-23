@@ -461,15 +461,14 @@
                                 {{-- 대행 주문 대상 학원 (서버에서 담당 여부 재검증) --}}
                                 <input type="hidden" name="vendor_id" value="{{ $vendor->id }}">
                             @endif
-                            @if($classes->isNotEmpty())
+                            {{-- 학급·대상학생은 소매(학부모 개별 결제)에서만. 도매는 학원이 일괄 매입해 학급 개념이 없다 --}}
+                            @if(($vendor->trade_type ?? 'retail') !== 'wholesale' && $classes->isNotEmpty())
                                 <div class="mb-2 p-2 rounded" style="background:#eaf1f8; border:1px solid #1f3a5f;">
                                     <label class="form-label small fw-bold navy mb-1" for="orderClassSelect">
-                                        <i class="bi bi-mortarboard-fill"></i> 학급 선택
-                                        @if(($vendor->trade_type ?? 'retail') !== 'wholesale')<span class="text-danger">*</span>@endif
+                                        <i class="bi bi-mortarboard-fill"></i> 학급 선택 <span class="text-danger">*</span>
                                     </label>
-                                    <select name="class_id" id="orderClassSelect" class="form-select form-select-sm" aria-label="학급 선택"
-                                            @if(($vendor->trade_type ?? 'retail') !== 'wholesale') required @endif>
-                                        <option value="">@if(($vendor->trade_type ?? 'retail') !== 'wholesale')학급을 선택하세요@else학급 선택 안 함@endif</option>
+                                    <select name="class_id" id="orderClassSelect" class="form-select form-select-sm" aria-label="학급 선택" required>
+                                        <option value="">학급을 선택하세요</option>
                                         @foreach($classes as $c)
                                             <option value="{{ $c->id }}">{{ $c->name }}</option>
                                         @endforeach
