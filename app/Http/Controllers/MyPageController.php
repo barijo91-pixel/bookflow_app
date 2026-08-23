@@ -467,10 +467,20 @@ class MyPageController extends Controller
         $portOneStoreId = \App\Services\PortOneService::storeId();
         $portOneMethods = \App\Services\PortOneService::methods();
 
+        // 반품 접수 (영업자·총판) — 품목별 남은 반품 가능 수량
+        $canReturn = ($user->role_code === 'agent' && $order->agent_user_id == $user->id)
+            || ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id);
+        $canReturn = $canReturn && in_array($order->status_code, \App\Services\ReturnService::RETURNABLE_ORDER_STATUS, true);
+        $returnable    = $canReturn ? \App\Services\ReturnService::returnableQty($order->id) : [];
+        $returnReasons = \App\Services\ReturnService::REASONS;
+        $orderReturns  = DB::table('returns')->where('order_id', $order->id)
+            ->whereNull('deleted_at')->orderByDesc('id')->get();
+
         return view('public.mypage.order_show', compact(
             'user', 'order', 'vendor', 'class', 'orderStudents', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
             'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit', 'payers',
-            'portOneActive', 'portOneStoreId', 'portOneMethods'
+            'portOneActive', 'portOneStoreId', 'portOneMethods',
+            'canReturn', 'returnable', 'returnReasons', 'orderReturns'
         ));
     }
 

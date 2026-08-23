@@ -45,9 +45,10 @@ class PaymentRequestController extends Controller
             'parent_name'  => $vendor->name,
             'student_name' => '(학원 일괄 결제)',
             'amount'       => $order->total_amount,
-            'status'       => 'paid',
-            'paid_at'      => now(),
-            'created_by'   => $user->id,
+            'status'        => 'paid',
+            'pg_payment_id' => $data['payment_id'],
+            'paid_at'       => now(),
+            'created_by'    => $user->id,
             'created_at'   => now(),
             'updated_at'   => now(),
         ]);
@@ -109,9 +110,10 @@ class PaymentRequestController extends Controller
             'parent_name'  => $vendor->name,
             'student_name' => '(학원 일괄 결제)',
             'amount'       => $order->total_amount,
-            'status'       => 'paid',
-            'paid_at'      => now(),
-            'created_by'   => $user->id,
+            'status'        => 'paid',
+            'pg_payment_id' => $data['payment_id'],
+            'paid_at'       => now(),
+            'created_by'    => $user->id,
             'created_at'   => now(),
             'updated_at'   => now(),
         ]);
@@ -420,6 +422,7 @@ class PaymentRequestController extends Controller
 
             // 정산 레코드 자동 생성
             $mockTxId = 'MOCK-' . strtoupper(Str::random(10));
+            $pr->update(['pg_payment_id' => $mockTxId]);
             $settlement = SettlementService::createFromPaymentRequest($pr, $mockTxId);
 
             AuditLog::log('payment_requests', $pr->id, 'mock_paid', null, [
@@ -494,8 +497,9 @@ class PaymentRequestController extends Controller
 
         DB::transaction(function () use ($pr, $data, $payment) {
             $pr->update([
-                'status'  => 'paid',
-                'paid_at' => now(),
+                'status'        => 'paid',
+                'pg_payment_id' => $data['payment_id'],
+                'paid_at'       => now(),
             ]);
 
             $settlement = SettlementService::createFromPaymentRequest($pr, $data['payment_id']);

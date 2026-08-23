@@ -249,6 +249,109 @@
             </div>
         @endif
 
+        {{-- 반품 (영업자·총판) — 품목별 수량 접수, 총판 확정 시 PG 부분취소 --}}
+        @if(!empty($canReturn) || (isset($orderReturns) && $orderReturns->count() && $user->role_code !== 'academy'))
+            <div class="card section-card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong><i class="bi bi-arrow-return-left"></i> 반품</strong>
+                    @if(!empty($canReturn) && collect($returnable)->sum('left') > 0)
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                data-bs-toggle="modal" data-bs-target="#returnModal">
+                            <i class="bi bi-plus-lg"></i> 반품 접수
+                        </button>
+                    @endif
+                </div>
+                <div class="card-body small">
+                    @if(isset($orderReturns) && $orderReturns->count())
+                        @foreach($orderReturns as $rt)
+                            @php
+                                $rtBadge = ['requested' => ['접수', 'bg-warning text-dark'], 'confirmed' => ['확정', 'bg-success'],
+                                            'rejected' => ['반려', 'bg-secondary'], 'canceled' => ['취소', 'bg-secondary']][$rt->status] ?? [$rt->status, 'bg-light text-dark'];
+                            @endphp
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-1">
+                                <span>
+                                    <span class="badge {{ $rtBadge[1] }}">{{ $rtBadge[0] }}</span>
+                                    <code class="ms-1">{{ $rt->return_no }}</code>
+                                    <span class="text-muted ms-1">{{ \Carbon\Carbon::parse($rt->requested_at)->format('m-d') }}</span>
+                                </span>
+                                <span class="fw-bold">{{ number_format($rt->total_qty) }}권 · {{ number_format($rt->total_amount) }}원
+                                    @if($rt->status === 'confirmed' && $rt->refund_status === 'done')
+                                        <span class="text-success fw-normal">환불됨</span>
+                                    @elseif($rt->status === 'confirmed' && in_array($rt->refund_status, ['failed', 'partial']))
+                                        <span class="text-danger fw-normal">환불 미완</span>
+                                    @endif
+                                </span>
+                            </div>
+                        @endforeach
+                        <div class="text-end mt-2">
+                            <a href="{{ route('my.returns.index') }}" class="link-name">반품 관리에서 처리 <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    @else
+                        <span class="text-muted">접수된 반품이 없습니다. 품목별로 수량을 지정해 접수하면 총판 확정 시 환불됩니다.</span>
+                    @endif
+                </div>
+            </div>
+
+            @if(!empty($canReturn))
+            <div class="modal fade" id="returnModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form method="POST" action="{{ route('my.returns.store', $order->id) }}" class="modal-content">
+                        @csrf
+                        <div class="modal-header py-2">
+                            <strong class="navy"><i class="bi bi-arrow-return-left"></i> 반품 접수</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table table-sm small align-middle mb-3">
+                                <thead class="table-light">
+                                    <tr><th>교재</th><th class="text-end">주문</th><th class="text-end">반품 가능</th><th style="width:90px;">반품 수량</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($items as $it)
+                                        @php $rq = $returnable[$it->id] ?? ['qty' => $it->qty, 'left' => 0]; @endphp
+                                        <tr>
+                                            <td>{{ $it->title_snapshot }}<div class="text-muted">{{ number_format($it->unit_price) }}원</div></td>
+                                            <td class="text-end">{{ $it->qty }}</td>
+                                            <td class="text-end {{ $rq['left'] > 0 ? 'fw-bold' : 'text-muted' }}">{{ $rq['left'] }}</td>
+                                            <td>
+                                                <input type="number" name="items[{{ $it->id }}]" class="form-control form-control-sm text-end"
+                                                       min="0" max="{{ $rq['left'] }}" value="0" {{ $rq['left'] <= 0 ? 'disabled' : '' }}>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <div class="row g-2">
+                                <div class="col-5">
+                                    <label class="form-label small fw-bold navy mb-1">반품 사유</label>
+                                    <select name="reason_code" class="form-select form-select-sm">
+                                        @foreach($returnReasons as $k => $label)
+                                            <option value="{{ $k }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-7">
+                                    <label class="form-label small fw-bold navy mb-1">상세 (선택)</label>
+                                    <input type="text" name="reason_text" class="form-control form-control-sm" maxlength="500"
+                                           placeholder="예: 표지 파손 3권">
+                                </div>
+                            </div>
+                            <div class="alert alert-light border small text-muted mt-3 mb-0">
+                                <i class="bi bi-info-circle"></i>
+                                총판이 확정하면 결제된 주문은 반품액만큼 <strong>PG 부분취소로 자동 환불</strong>됩니다.
+                                아직 결제 전이면 장부에서만 차감됩니다.
+                            </div>
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+                            <button class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> 반품 접수</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            @endif
+        @endif
+
         {{-- 출고 정보 --}}
         @if($shipment)
             @php $isDirect = ($order->delivery_type ?? 'parcel') === 'direct'; @endphp

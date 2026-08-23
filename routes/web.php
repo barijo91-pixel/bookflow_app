@@ -213,6 +213,15 @@ Route::middleware('auth')->group(function () {
         // 매출 조회 (영업자·총판) — 결제액 기준, 일별/월별/거래처/도서/출판사/담당자
         Route::get('sales', [\App\Http\Controllers\Public\SalesReportController::class, 'index'])->name('sales.index');
 
+        // 반품 관리 (영업자·총판) — 품목별 수량 접수 → 총판 확정 시 PG 부분취소
+        Route::get('returns',                    [\App\Http\Controllers\Public\ReturnController::class, 'index'])->name('returns.index');
+        Route::get('returns/{id}',               [\App\Http\Controllers\Public\ReturnController::class, 'show'])->name('returns.show')->whereNumber('id');
+        Route::post('orders/{orderId}/returns',  [\App\Http\Controllers\Public\ReturnController::class, 'store'])->name('returns.store');
+        Route::post('returns/{id}/confirm',      [\App\Http\Controllers\Public\ReturnController::class, 'confirm'])->name('returns.confirm');
+        Route::post('returns/{id}/retry-refund', [\App\Http\Controllers\Public\ReturnController::class, 'retryRefund'])->name('returns.retry_refund');
+        Route::post('returns/{id}/reject',       [\App\Http\Controllers\Public\ReturnController::class, 'reject'])->name('returns.reject');
+        Route::post('returns/{id}/cancel',       [\App\Http\Controllers\Public\ReturnController::class, 'cancel'])->name('returns.cancel');
+
         // 교재 조회 (영업자·총판) — 학원 없이도 판매 가능한 교재를 둘러본다
         Route::get('books', [\App\Http\Controllers\Public\BookCatalogController::class, 'index'])->name('books.index');
 
