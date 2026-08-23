@@ -9,9 +9,7 @@
             {{ $vendor->name ?? '학원' }} · 총 {{ $classes->count() }}개 학급
         </p>
     </div>
-    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#classCreateModal">
-        <i class="bi bi-plus-lg"></i> 학급 등록
-    </button>
+
 </div>
 
 @if(session('success'))<div class="alert alert-success py-2 small">{{ session('success') }}</div>@endif
@@ -27,7 +25,10 @@
         <div class="card-body text-center text-muted py-5">
             <i class="bi bi-mortarboard" style="font-size:2rem"></i>
             <p class="mb-1 mt-2">등록된 학급이 없습니다.</p>
-            <p class="small mb-0">우측 상단 「학급 등록」으로 학급과 학생을 함께 만들 수 있습니다.</p>
+            <p class="small mb-3">학급과 학생을 한 번에 만들 수 있습니다.</p>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#classCreateModal">
+                <i class="bi bi-plus-lg"></i> 학급 등록
+            </button>
         </div>
     </div>
 @else
@@ -36,7 +37,13 @@
     <div class="col-lg-4">
         {{-- 학급 목록 — 고르면 오른쪽에 그 학급 학생이 나온다 --}}
         <div class="card section-card mb-3">
-            <div class="card-header"><strong><i class="bi bi-list-ul"></i> 학급</strong></div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-list-ul"></i> 학급</strong>
+                <button type="button" class="btn btn-sm btn-primary"
+                        data-bs-toggle="modal" data-bs-target="#classCreateModal">
+                    <i class="bi bi-plus-lg"></i> 학급 등록
+                </button>
+            </div>
             <div class="list-group list-group-flush" style="max-height:360px; overflow-y:auto;">
                 @foreach($classes as $c)
                     <a href="{{ route('my.classes.index', ['class' => $c->id]) }}"
@@ -69,20 +76,11 @@
                 @csrf @method('PUT')
                 <div class="card-body" id="classInfoBody" style="display:none;">
                     <div class="row g-2">
-                        <div class="col-md-7">
+                        <div class="col-12">
                             <label class="form-label small text-muted mb-1">학급명</label>
                             <input type="text" name="name" class="form-control form-control-sm" value="{{ $selectedClass->name }}" required>
                         </div>
                         <div class="col-md-5">
-                            <label class="form-label small text-muted mb-1">학년</label>
-                            <select name="grade_code" class="form-select form-select-sm">
-                                <option value="">선택 안 함</option>
-                                @foreach($grades as $g)
-                                    <option value="{{ $g->code }}" @selected($selectedClass->grade_code === $g->code)>{{ $g->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4">
                             <label class="form-label small text-muted mb-1">상태</label>
                             <select name="status" class="form-select form-select-sm">
                                 <option value="active" @selected($selectedClass->status === 'active')>진행중</option>
@@ -130,10 +128,7 @@
                             <tr>
                                 <td class="small">
                                     <strong>{{ $s->name }}</strong>
-                                    @if($s->grade_code)
-                                        @php $g = $grades->firstWhere('code', $s->grade_code); @endphp
-                                        <span class="badge bg-light text-dark">{{ $g->name ?? $s->grade_code }}</span>
-                                    @endif
+
                                 </td>
                                 <td class="small">{{ $s->parent_name ?? '-' }}</td>
                                 <td class="small text-muted">{{ $s->parent_phone ? format_phone($s->parent_phone) : '-' }}</td>
@@ -240,18 +235,9 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-2">
-                            <div class="col-md-7">
+                            <div class="col-12">
                                 <label class="form-label small mb-1">학생 이름</label>
                                 <input type="text" name="student_name" class="form-control form-control-sm" required>
-                            </div>
-                            <div class="col-md-5">
-                                <label class="form-label small mb-1">학년</label>
-                                <select name="grade_code" class="form-select form-select-sm">
-                                    <option value="">학년</option>
-                                    @foreach($grades as $g)
-                                        <option value="{{ $g->code }}">{{ $g->name }}</option>
-                                    @endforeach
-                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small mb-1">학부모 이름</label>
@@ -352,15 +338,7 @@
                                         <input type="text" name="name" class="form-control" value="{{ old('name') }}"
                                                placeholder="예: 초3 영어반 A" required>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label small text-muted">학년</label>
-                                        <select name="grade_code" class="form-select">
-                                            <option value="">선택 안 함</option>
-                                            @foreach($grades as $g)
-                                                <option value="{{ $g->code }}" @selected(old('grade_code') === $g->code)>{{ $g->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+
                                     <div class="mb-2">
                                         <label class="form-label small text-muted">설명 / 메모</label>
                                         <textarea name="memo" class="form-control" rows="3">{{ old('memo') }}</textarea>
