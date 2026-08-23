@@ -6,7 +6,7 @@
 <div class="mb-3">
     <h1 class="h4 navy mb-1"><i class="bi bi-bar-chart-line"></i> 매출 조회</h1>
     <p class="text-muted small mb-0">
-        학부모·학원이 <strong>실제로 결제한 금액</strong> 기준입니다. 주문만 되고 아직 결제되지 않은 건은 잡히지 않습니다.
+        학부모(소매)·학원(도매)이 <strong>실제로 결제한 금액</strong> 기준입니다. 주문만 되고 아직 결제되지 않은 건은 잡히지 않습니다.
     </p>
 </div>
 
@@ -23,16 +23,24 @@
                 <label class="form-label small text-muted mb-1">종료일</label>
                 <input type="date" name="to" value="{{ $to }}" class="form-control form-control-sm">
             </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">거래구분</label>
+                <select name="trade" class="form-select form-select-sm" onchange="this.form.submit()">
+                    @foreach($trades as $k => $label)
+                        <option value="{{ $k }}" @selected((string) $trade === $k)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="col-md-2 d-flex gap-1">
                 <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-search"></i> 조회</button>
                 <a href="{{ route('my.sales.index', ['view' => $view]) }}" class="btn btn-sm btn-outline-secondary" title="이번 달">
                     <i class="bi bi-arrow-counterclockwise"></i>
                 </a>
             </div>
-            <div class="col-md-6 d-flex flex-wrap gap-1 justify-content-md-end">
+            <div class="col-md-4 d-flex flex-wrap gap-1 justify-content-md-end">
                 @foreach($views as $key => $label)
                     @if($key === 'agent' && $user->role_code === 'agent') @continue @endif
-                    <a href="{{ route('my.sales.index', ['view' => $key, 'from' => $from, 'to' => $to]) }}"
+                    <a href="{{ route('my.sales.index', ['view' => $key, 'from' => $from, 'to' => $to, 'trade' => $trade]) }}"
                        class="btn btn-sm {{ $view === $key ? 'btn-navy' : 'btn-outline-secondary' }}">{{ $label }}</a>
                 @endforeach
             </div>
@@ -62,8 +70,20 @@
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card">
-            <div class="stat-label">거래 학원</div>
-            <div class="stat-value">{{ number_format($summary->vendors ?? 0) }}<span class="fs-6">곳</span></div>
+            <div class="stat-label">소매 / 도매</div>
+            @php
+                $retail = (int) ($byTrade['retail']->revenue ?? 0);
+                $whole  = (int) ($byTrade['wholesale']->revenue ?? 0);
+                $sumT   = $retail + $whole;
+            @endphp
+            <div class="stat-value" style="font-size:1.15rem; line-height:1.5;">
+                <div>소매 {{ number_format($retail) }}원
+                    <span class="text-muted fs-6">{{ $sumT ? round($retail / $sumT * 100) : 0 }}%</span>
+                </div>
+                <div>도매 {{ number_format($whole) }}원
+                    <span class="text-muted fs-6">{{ $sumT ? round($whole / $sumT * 100) : 0 }}%</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>

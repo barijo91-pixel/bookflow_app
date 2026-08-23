@@ -4,18 +4,18 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\DistributorScopeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * 매출 조회 — 결제액(settlement_records.parent_paid) 기준.
+ * 매출 조회 — 결제 완료된 금액 기준.
  *
- * "정산 내역"은 누가 얼마 받는지(배분)를 보는 화면이고, 여기는 얼마 팔렸는지를 본다.
- * 주문했지만 아직 결제되지 않은 건은 매출로 잡지 않는다(형아 결정 2026-08-22).
+ * 출처는 `payment_requests` (status=paid).
+ * 소매(학부모 개별 결제)와 도매(학원 직접 결제)가 **둘 다 여기 남는다**.
+ * settlement_records 는 소매 결제에서만 생성되므로 매출 집계 기준으로는 쓸 수 없다.
  *
- * 도서별·출판사별은 정산 레코드에 도서 구분이 없어(주문 단위 결제)
+ * 도서별·출판사별은 결제가 주문 단위라 도서 구분이 없어,
  * 결제액을 그 주문의 도서 금액 비중으로 안분해 계산한다.
  */
 class SalesReportController extends Controller
@@ -29,7 +29,13 @@ class SalesReportController extends Controller
         'agent'     => '영업담당자별',
     ];
 
-    private function authorize(): User
+    public const TRADES = [
+        ''          => '전체',
+        'retail'    => '소매',
+        'wholesale' => '도매',
+    ];
+
+    private function authorizeUser(): User
     {
         $user = Auth::user();
         if (! $user || ! in_array($user->role_code, ['agent', 'distributor'], true)) {
@@ -38,110 +44,118 @@ class SalesReportController extends Controller
         return $user;
     }
 
-    /** 역할별 정산 레코드 스코프 */
-    private function scoped(User $user)
+    /**
+     * 결제 완료분 스코프.
+     * 주문을 통해 역할(영업자/총판)과 거래구분(소매/도매)을 건다.
+     */
+    private function scoped(User $user, string $from, string $to, ?string $trade)
     {
-        $q = DB::table('settlement_records as s');
+        $q = DB::table('payment_requests as pr')
+            ->join('orders as o', 'o.id', '=', 'pr.order_id')
+            ->join('vendors as v', 'v.id', '=', 'o.vendor_id')
+            ->where('pr.status', 'paid')
+            ->whereNull('o.deleted_at')
+            ->whereDate('pr.paid_at', '>=', $from)
+            ->whereDate('pr.paid_at', '<=', $to);
+
         if ($user->role_code === 'agent') {
-            $q->where('s.agent_user_id', $user->id);
+            $q->where('o.agent_user_id', $user->id);
         } else {
-            $q->where('s.distributor_user_id', $user->id);
+            $q->where('o.distributor_user_id', $user->id);
         }
+        if ($trade) $q->where('v.trade_type', $trade);
+
         return $q;
     }
 
     public function index(Request $request)
     {
-        $user = $this->authorize();
+        $user = $this->authorizeUser();
 
         $view = $request->query('view', 'daily');
         if (! array_key_exists($view, self::VIEWS)) $view = 'daily';
-        // 영업자는 본인 하나뿐이라 담당자별이 의미 없다
         if ($view === 'agent' && $user->role_code === 'agent') $view = 'daily';
 
-        // 기간 — 기본 이번 달
+        $trade = $request->query('trade');
+        if (! array_key_exists((string) $trade, self::TRADES)) $trade = null;
+        if ($trade === '') $trade = null;
+
         $from = $request->query('from') ?: now()->startOfMonth()->toDateString();
         $to   = $request->query('to')   ?: now()->toDateString();
 
-        $base = fn () => $this->scoped($user)
-            ->whereDate('s.computed_at', '>=', $from)
-            ->whereDate('s.computed_at', '<=', $to);
+        $base = fn () => $this->scoped($user, $from, $to, $trade);
 
-        // 상단 요약
         $summary = (clone $base())
-            ->selectRaw('COUNT(*) as cnt, COALESCE(SUM(s.parent_paid),0) as revenue,
-                         COUNT(DISTINCT s.order_id) as orders, COUNT(DISTINCT s.vendor_id) as vendors')
+            ->selectRaw('COUNT(*) as cnt, COALESCE(SUM(pr.amount),0) as revenue,
+                         COUNT(DISTINCT pr.order_id) as orders, COUNT(DISTINCT o.vendor_id) as vendors')
             ->first();
+
+        // 소매/도매 비교 (필터와 무관하게 항상 보여준다)
+        $byTrade = $this->scoped($user, $from, $to, null)
+            ->selectRaw("v.trade_type, COUNT(*) as cnt, COALESCE(SUM(pr.amount),0) as revenue")
+            ->groupBy('v.trade_type')->get()->keyBy('trade_type');
 
         $rows = match ($view) {
             'daily'     => $this->byDate($base(), '%Y-%m-%d'),
             'monthly'   => $this->byDate($base(), '%Y-%m'),
-            'vendor'    => $this->byJoin($base(), 'vendors', 'v', 's.vendor_id', 'v.name'),
-            'agent'     => $this->byJoin($base(), 'users', 'u', 's.agent_user_id',
-                            DB::raw("COALESCE(NULLIF(u.business_name,''), u.name)")),
-            'book'      => $this->byBook($user, $from, $to, 'book'),
-            'publisher' => $this->byBook($user, $from, $to, 'publisher'),
+            'vendor'    => $this->byLabel($base(), 'v.name'),
+            'agent'     => $this->byLabel(
+                                $base()->leftJoin('users as u', 'u.id', '=', 'o.agent_user_id'),
+                                "COALESCE(NULLIF(u.business_name,''), u.name)"),
+            'book'      => $this->byBook($user, $from, $to, $trade, 'book'),
+            'publisher' => $this->byBook($user, $from, $to, $trade, 'publisher'),
         };
 
         return view('public.mypage.sales', [
-            'user'      => $user,
-            'view'      => $view,
-            'views'     => self::VIEWS,
-            'from'      => $from,
-            'to'        => $to,
-            'summary'   => $summary,
-            'rows'      => $rows,
+            'user'    => $user,
+            'view'    => $view,
+            'views'   => self::VIEWS,
+            'trade'   => $trade,
+            'trades'  => self::TRADES,
+            'from'    => $from,
+            'to'      => $to,
+            'summary' => $summary,
+            'byTrade' => $byTrade,
+            'rows'    => $rows,
         ]);
     }
 
     /** 일별·월별 */
     private function byDate($q, string $format)
     {
-        return $q->selectRaw("DATE_FORMAT(s.computed_at, '{$format}') as label,
+        return $q->selectRaw("DATE_FORMAT(pr.paid_at, '{$format}') as label,
                               COUNT(*) as cnt,
-                              COUNT(DISTINCT s.order_id) as orders,
-                              COALESCE(SUM(s.parent_paid),0) as revenue")
-            ->groupBy('label')
-            ->orderByDesc('label')
-            ->limit(400)
-            ->get();
+                              COUNT(DISTINCT pr.order_id) as orders,
+                              COALESCE(SUM(pr.amount),0) as revenue")
+            ->groupBy('label')->orderByDesc('label')->limit(400)->get();
     }
 
     /** 거래처별·영업담당자별 */
-    private function byJoin($q, string $table, string $alias, string $fk, $nameExpr)
+    private function byLabel($q, string $labelExpr)
     {
-        return $q->leftJoin("{$table} as {$alias}", "{$alias}.id", '=', $fk)
-            ->selectRaw((is_string($nameExpr) ? $nameExpr : $nameExpr->getValue(DB::connection()->getQueryGrammar()))
-                . ' as label,
-                   COUNT(*) as cnt,
-                   COUNT(DISTINCT s.order_id) as orders,
-                   COALESCE(SUM(s.parent_paid),0) as revenue')
-            ->groupBy('label')
-            ->orderByDesc('revenue')
-            ->limit(400)
-            ->get();
+        return $q->selectRaw("{$labelExpr} as label,
+                              COUNT(*) as cnt,
+                              COUNT(DISTINCT pr.order_id) as orders,
+                              COALESCE(SUM(pr.amount),0) as revenue")
+            ->groupBy('label')->orderByDesc('revenue')->limit(400)->get();
     }
 
     /**
-     * 도서별·출판사별 — 정산 레코드엔 도서 구분이 없다.
+     * 도서별·출판사별 — 결제는 주문 단위라 도서 구분이 없다.
      * 주문별 결제합계를 그 주문의 도서 금액 비중(line_total)으로 안분한다.
      */
-    private function byBook(User $user, string $from, string $to, string $mode)
+    private function byBook(User $user, string $from, string $to, ?string $trade, string $mode)
     {
-        // 주문별 결제 합계
-        $paidPerOrder = $this->scoped($user)
-            ->whereDate('s.computed_at', '>=', $from)
-            ->whereDate('s.computed_at', '<=', $to)
-            ->selectRaw('s.order_id, SUM(s.parent_paid) as paid')
-            ->groupBy('s.order_id');
+        $paidPerOrder = $this->scoped($user, $from, $to, $trade)
+            ->selectRaw('pr.order_id, SUM(pr.amount) as paid')
+            ->groupBy('pr.order_id');
 
-        // 주문별 도서 금액 합계 (안분 분모)
         $orderTotal = DB::table('order_items')
             ->selectRaw('order_id, SUM(line_total) as total')
             ->groupBy('order_id');
 
         $label = $mode === 'book'
-            ? "COALESCE(b.title, oi.title_snapshot)"
+            ? 'COALESCE(b.title, oi.title_snapshot)'
             : "COALESCE(p.name, '(출판사 미지정)')";
 
         return DB::query()
@@ -155,9 +169,6 @@ class SalesReportController extends Controller
                          COUNT(DISTINCT sp.order_id) as orders,
                          SUM(oi.qty) as cnt,
                          ROUND(SUM(sp.paid * oi.line_total / ot.total)) as revenue")
-            ->groupBy('label')
-            ->orderByDesc('revenue')
-            ->limit(400)
-            ->get();
+            ->groupBy('label')->orderByDesc('revenue')->limit(400)->get();
     }
 }
