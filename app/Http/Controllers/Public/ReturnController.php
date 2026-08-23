@@ -166,15 +166,17 @@ class ReturnController extends Controller
         }
 
         $data = $request->validate([
-            'items'       => ['required', 'array'],
-            'items.*'     => ['nullable', 'integer', 'min:0', 'max:100000'],
-            'reason_code' => ['required', 'in:' . implode(',', array_keys(ReturnService::REASONS))],
-            'reason_text' => ['nullable', 'string', 'max:500'],
+            'items'              => ['required', 'array'],
+            'items.*'            => ['nullable', 'integer', 'min:0', 'max:100000'],
+            'reason_code'        => ['required', 'in:' . implode(',', array_keys(ReturnService::REASONS))],
+            'reason_text'        => ['nullable', 'string', 'max:500'],
+            'payment_request_id' => ['nullable', 'integer'],   // 환불 대상 학부모 결제 (소매)
         ]);
 
         try {
             $return = ReturnService::create($order, $data['items'], $data['reason_code'],
-                $data['reason_text'] ?? null, $user->id);
+                $data['reason_text'] ?? null, $user->id,
+                $data['payment_request_id'] ?? null ? (int) $data['payment_request_id'] : null);
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }

@@ -475,12 +475,17 @@ class MyPageController extends Controller
         $returnReasons = \App\Services\ReturnService::REASONS;
         $orderReturns  = DB::table('returns')->where('order_id', $order->id)
             ->whereNull('deleted_at')->orderByDesc('id')->get();
+        // 소매 반품의 환불 대상 지정용 — 결제 완료된 학부모 결제 (남은 환불 여지 포함)
+        $returnPayments = $canReturn ? DB::table('payment_requests')
+            ->where('order_id', $order->id)->where('status', 'paid')
+            ->whereNotNull('parent_name')
+            ->get(['id', 'parent_name', 'student_name', 'amount', 'refunded_amount']) : collect();
 
         return view('public.mypage.order_show', compact(
             'user', 'order', 'vendor', 'class', 'orderStudents', 'agent', 'dist', 'items', 'statusLogs', 'shipment',
             'courierOptions', 'canConfirm', 'canAccept', 'canShip', 'canCancel', 'canEdit', 'payers',
             'portOneActive', 'portOneStoreId', 'portOneMethods',
-            'canReturn', 'returnable', 'returnReasons', 'orderReturns'
+            'canReturn', 'returnable', 'returnReasons', 'orderReturns', 'returnPayments'
         ));
     }
 

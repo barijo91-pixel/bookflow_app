@@ -250,7 +250,8 @@
         @endif
 
         {{-- 반품 (영업자·총판) — 품목별 수량 접수, 총판 확정 시 PG 부분취소 --}}
-        @if(!empty($canReturn) || (isset($orderReturns) && $orderReturns->count() && $user->role_code !== 'academy'))
+        {{-- 학원은 읽기전용 (반품이 있을 때만) — 접수·확정은 영업자·총판 몫 --}}
+        @if(!empty($canReturn) || (isset($orderReturns) && $orderReturns->count()))
             <div class="card section-card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <strong><i class="bi bi-arrow-return-left"></i> 반품</strong>
@@ -283,9 +284,11 @@
                                 </span>
                             </div>
                         @endforeach
-                        <div class="text-end mt-2">
-                            <a href="{{ route('my.returns.index') }}" class="link-name">반품 관리에서 처리 <i class="bi bi-arrow-right"></i></a>
-                        </div>
+                        @if($user->role_code !== 'academy')
+                            <div class="text-end mt-2">
+                                <a href="{{ route('my.returns.index') }}" class="link-name">반품 관리에서 처리 <i class="bi bi-arrow-right"></i></a>
+                            </div>
+                        @endif
                     @else
                         <span class="text-muted">접수된 반품이 없습니다. 품목별로 수량을 지정해 접수하면 총판 확정 시 환불됩니다.</span>
                     @endif
@@ -321,6 +324,21 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                            @if(isset($returnPayments) && $returnPayments->count())
+                                {{-- 소매 — 어느 학부모 결제에서 환불할지. 안 고르면 환불 여지가 남은 결제부터 순서대로 --}}
+                                <div class="mb-2">
+                                    <label class="form-label small fw-bold navy mb-1">환불 대상 학부모 (소매)</label>
+                                    <select name="payment_request_id" class="form-select form-select-sm">
+                                        <option value="">지정 안 함 — 결제 순서대로 환불</option>
+                                        @foreach($returnPayments as $rp)
+                                            <option value="{{ $rp->id }}">
+                                                {{ $rp->parent_name }}@if($rp->student_name) ({{ $rp->student_name }})@endif
+                                                — {{ number_format($rp->amount - $rp->refunded_amount) }}원 환불 가능
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
                             <div class="row g-2">
                                 <div class="col-5">
                                     <label class="form-label small fw-bold navy mb-1">반품 사유</label>

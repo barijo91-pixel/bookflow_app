@@ -63,10 +63,20 @@ class ReturnService
     /**
      * 반품 접수.
      * @param array $lines [order_item_id => qty] (0 은 무시)
+     * @param int|null $paymentRequestId 환불 대상 학부모 결제 (소매 — 지정하면 그 결제에서 우선 환불)
      * @return object returns 행
      */
-    public static function create(object $order, array $lines, string $reasonCode, ?string $reasonText, int $byUserId): object
+    public static function create(object $order, array $lines, string $reasonCode, ?string $reasonText, int $byUserId, ?int $paymentRequestId = null): object
     {
+        // 대상 결제 지정 시 — 이 주문의 결제 완료 건이어야 한다
+        if ($paymentRequestId) {
+            $ok = DB::table('payment_requests')->where('id', $paymentRequestId)
+                ->where('order_id', $order->id)->where('status', 'paid')->exists();
+            if (! $ok) {
+                throw new \RuntimeException('환불 대상 결제가 이 주문의 결제 완료 건이 아닙니다.');
+            }
+        }
+
         $left  = self::returnableQty($order->id);
         $items = DB::table('order_items')->where('order_id', $order->id)->get()->keyBy('id');
 
@@ -99,7 +109,7 @@ class ReturnService
             throw new \RuntimeException('반품할 수량을 1권 이상 입력해 주세요.');
         }
 
-        return DB::transaction(function () use ($order, $rows, $reasonCode, $reasonText, $byUserId, $totalQty, $totalAmount) {
+        return DB::transaction(function () use ($order, $rows, $reasonCode, $reasonText, $byUserId, $totalQty, $totalAmount, $paymentRequestId) {
             $today = now()->format('Ymd');
             $seq   = DB::table('returns')->where('return_no', 'like', "RT{$today}%")->lockForUpdate()->count() + 1;
 
@@ -107,6 +117,7 @@ class ReturnService
                 'return_no'           => 'RT' . $today . str_pad((string) $seq, 4, '0', STR_PAD_LEFT),
                 'order_id'            => $order->id,
                 'vendor_id'           => $order->vendor_id,
+                'payment_request_id'  => $paymentRequestId,
                 'agent_user_id'       => $order->agent_user_id,
                 'distributor_user_id' => $order->distributor_user_id,
                 'status'              => 'requested',
@@ -169,12 +180,14 @@ class ReturnService
             return ['refund_status' => $return->refund_status, 'refund_amount' => 0, 'errors' => []];
         }
 
-        // 환불 대상 — 실PG 결제만 (mock 제외)
+        // 환불 대상 — 실PG 결제만 (mock 제외).
+        // 대상 결제가 지정된 반품은 그 결제부터 취소하고, 모자랄 때만 다른 건으로 넘어간다.
         $payments = DB::table('payment_requests')
             ->where('order_id', $return->order_id)
             ->where('status', 'paid')
             ->whereNotNull('pg_payment_id')
             ->where('pg_payment_id', 'not like', 'MOCK-%')
+            ->orderByRaw('(id = ?) desc', [(int) ($return->payment_request_id ?? 0)])
             ->orderBy('id')
             ->get();
 

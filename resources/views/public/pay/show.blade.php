@@ -57,6 +57,14 @@
                 <p class="small text-muted mt-2 mb-0">
                     {{ \Carbon\Carbon::parse($pr->paid_at)->format('Y-m-d H:i') }} 결제 확인됨
                 </p>
+                @if(($pr->refunded_amount ?? 0) > 0)
+                    {{-- 교재 반품으로 카드 부분취소된 금액 --}}
+                    <div class="alert alert-light border small mt-2 mb-0">
+                        <i class="bi bi-arrow-return-left"></i>
+                        교재 반품으로 <strong>{{ number_format($pr->refunded_amount) }}원이 환불</strong>되었습니다.
+                        카드 승인 취소는 카드사에 따라 2~5일 걸릴 수 있습니다.
+                    </div>
+                @endif
             </div>
         @elseif($pr->status === 'expired')
             <div class="text-center mb-3">
