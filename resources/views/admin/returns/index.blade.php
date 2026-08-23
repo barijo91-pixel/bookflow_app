@@ -213,19 +213,25 @@
             .then(function (r) { return r.json(); })
             .then(function (d) {
                 var fmt = function (n) { return Number(n).toLocaleString(); };
-                var h = '<div class="small text-muted mb-2">' + d.return.return_no + ' · ' + (d.return.vendor_name || '') + '</div>';
+                // DB 값(사유·이름·교재명 등)은 사용자 입력 — innerHTML 에 넣기 전 반드시 이스케이프 (XSS)
+                var esc = function (s) {
+                    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                    });
+                };
+                var h = '<div class="small text-muted mb-2">' + esc(d.return.return_no) + ' · ' + esc(d.return.vendor_name || '') + '</div>';
                 h += '<table class="table table-sm small mb-3"><thead class="table-light"><tr><th>교재</th><th class="text-end">수량</th><th class="text-end">단가</th><th class="text-end">금액</th></tr></thead><tbody>';
                 d.items.forEach(function (it) {
-                    h += '<tr><td>' + it.title_snapshot + '</td><td class="text-end">' + it.qty + '</td><td class="text-end">' + fmt(it.unit_price) + '</td><td class="text-end fw-bold">' + fmt(it.line_total) + '원</td></tr>';
+                    h += '<tr><td>' + esc(it.title_snapshot) + '</td><td class="text-end">' + fmt(it.qty) + '</td><td class="text-end">' + fmt(it.unit_price) + '</td><td class="text-end fw-bold">' + fmt(it.line_total) + '원</td></tr>';
                 });
                 h += '</tbody></table>';
-                if (d.return.reason_text) h += '<div class="small mb-2"><span class="text-muted">사유:</span> ' + d.return.reason_text + '</div>';
+                if (d.return.reason_text) h += '<div class="small mb-2"><span class="text-muted">사유:</span> ' + esc(d.return.reason_text) + '</div>';
                 if (d.refunds.length) {
                     h += '<div class="fw-bold small mb-1">환불 이력</div>';
                     d.refunds.forEach(function (rf) {
-                        var who = rf.parent_name ? (rf.parent_name + (rf.student_name ? ' (' + rf.student_name + ')' : '')) : '학원 결제';
+                        var who = rf.parent_name ? (esc(rf.parent_name) + (rf.student_name ? ' (' + esc(rf.student_name) + ')' : '')) : '학원 결제';
                         h += '<div class="small d-flex justify-content-between border-bottom py-1"><span>' + who + '</span><span class="' + (rf.status === 'success' ? 'text-success' : 'text-danger') + '">' + fmt(rf.amount) + '원 · ' + (rf.status === 'success' ? '환불됨' : '실패') + '</span></div>';
-                        if (rf.error_message) h += '<div class="small text-danger">' + rf.error_message + '</div>';
+                        if (rf.error_message) h += '<div class="small text-danger">' + esc(rf.error_message) + '</div>';
                     });
                 }
                 document.getElementById('rdBody').innerHTML = h;

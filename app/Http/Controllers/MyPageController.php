@@ -479,6 +479,7 @@ class MyPageController extends Controller
         $returnPayments = $canReturn ? DB::table('payment_requests')
             ->where('order_id', $order->id)->where('status', 'paid')
             ->whereNotNull('parent_name')
+            ->whereNotNull('parent_phone')   // 도매 직접결제(학원 일괄)는 제외 — 학부모 지정 대상이 아니다
             ->get(['id', 'parent_name', 'student_name', 'amount', 'refunded_amount']) : collect();
 
         return view('public.mypage.order_show', compact(

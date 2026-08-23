@@ -77,39 +77,43 @@ class ReturnService
             }
         }
 
-        $left  = self::returnableQty($order->id);
-        $items = DB::table('order_items')->where('order_id', $order->id)->get()->keyBy('id');
+        // 수량 검증부터 insert 까지 한 트랜잭션 — 주문 행 잠금으로 동시 접수를 직렬화해
+        // "남은 3권"을 두 요청이 동시에 통과하는 초과 접수를 막는다.
+        return DB::transaction(function () use ($order, $lines, $reasonCode, $reasonText, $byUserId, $paymentRequestId) {
+            DB::table('orders')->where('id', $order->id)->lockForUpdate()->first();
 
-        $rows = []; $totalQty = 0; $totalAmount = 0;
-        foreach ($lines as $itemId => $qty) {
-            $qty = (int) $qty;
-            if ($qty <= 0) continue;
-            $it = $items->get((int) $itemId);
-            if (! $it) {
-                throw new \RuntimeException('주문에 없는 품목입니다.');
-            }
-            if ($qty > ($left[$it->id]['left'] ?? 0)) {
-                throw new \RuntimeException("'{$it->title_snapshot}' 반품 가능 수량({$left[$it->id]['left']}권)을 초과했습니다.");
-            }
-            $rows[] = [
-                'order_item_id'  => $it->id,
-                'book_id'        => $it->book_id,
-                'isbn_snapshot'  => $it->isbn_snapshot,
-                'title_snapshot' => $it->title_snapshot,
-                'qty'            => $qty,
-                'unit_price'     => (int) $it->unit_price,
-                'line_total'     => (int) $it->unit_price * $qty,
-                'created_at'     => now(),
-                'updated_at'     => now(),
-            ];
-            $totalQty    += $qty;
-            $totalAmount += (int) $it->unit_price * $qty;
-        }
-        if (! $rows) {
-            throw new \RuntimeException('반품할 수량을 1권 이상 입력해 주세요.');
-        }
+            $left  = self::returnableQty($order->id);
+            $items = DB::table('order_items')->where('order_id', $order->id)->get()->keyBy('id');
 
-        return DB::transaction(function () use ($order, $rows, $reasonCode, $reasonText, $byUserId, $totalQty, $totalAmount, $paymentRequestId) {
+            $rows = []; $totalQty = 0; $totalAmount = 0;
+            foreach ($lines as $itemId => $qty) {
+                $qty = (int) $qty;
+                if ($qty <= 0) continue;
+                $it = $items->get((int) $itemId);
+                if (! $it) {
+                    throw new \RuntimeException('주문에 없는 품목입니다.');
+                }
+                if ($qty > ($left[$it->id]['left'] ?? 0)) {
+                    throw new \RuntimeException("'{$it->title_snapshot}' 반품 가능 수량({$left[$it->id]['left']}권)을 초과했습니다.");
+                }
+                $rows[] = [
+                    'order_item_id'  => $it->id,
+                    'book_id'        => $it->book_id,
+                    'isbn_snapshot'  => $it->isbn_snapshot,
+                    'title_snapshot' => $it->title_snapshot,
+                    'qty'            => $qty,
+                    'unit_price'     => (int) $it->unit_price,
+                    'line_total'     => (int) $it->unit_price * $qty,
+                    'created_at'     => now(),
+                    'updated_at'     => now(),
+                ];
+                $totalQty    += $qty;
+                $totalAmount += (int) $it->unit_price * $qty;
+            }
+            if (! $rows) {
+                throw new \RuntimeException('반품할 수량을 1권 이상 입력해 주세요.');
+            }
+
             $today = now()->format('Ymd');
             $seq   = DB::table('returns')->where('return_no', 'like', "RT{$today}%")->lockForUpdate()->count() + 1;
 
@@ -149,17 +153,19 @@ class ReturnService
      */
     public static function confirm(object $return, int $byUserId): array
     {
-        if ($return->status !== 'requested') {
-            throw new \RuntimeException('접수 상태의 반품만 확정할 수 있습니다.');
+        // 상태 전환을 원자적으로 — 두 명이 동시에 확정을 눌러도 한 명만 통과한다.
+        // (확인 후 갱신 방식이면 둘 다 통과해 PG 취소가 두 번 나갈 수 있다)
+        $claimed = DB::table('returns')->where('id', $return->id)
+            ->where('status', 'requested')
+            ->update([
+                'status'       => 'confirmed',
+                'confirmed_by' => $byUserId,
+                'confirmed_at' => now(),
+                'updated_at'   => now(),
+            ]);
+        if (! $claimed) {
+            throw new \RuntimeException('접수 상태의 반품만 확정할 수 있습니다. (이미 처리됐을 수 있습니다)');
         }
-
-        // 1) 확정으로 전환 (환불과 분리 — 부분취소가 실패해도 반품 자체는 확정 유지)
-        DB::table('returns')->where('id', $return->id)->update([
-            'status'       => 'confirmed',
-            'confirmed_by' => $byUserId,
-            'confirmed_at' => now(),
-            'updated_at'   => now(),
-        ]);
 
         return self::refund($return->id);
     }
@@ -169,6 +175,21 @@ class ReturnService
      * 재시도에도 그대로 쓰인다 (남은 금액만 다시 시도).
      */
     public static function refund(int $returnId): array
+    {
+        // 같은 반품의 환불이 겹쳐 돌지 않게 — 재시도 연타·확정과 재시도 동시 등.
+        // PG 호출이 끼어 있어 DB 트랜잭션 대신 캐시 락(120초)으로 직렬화한다.
+        $lock = \Illuminate\Support\Facades\Cache::lock('return-refund-' . $returnId, 120);
+        if (! $lock->get()) {
+            throw new \RuntimeException('이 반품의 환불이 이미 처리 중입니다. 잠시 후 새로고침해 확인하세요.');
+        }
+        try {
+            return self::refundLocked($returnId);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private static function refundLocked(int $returnId): array
     {
         $return = DB::table('returns')->find($returnId);
         if (! $return || $return->status !== 'confirmed') {
