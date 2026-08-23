@@ -464,10 +464,12 @@
                             @if($classes->isNotEmpty())
                                 <div class="mb-2 p-2 rounded" style="background:#eaf1f8; border:1px solid #1f3a5f;">
                                     <label class="form-label small fw-bold navy mb-1" for="orderClassSelect">
-                                        <i class="bi bi-mortarboard-fill"></i> 학급 선택 <span class="text-muted fw-normal">(소매 주문 시)</span>
+                                        <i class="bi bi-mortarboard-fill"></i> 학급 선택
+                                        @if(($vendor->trade_type ?? 'retail') !== 'wholesale')<span class="text-danger">*</span>@endif
                                     </label>
-                                    <select name="class_id" id="orderClassSelect" class="form-select form-select-sm" aria-label="학급 선택">
-                                        <option value="">학급 선택 안 함</option>
+                                    <select name="class_id" id="orderClassSelect" class="form-select form-select-sm" aria-label="학급 선택"
+                                            @if(($vendor->trade_type ?? 'retail') !== 'wholesale') required @endif>
+                                        <option value="">@if(($vendor->trade_type ?? 'retail') !== 'wholesale')학급을 선택하세요@else학급 선택 안 함@endif</option>
                                         @foreach($classes as $c)
                                             <option value="{{ $c->id }}">{{ $c->name }}</option>
                                         @endforeach

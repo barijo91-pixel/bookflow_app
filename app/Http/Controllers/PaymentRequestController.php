@@ -148,6 +148,13 @@ class PaymentRequestController extends Controller
 
         $vendor = DB::table('vendors')->find($order->vendor_id);
 
+        // 도매는 학원이 직접 결제하는 구조 — 학부모 결제요청 대상이 아니다.
+        // (한 학원은 도매/소매 한 형태로만 거래한다)
+        if (($vendor->trade_type ?? 'retail') === 'wholesale') {
+            return redirect()->route('my.orders.show', $orderId)
+                ->with('error', '도매 학원은 학부모 결제요청 대신 학원에서 직접 결제합니다.');
+        }
+
         // 학급 목록 (active)
         $classes = DB::table('academy_classes')
             ->where('vendor_id', $order->vendor_id)
@@ -220,6 +227,12 @@ class PaymentRequestController extends Controller
 
         $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id')->toArray();
         if (! in_array($order->vendor_id, $vendorIds)) abort(403);
+
+        // 도매 학원은 학부모 결제요청 대상이 아니다 (화면 우회 방어)
+        $tradeType = DB::table('vendors')->where('id', $order->vendor_id)->value('trade_type') ?? 'retail';
+        if ($tradeType === 'wholesale') {
+            return back()->with('error', '도매 학원은 학부모 결제요청 대신 학원에서 직접 결제합니다.');
+        }
 
         $data = $request->validate([
             'class_id'                  => ['nullable', 'integer'],

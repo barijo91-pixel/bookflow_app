@@ -2029,13 +2029,24 @@ class MyPageController extends Controller
             }
         }
 
-        // 학급(선택) 검증 — 본인 학원의 학급만 허용
+        // 학급 검증 — 본인 학원의 학급만 허용
         $classId = null;
         if (! empty($data['class_id'])) {
             $classId = DB::table('academy_classes')
                 ->where('id', $data['class_id'])
                 ->where('vendor_id', $vendorId)
                 ->value('id');
+        }
+
+        // 소매는 학부모에게 개별 결제요청을 보내는 구조라 어느 학급 것인지 정해져야 한다.
+        // 학급 없이 주문하면 결제요청 단계에서 대상 학생을 특정할 수 없다.
+        $vendorTrade = DB::table('vendors')->where('id', $vendorId)->value('trade_type') ?? 'retail';
+        if ($vendorTrade !== 'wholesale' && ! $classId) {
+            $hasClass = DB::table('academy_classes')->where('vendor_id', $vendorId)
+                ->where('status', 'active')->exists();
+            return back()->with('error', $hasClass
+                ? '소매 주문은 학급을 선택해야 합니다. 어느 학급 교재인지 정해야 학부모에게 결제를 요청할 수 있습니다.'
+                : '등록된 학급이 없습니다. 학급/학생 메뉴에서 학급을 먼저 만들어주세요.');
         }
 
         // 대상 학생(선택) — 위 학급에 속한 학생만 스냅샷으로 보존
