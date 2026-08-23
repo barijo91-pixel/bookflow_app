@@ -213,6 +213,10 @@ Route::middleware('auth')->group(function () {
         // 매출 조회 (영업자·총판) — 결제액 기준, 일별/월별/거래처/도서/출판사/담당자
         Route::get('sales', [\App\Http\Controllers\Public\SalesReportController::class, 'index'])->name('sales.index');
 
+        // 물류센터 출고 요청 엑셀 — 주문 목록에서 고른 주문 (확정 이후만)
+        Route::post('orders/export-logistics',
+            [\App\Http\Controllers\Public\OrderExportController::class, 'export'])->name('orders.export_logistics');
+
         // 반품 관리 (영업자·총판) — 품목별 수량 접수 → 총판 확정 시 PG 부분취소
         Route::get('returns',                    [\App\Http\Controllers\Public\ReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/{id}',               [\App\Http\Controllers\Public\ReturnController::class, 'show'])->name('returns.show')->whereNumber('id');

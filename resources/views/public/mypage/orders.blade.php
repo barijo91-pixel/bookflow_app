@@ -110,12 +110,40 @@
     </div>
 </form>
 
+@php
+    // 물류로 넘길 수 있는 주문만 체크 가능 — 확정 이후 (접수 대기·취소는 제외)
+    $canExport = in_array($user->role_code, ['agent', 'distributor'], true);
+    $exportable = \App\Http\Controllers\Public\OrderExportController::EXPORTABLE_STATUS;
+@endphp
+
+@if($canExport)
+    {{-- 선택 주문을 물류센터 출고 엑셀로 --}}
+    <form method="POST" action="{{ route('my.orders.export_logistics') }}" id="logisticsForm" class="d-none d-md-block mb-2">
+        @csrf
+        <input type="hidden" name="order_ids" id="logisticsIds" value="">
+        <div class="d-flex align-items-center gap-2">
+            <button type="submit" class="btn btn-sm btn-navy" id="logisticsBtn" disabled>
+                <i class="bi bi-file-earmark-excel"></i> 물류센터 출고 엑셀
+                <span id="logisticsCount"></span>
+            </button>
+            <span class="small text-muted">
+                주문일 앞 체크박스로 고르세요. <strong>확정 이후</strong>의 주문만 선택할 수 있습니다.
+            </span>
+        </div>
+    </form>
+@endif
+
 <div class="card section-card">
     {{-- 데스크탑: 표 --}}
     <div class="table-responsive d-none d-md-block">
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
+                    @if($canExport)
+                        <th style="width:34px;">
+                            <input type="checkbox" class="form-check-input" id="logisticsAll" title="선택 가능한 주문 전체 선택">
+                        </th>
+                    @endif
                     <th><x-sort-link field="date" label="주문일" :sort="$sort" :dir="$dir" /></th>
                     {{-- 주문번호에 학급을 함께 표기 (학급 컬럼 별도 운용 안 함) --}}
                     <th><x-sort-link field="order_no" label="주문번호 (학급)" :sort="$sort" :dir="$dir" /></th>
@@ -135,6 +163,14 @@
             <tbody>
                 @forelse($orders as $o)
                     <tr class="order-row" style="cursor:pointer" onclick="location.href='{{ route('my.orders.show', $o->id) }}'">
+                        @if($canExport)
+                            @php $selectable = in_array($o->status_code, $exportable, true); @endphp
+                            <td onclick="event.stopPropagation()">
+                                <input type="checkbox" class="form-check-input logistics-pick" value="{{ $o->id }}"
+                                       {{ $selectable ? '' : 'disabled' }}
+                                       title="{{ $selectable ? '물류 출고 엑셀에 포함' : '확정 이후의 주문만 내보낼 수 있습니다' }}">
+                            </td>
+                        @endif
                         <td class="small text-muted text-nowrap">
                             {{ \Carbon\Carbon::parse($o->requested_at ?? $o->created_at)->format('Y-m-d H:i') }}
                         </td>
@@ -179,7 +215,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ 5 + ($user->role_code !== 'academy' ? 2 : 0) + ($user->role_code !== 'agent' ? 1 : 0) + (! in_array($user->role_code, ['distributor','academy'], true) ? 1 : 0) }}"
+                        <td colspan="{{ 5 + ($canExport ? 1 : 0) + ($user->role_code !== 'academy' ? 2 : 0) + ($user->role_code !== 'agent' ? 1 : 0) + (! in_array($user->role_code, ['distributor','academy'], true) ? 1 : 0) }}"
                             class="text-center text-muted py-5">
                             <i class="bi bi-inbox" style="font-size:2rem"></i>
                             <p class="mb-0 mt-2">
@@ -235,6 +271,38 @@
         <div class="card-footer">{{ $orders->links() }}</div>
     @endif
 </div>
+@if($canExport)
+{{-- 체크박스 → 선택 주문 id 를 폼에 실어 보낸다 --}}
+<script>
+(function () {
+    var form  = document.getElementById('logisticsForm');
+    if (! form) return;
+    var btn   = document.getElementById('logisticsBtn');
+    var cnt   = document.getElementById('logisticsCount');
+    var hid   = document.getElementById('logisticsIds');
+    var all   = document.getElementById('logisticsAll');
+    var picks = function () { return Array.prototype.slice.call(document.querySelectorAll('.logistics-pick:not(:disabled)')); };
+
+    function sync() {
+        var on = picks().filter(function (c) { return c.checked; });
+        hid.value  = on.map(function (c) { return c.value; }).join(',');
+        btn.disabled = on.length === 0;
+        cnt.textContent = on.length ? '(' + on.length + '건)' : '';
+        if (all) {
+            var total = picks().length;
+            all.checked = total > 0 && on.length === total;
+            all.indeterminate = on.length > 0 && on.length < total;
+        }
+    }
+    picks().forEach(function (c) { c.addEventListener('change', sync); });
+    if (all) all.addEventListener('change', function () {
+        picks().forEach(function (c) { c.checked = all.checked; });
+        sync();
+    });
+    sync();
+})();
+</script>
+@endif
 @endsection
 
 @push('head')
