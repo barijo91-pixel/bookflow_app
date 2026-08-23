@@ -210,6 +210,9 @@ Route::middleware('auth')->group(function () {
         Route::post('classes/{id}/students/import/{jobId}/run',
             [\App\Http\Controllers\Public\StudentImportController::class, 'run'])->name('classes.students.import.run');
 
+        // 매출 조회 (영업자·총판) — 결제액 기준, 일별/월별/거래처/도서/출판사/담당자
+        Route::get('sales', [\App\Http\Controllers\Public\SalesReportController::class, 'index'])->name('sales.index');
+
         // 교재 조회 (영업자·총판) — 학원 없이도 판매 가능한 교재를 둘러본다
         Route::get('books', [\App\Http\Controllers\Public\BookCatalogController::class, 'index'])->name('books.index');
 

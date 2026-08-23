@@ -73,6 +73,9 @@
                 <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
                     <i class="bi bi-graph-up-arrow"></i> 예상 수익보기
                 </a>
+                <a href="{{ route('my.sales.index') }}" class="nav-item {{ $startsWith('my.sales') }}">
+                    <i class="bi bi-bar-chart-line"></i> 매출 조회
+                </a>
                 <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
                     <i class="bi bi-cash-stack"></i> 정산 내역
                 </a>
@@ -104,6 +107,9 @@
                 </a>
                 <a href="{{ route('mypage.tax') }}" class="nav-item {{ $is('mypage.tax') }}">
                     <i class="bi bi-receipt-cutoff"></i> 세무 정보
+                </a>
+                <a href="{{ route('my.sales.index') }}" class="nav-item {{ $startsWith('my.sales') }}">
+                    <i class="bi bi-bar-chart-line"></i> 매출 조회
                 </a>
                 <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
                     <i class="bi bi-cash-stack"></i> 정산 내역
