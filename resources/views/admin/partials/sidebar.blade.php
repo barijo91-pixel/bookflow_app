@@ -1,6 +1,9 @@
 @php
     $route = request()->route() ? request()->route()->getName() : '';
     $is = fn($prefix) => str_starts_with($route, $prefix) ? 'active' : '';
+    // 반품 확정 대기 (전사)
+    $returnBadge = \Illuminate\Support\Facades\DB::table('returns')
+        ->where('status', 'requested')->whereNull('deleted_at')->count();
 @endphp
 <aside class="admin-sidebar">
     <div class="sidebar-brand">
@@ -25,6 +28,13 @@
         </a>
         <a href="{{ route('admin.vendors.index') }}" class="nav-item {{ $is('admin.vendors') }}">
             <i class="bi bi-building"></i> 거래처(학원)
+        </a>
+        <a href="{{ route('admin.sales.index') }}" class="nav-item {{ $is('admin.sales') }}">
+            <i class="bi bi-bar-chart-line"></i> 매출 조회
+        </a>
+        <a href="{{ route('admin.returns.index') }}" class="nav-item {{ $is('admin.returns') }}">
+            <i class="bi bi-arrow-return-left"></i> 반품 관리
+            @if(($returnBadge ?? 0) > 0)<span class="badge bg-danger ms-auto">{{ $returnBadge }}</span>@endif
         </a>
         <a href="{{ route('admin.settlement.records') }}" class="nav-item {{ $is('admin.settlement.records') . $is('admin.settlement.record_show') }}">
             <i class="bi bi-cash-stack"></i> 정산 레코드

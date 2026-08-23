@@ -381,6 +381,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('code-groups/{group_code}/codes/{id}',     [CodeController::class, 'update'])->name('codes.update');
         Route::delete('code-groups/{group_code}/codes/{id}',  [CodeController::class, 'destroy'])->name('codes.destroy');
 
+        // 매출 조회 (전사) — 결제액 기준, 총판·영업자·거래구분 필터
+        Route::get('sales', [\App\Http\Controllers\Admin\SalesReportController::class, 'index'])->name('sales.index');
+
+        // 반품 관리 (전사) — 총판 미처리분을 본사가 확정/반려/환불 재시도
+        Route::get('returns',                    [\App\Http\Controllers\Admin\ReturnController::class, 'index'])->name('returns.index');
+        Route::get('returns/{id}',               [\App\Http\Controllers\Admin\ReturnController::class, 'show'])->name('returns.show')->whereNumber('id');
+        Route::post('returns/{id}/confirm',      [\App\Http\Controllers\Admin\ReturnController::class, 'confirm'])->name('returns.confirm');
+        Route::post('returns/{id}/retry-refund', [\App\Http\Controllers\Admin\ReturnController::class, 'retryRefund'])->name('returns.retry_refund');
+        Route::post('returns/{id}/reject',       [\App\Http\Controllers\Admin\ReturnController::class, 'reject'])->name('returns.reject');
+
         // 정산 시뮬레이션 (계획서 7장 — PG 실연동 전 계산 검증용)
         Route::get('settlement/simulator',     [\App\Http\Controllers\Admin\SettlementController::class, 'simulator'])->name('settlement.simulator');
         Route::get('settlement/order/{order}', [\App\Http\Controllers\Admin\SettlementController::class, 'orderPreview'])->name('settlement.order_preview');
