@@ -2226,7 +2226,12 @@ class MyPageController extends Controller
     }
 
     /** 학급 목록 */
-    public function classesIndex()
+    /**
+     * 학급 목록 + 선택한 학급의 학생을 한 화면에서.
+     * 학급 정보가 이름·학년 정도라 목록과 상세를 나눌 이유가 없어 합쳤다.
+     * 기존 /mypage/classes/{id} 는 리다이렉트로 유지 (북마크·알림 링크 호환).
+     */
+    public function classesIndex(Request $request)
     {
         [$user, $vendorId, $vendor] = $this->academyVendor();
 
@@ -2235,7 +2240,6 @@ class MyPageController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        // 각 학급 학생 수
         $classIds = $classes->pluck('id')->toArray();
         $counts = DB::table('students')
             ->whereIn('class_id', $classIds)
@@ -2246,9 +2250,37 @@ class MyPageController extends Controller
             $c->student_count = $counts[$c->id] ?? 0;
         }
 
+        // 선택 학급 — 지정이 없으면 첫 번째 (없으면 null)
+        $wanted = (int) $request->query('class');
+        $selectedClass = $classes->firstWhere('id', $wanted) ?: $classes->first();
+
+        $students = collect();
+        $shareLinks = collect();
+        if ($selectedClass) {
+            $students = DB::table('students as s')
+                ->leftJoin('parents as p', 'p.id', '=', 's.parent_id')
+                ->where('s.class_id', $selectedClass->id)
+                ->whereNull('s.deleted_at')
+                ->select('s.id', 's.name', 's.grade_code', 's.memo',
+                    'p.id as parent_id', 'p.name as parent_name', 'p.phone as parent_phone',
+                    'p.address as parent_address', 'p.address_detail as parent_address_detail')
+                ->orderBy('s.id')->get();
+
+            $shareLinks = DB::table('parent_share_links as l')
+                ->leftJoin('students as s', 's.id', '=', 'l.student_id')
+                ->leftJoin('parents as p', 'p.id', '=', 'l.parent_id')
+                ->where('l.class_id', $selectedClass->id)
+                ->orderByDesc('l.id')->limit(20)
+                ->select('l.id', 'l.token', 'l.sent_at', 'l.expires_at', 'l.accessed_at', 'l.access_count',
+                    's.name as student_name', 'p.name as parent_name', 'p.phone as parent_phone')
+                ->get();
+        }
+
         $grades = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get();
 
-        return view('public.mypage.classes', compact('user', 'vendor', 'classes', 'grades'));
+        return view('public.mypage.classes', compact(
+            'user', 'vendor', 'classes', 'grades', 'selectedClass', 'students', 'shareLinks'
+        ));
     }
 
     /** 학급 생성 */
@@ -2376,57 +2408,15 @@ class MyPageController extends Controller
         return redirect()->route('my.classes.show', $classId)->with('success', $msg);
     }
     /** 학급 상세 */
+    /** 옛 상세 주소 — 합쳐진 화면으로 넘긴다 (북마크·기존 링크 호환) */
     public function classesShow($id)
     {
         [$user, $vendorId] = $this->academyVendor();
 
-        $class = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->first();
-        if (! $class) abort(404, '학급을 찾을 수 없습니다.');
+        $exists = DB::table('academy_classes')->where('id', $id)->where('vendor_id', $vendorId)->exists();
+        if (! $exists) abort(404, '학급을 찾을 수 없습니다.');
 
-        $students = DB::table('students as s')
-            ->leftJoin('parents as p', 'p.id', '=', 's.parent_id')
-            ->where('s.class_id', $id)
-            ->whereNull('s.deleted_at')
-            ->select('s.id', 's.name', 's.grade_code', 's.memo',
-                'p.id as parent_id', 'p.name as parent_name', 'p.phone as parent_phone',
-                'p.address as parent_address', 'p.address_detail as parent_address_detail')
-            ->orderBy('s.id')->get();
-
-        $books = DB::table('class_books as cb')
-            ->leftJoin('books as b', 'b.id', '=', 'cb.book_id')
-            ->where('cb.class_id', $id)
-            ->select('cb.id as cb_id', 'cb.qty', 'cb.sort_order',
-                'b.id as book_id', 'b.title', 'b.isbn', 'b.price')
-            ->orderBy('cb.sort_order')->orderBy('cb.id')->get();
-
-        $shareLinks = DB::table('parent_share_links as l')
-            ->leftJoin('students as s', 's.id', '=', 'l.student_id')
-            ->leftJoin('parents as p', 'p.id', '=', 'l.parent_id')
-            ->where('l.class_id', $id)
-            ->orderByDesc('l.id')->limit(20)
-            ->select('l.id', 'l.token', 'l.sent_at', 'l.expires_at', 'l.accessed_at', 'l.access_count',
-                's.name as student_name', 'p.name as parent_name', 'p.phone as parent_phone')
-            ->get();
-
-        $grades = DB::table('codes')->where('group_code', 'grade')->orderBy('sort_order')->get();
-        $availableBooks = DB::table('books as b')
-            ->leftJoin('publishers as p', 'p.id', '=', 'b.publisher_id')
-            ->whereNull('b.deleted_at')->where('b.status_code', 'selling')
-            ->orderBy('b.title')
-            ->get(['b.id', 'b.title', 'b.isbn', 'b.price', 'b.publisher_id', 'p.name as publisher_name']);
-
-        // 출판사 필터 옵션 (판매중 도서를 보유한 출판사만)
-        $publisherOptions = DB::table('publishers as p')
-            ->whereIn('p.id', function ($q) {
-                $q->select('publisher_id')->from('books')
-                  ->whereNull('deleted_at')->where('status_code', 'selling')->whereNotNull('publisher_id');
-            })
-            ->orderBy('p.name')   // 출판사 드롭다운은 이름순(가나다) 통일
-            ->get(['p.id', 'p.name']);
-
-        return view('public.mypage.class_show', compact(
-            'user', 'class', 'students', 'books', 'shareLinks', 'grades', 'availableBooks', 'publisherOptions'
-        ));
+        return redirect()->route('my.classes.index', ['class' => $id]);
     }
 
     /** 학급 정보 수정 */
