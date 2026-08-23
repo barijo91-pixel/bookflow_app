@@ -23,9 +23,12 @@
         <a href="{{ route('admin.books.index') }}" class="nav-item {{ $is('admin.books') }}">
             <i class="bi bi-journals"></i> 도서관리
         </a>
+        {{-- 재고관리 — 숨김 (물류를 외부 업체가 맡아 재고 수치를 맞출 수 없다).
+             라우트는 살아 있어 /admin/stocks 로 직접 접근 가능. 물류를 직접 다루게 되면 되살릴 것.
         <a href="{{ route('admin.stocks.index') }}" class="nav-item {{ $is('admin.stocks') }}">
             <i class="bi bi-box-seam"></i> 재고관리
         </a>
+        --}}
         <a href="{{ route('admin.vendors.index') }}" class="nav-item {{ $is('admin.vendors') }}">
             <i class="bi bi-building"></i> 거래처(학원)
         </a>

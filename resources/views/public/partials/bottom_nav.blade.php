@@ -43,8 +43,9 @@
                 <i class="bi bi-receipt"></i><span>주문</span>
                 @if($navBadge > 0)<span class="mbn-badge">{{ $navBadge > 99 ? '99+' : $navBadge }}</span>@endif
             </a>
-            <a href="{{ route('my.stocks.index') }}" class="mbn-item {{ $rs('my.stocks') ? 'active' : '' }}">
-                <i class="bi bi-box-seam"></i><span>재고</span>
+            {{-- 재고 숨김 — 자리를 반품으로 대체 (사이드바 주석 참고) --}}
+            <a href="{{ route('my.returns.index') }}" class="mbn-item {{ $rs('my.returns') ? 'active' : '' }}">
+                <i class="bi bi-arrow-return-left"></i><span>반품</span>
             </a>
             <a href="{{ route('mypage.settlements') }}" class="mbn-item {{ $route === 'mypage.settlements' ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i><span>정산</span>

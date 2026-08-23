@@ -90,9 +90,12 @@
                 <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
                     <i class="bi bi-cash-stack"></i> 정산 내역
                 </a>
+                {{-- 재고 관리 — 숨김 (물류를 외부 업체가 맡아 재고 수치를 맞출 수 없다).
+                     라우트는 살아 있어 /mypage/stocks 로 직접 접근 가능. 물류를 직접 다루게 되면 되살릴 것.
                 <a href="{{ route('my.stocks.index') }}" class="nav-item {{ $startsWith('my.stocks') }}">
                     <i class="bi bi-box-seam"></i> 재고 관리
                 </a>
+                --}}
                 @break
 
             @case('agent')

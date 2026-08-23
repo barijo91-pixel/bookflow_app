@@ -50,13 +50,12 @@
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-card">
+            {{-- 재고부족은 뺐다 — 물류가 외부라 수량이 실제와 맞지 않아 경고로서 의미가 없다 --}}
             <div class="stat-label"><i class="bi bi-exclamation-triangle"></i> 주의</div>
             <div class="stat-value">
-                <span class="text-warning">{{ number_format($stats['low_stocks']) }}</span>
-                <span class="text-muted" style="font-size:1rem">/</span>
                 <span class="text-danger">{{ number_format($stats['notifications_failed']) }}</span>
             </div>
-            <span class="stat-link text-muted">재고부족 / 알림실패</span>
+            <span class="stat-link text-muted">알림실패</span>
         </div>
     </div>
 </div>

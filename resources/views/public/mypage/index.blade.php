@@ -71,19 +71,15 @@
         </div>
 
         {{-- 역할별 추가 카드 --}}
+        {{-- 재고 요약 — 숨김. 물류를 외부 업체가 맡아 수량이 실제와 맞지 않아
+             "총 재고 수량"을 그대로 띄우면 오히려 오해를 부른다. 취급 도서 수만 남긴다. --}}
         @if($user->role_code === 'distributor' && isset($stock_summary))
             <div class="card section-card mb-3">
-                <div class="card-header"><strong><i class="bi bi-box-seam"></i> 내 재고 요약</strong></div>
+                <div class="card-header"><strong><i class="bi bi-journals"></i> 취급 교재</strong></div>
                 <div class="card-body">
                     <dl class="row mb-0 small">
                         <dt class="col-7 text-muted">취급 도서</dt>
-                        <dd class="col-5 text-end">{{ number_format($stock_summary['total_books']) }}권</dd>
-                        <dt class="col-7 text-muted">총 재고 수량</dt>
-                        <dd class="col-5 text-end">{{ number_format($stock_summary['total_qty']) }}</dd>
-                        <dt class="col-7 text-muted">안전재고 이하</dt>
-                        <dd class="col-5 text-end {{ $stock_summary['low_stock'] > 0 ? 'text-warning fw-bold' : '' }}">
-                            {{ number_format($stock_summary['low_stock']) }}
-                        </dd>
+                        <dd class="col-5 text-end">{{ number_format($stock_summary['total_books']) }}종</dd>
                     </dl>
                 </div>
             </div>
