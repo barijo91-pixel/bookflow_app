@@ -82,7 +82,7 @@
 
 {{-- 학급 추가 모달 — 학급 정보와 학생을 한 번에 등록 --}}
 <div class="modal fade" id="classCreateModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
             <form method="POST" action="{{ route('my.classes.store_with_students') }}">
                 @csrf

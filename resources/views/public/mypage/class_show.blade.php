@@ -159,7 +159,7 @@
 
         {{-- 학생 여러 명 등록 모달 — 학급 목록의 등록 모달과 같은 방식 --}}
         <div class="modal fade" id="studentBulkModal" tabindex="-1">
-            <div class="modal-dialog modal-xl">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content">
                     <form method="POST" action="{{ route('my.classes.students.attach_bulk', $class->id) }}">
                         @csrf

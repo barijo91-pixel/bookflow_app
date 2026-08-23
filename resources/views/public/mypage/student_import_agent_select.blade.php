@@ -97,7 +97,7 @@
 
                             {{-- 학생 여러 명 등록 모달 (학급마다 하나) --}}
                             <div class="modal fade" id="bulkModal{{ $c->id }}" tabindex="-1">
-                                <div class="modal-dialog modal-xl">
+                                <div class="modal-dialog modal-xl modal-dialog-centered">
                                     <div class="modal-content">
                                         <form method="POST" action="{{ route('my.agent.classes.students', $c->id) }}">
                                             @csrf
