@@ -34,18 +34,29 @@
 {{-- 상태 필터 --}}
 <div class="card section-card mb-3">
     <div class="card-body py-2 d-flex flex-wrap gap-2 align-items-center">
-        <a href="{{ route('my.orders.index') }}"
+        @php
+            // 전체 = 취소 제외 (기본 목록과 같은 기준)
+            $keep = request()->only(['date_from','date_to','q','vendor_id','trade_type']);
+            $canceledCount = $statusCounts->get('canceled', 0);
+        @endphp
+        <a href="{{ route('my.orders.index', $keep) }}"
            class="btn btn-sm {{ !$status ? 'btn-navy' : 'btn-outline-secondary' }}">
-            전체 ({{ $statusCounts->sum() }})
+            전체 ({{ $statusCounts->sum() - $canceledCount }})
         </a>
         @foreach($statusOptions as $code => [$label, $cls])
+            @continue($code === 'canceled')
             @if($statusCounts->get($code, 0) > 0)
-                <a href="{{ route('my.orders.index', array_merge(request()->only(['date_from','date_to','q','vendor_id','trade_type']), ['status' => $code])) }}"
+                <a href="{{ route('my.orders.index', array_merge($keep, ['status' => $code])) }}"
                    class="btn btn-sm {{ $status === $code ? 'btn-navy' : 'btn-outline-secondary' }}">
                     {{ $label }} ({{ $statusCounts->get($code, 0) }})
                 </a>
             @endif
         @endforeach
+        {{-- 취소는 기본 목록에서 빠져 있으므로, 0건이어도 눌러볼 수 있게 항상 노출 --}}
+        <a href="{{ route('my.orders.index', array_merge($keep, ['status' => 'canceled'])) }}"
+           class="btn btn-sm ms-auto {{ $status === 'canceled' ? 'btn-navy' : 'btn-outline-secondary' }}">
+            <i class="bi bi-x-circle"></i> 취소 ({{ $canceledCount }})
+        </a>
     </div>
 </div>
 

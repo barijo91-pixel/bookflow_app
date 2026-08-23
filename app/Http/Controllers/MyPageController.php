@@ -1056,7 +1056,13 @@ class MyPageController extends Controller
                 abort(403);
         }
 
-        if ($status)   $query->where('o.status_code', $status);
+        // 취소 주문은 기본 목록에서 제외 — 취소 탭을 눌렀을 때만 보인다.
+        // (지우지 않고 감추는 방식. 정산·결제 기록이 주문을 참조하므로 삭제는 하지 않는다)
+        if ($status) {
+            $query->where('o.status_code', $status);
+        } else {
+            $query->where('o.status_code', '!=', 'canceled');
+        }
         if ($tradeType) $query->where('v.trade_type', $tradeType);
         if ($dateFrom) $query->whereDate('o.created_at', '>=', $dateFrom);
         if ($dateTo)   $query->whereDate('o.created_at', '<=', $dateTo);
