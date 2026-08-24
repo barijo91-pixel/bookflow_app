@@ -30,6 +30,27 @@
     @php return; @endphp
 @endif
 
+{{-- 소매인데 학급이 없으면 주문이 끝에서 막힌다. 담기 전에 미리 알린다.
+     (서버 storeOrder 가 소매에 class_id 를 요구 — 학급 없이는 주문 자체가 안 됨) --}}
+@if(($vendor->trade_type ?? 'retail') !== 'wholesale' && $classes->isEmpty())
+    <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="flex-grow-1">
+            <strong><i class="bi bi-exclamation-triangle-fill"></i> 학급을 먼저 만들어 주세요.</strong>
+            <div class="small mt-1 mb-0">
+                교재비를 학부모가 결제하는 방식이라, 어느 학급 학생들에게 보낼지 정해야 주문할 수 있습니다.
+                지금은 도서를 담아도 <strong>주문이 완료되지 않습니다.</strong>
+            </div>
+        </div>
+        @if($user->role_code === 'academy')
+            <a href="{{ route('my.classes.index') }}" class="btn btn-warning text-dark fw-bold text-nowrap">
+                <i class="bi bi-mortarboard"></i> 학급 만들러 가기
+            </a>
+        @else
+            <span class="badge bg-secondary">학원에서 학급 등록 필요</span>
+        @endif
+    </div>
+@endif
+
 @php
     // 현재 쿼리에서 특정 필터만 바꿔 URL 생성 (다른 필터는 유지)
     $buildUrl = function (array $override) use ($activeFilters, $selectedAgent) {
@@ -102,6 +123,11 @@
             </div>
             <div class="col-md-2 d-flex gap-1">
                 <button type="submit" class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-search"></i> 검색</button>
+                {{-- 바코드 스캔 진입점. 원래 버튼이 숨김 처리된 AI 카드 안에 있어 아무도 열 수 없었다. --}}
+                <button type="button" class="btn btn-sm btn-outline-navy scan-btn" id="toggleBarcodeBtn"
+                        title="바코드 스캔으로 담기">
+                    <i class="bi bi-upc-scan"></i><span class="d-md-none ms-1">스캔</span>
+                </button>
             </div>
             {{-- 현재 필터 hidden (필터 유지) --}}
             @if($activeFilters['school'])   <input type="hidden" name="school"   value="{{ $activeFilters['school'] }}"> @endif
@@ -127,7 +153,7 @@
         <input type="file" id="visionFileInput" accept="image/*" capture="environment" style="display:none">
         <div id="visionResult" class="small mt-2"></div>
         <div class="mt-2 text-end">
-            <button type="button" class="btn btn-sm btn-link text-muted p-0" id="toggleBarcodeBtn">
+            <button type="button" class="btn btn-sm btn-link text-muted p-0" id="toggleBarcodeBtnLegacy">
                 <i class="bi bi-upc-scan"></i> 바코드로 스캔 (보조)
             </button>
         </div>
@@ -331,10 +357,11 @@
                     <thead class="table-light">
                         <tr>
                             <th>도서</th>
-                            <th class="text-end">정가</th>
+                            {{-- 정가는 모바일에서 숨긴다 — 좁은 폭에서 담기 버튼이 찌그러진다 --}}
+                            <th class="text-end d-none d-lg-table-cell">정가</th>
                             <th class="text-end">할인가</th>
-                            <th class="text-center" style="width:58px">수량</th>
-                            <th class="text-center" style="width:62px">담기</th>
+                            <th class="text-center qty-col">수량</th>
+                            <th class="text-center add-col">담기</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -348,7 +375,7 @@
                                 <td>
                                     <strong>{{ $b->title }}</strong>@if($b->subtitle)<span class="text-muted"> — {{ $b->subtitle }}</span>@endif<span class="text-muted small ms-2"><code>{{ $b->isbn }}</code>@if($b->publisher_name) · {{ $b->publisher_name }}@endif</span>
                                 </td>
-                                <td class="text-end text-muted">{{ number_format($b->price) }}원</td>
+                                <td class="text-end text-muted d-none d-lg-table-cell">{{ number_format($b->price) }}원</td>
                                 <td class="text-end">
                                     <span class="fw-bold navy">{{ number_format($unit) }}원</span>
                                     <span class="text-muted small ms-1">{{ rtrim(rtrim($rate, '0'), '.') }}%@if($hasBookDiscount) <i class="bi bi-star-fill text-warning" title="개별 할인율"></i>@endif</span>
@@ -358,10 +385,16 @@
                                         @csrf
                                         <input type="hidden" name="book_id" value="{{ $b->id }}">
                                         <input type="hidden" name="cart_key" value="{{ $cartKey }}">
-                                        <input type="number" name="qty" value="1" min="1" max="9999" class="form-control form-control-sm text-end px-1" style="width:48px">
+                                        {{-- 손가락으로 맞추기 좋게 −/+ 를 붙인다 (모바일에서 44px 확보) --}}
+                                        <div class="qty-stepper">
+                                            <button type="button" class="qty-btn" onclick="stepQty(this,-1)" aria-label="수량 줄이기">−</button>
+                                            <input type="number" name="qty" value="1" min="1" max="9999"
+                                                   class="form-control form-control-sm text-center px-0 qty-input" inputmode="numeric">
+                                            <button type="button" class="qty-btn" onclick="stepQty(this,1)" aria-label="수량 늘리기">+</button>
+                                        </div>
                                 </td>
                                 <td>
-                                        <button class="btn btn-sm btn-outline-navy w-100"><i class="bi bi-plus"></i></button>
+                                        <button class="btn btn-sm btn-outline-navy w-100 add-btn"><i class="bi bi-plus"></i></button>
                                     </form>
                                 </td>
                             </tr>
@@ -432,9 +465,13 @@
                                                 </div>
                                                 {{-- 우측: 수량 입력 + 삭제 --}}
                                                 <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                                                    <input type="number" name="qty[{{ $b->id }}]" value="{{ $line['qty'] }}" min="0" max="9999"
-                                                           class="form-control form-control-sm text-end" style="width:60px">
-                                                    <button type="button" class="btn btn-sm btn-link text-danger p-1"
+                                                    <div class="qty-stepper">
+                                                        <button type="button" class="qty-btn" onclick="stepQty(this,-1)" aria-label="수량 줄이기">−</button>
+                                                        <input type="number" name="qty[{{ $b->id }}]" value="{{ $line['qty'] }}" min="0" max="9999"
+                                                               class="form-control form-control-sm text-center px-0 qty-input" inputmode="numeric">
+                                                        <button type="button" class="qty-btn" onclick="stepQty(this,1)" aria-label="수량 늘리기">+</button>
+                                                    </div>
+                                                    <button type="button" class="btn btn-link text-danger p-1 del-btn"
                                                             onclick="removeCartItem({{ $b->id }})" title="제거">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
@@ -533,6 +570,19 @@
 @endif
 
 @push('scripts')
+<script>
+// 수량 −/+ — 입력칸을 직접 두드리지 않아도 되게
+function stepQty(btn, delta) {
+    var input = btn.parentElement.querySelector('.qty-input');
+    if (! input) return;
+    var min = parseInt(input.min || '0', 10);
+    var max = parseInt(input.max || '9999', 10);
+    var v   = parseInt(input.value || '0', 10);
+    if (isNaN(v)) v = min;
+    input.value = Math.min(max, Math.max(min, v + delta));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+</script>
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <style>
 /* 모바일 필터 접이식 — 기본 접힘, 헤더 탭하면 펼침 (데스크탑은 항상 표시) */
@@ -558,6 +608,31 @@
 }
 
 /* 모바일 플로팅 장바구니 버튼 — 데스크탑(lg+)은 우측 sticky 장바구니라 숨김 */
+/* 수량 스테퍼 — 모바일에서 손가락으로 맞추기 좋게 44px 확보 */
+.qty-stepper { display: inline-flex; align-items: stretch; border: 1px solid #ced4da; border-radius: 6px; overflow: hidden; background: #fff; }
+.qty-stepper .qty-btn {
+    border: 0; background: #f1f4f9; color: var(--navy, #1f3a5f);
+    width: 30px; font-size: 1.05rem; font-weight: 700; line-height: 1; padding: 0;
+}
+.qty-stepper .qty-btn:active { background: #e2e8f2; }
+.qty-stepper .qty-input { border: 0; border-radius: 0; width: 44px; box-shadow: none; }
+.qty-stepper .qty-input::-webkit-outer-spin-button,
+.qty-stepper .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.qty-stepper .qty-input { -moz-appearance: textfield; }
+@media (max-width: 991px) {
+    /* 터치 타겟 44px — 애플·구글 권장치 */
+    .qty-stepper .qty-btn { width: 44px; font-size: 1.2rem; }
+    .qty-stepper .qty-input { width: 52px; height: 44px; font-size: 1rem; }
+    .add-btn { min-height: 44px; }
+    .scan-btn { min-width: 44px; min-height: 44px; }
+    .qty-col { width: 148px; }
+    .add-col { width: 52px; }
+    .add-btn { min-width: 44px; }
+    .del-btn { min-width: 44px; min-height: 44px; }
+}
+
+.qty-col { width: 62px; }
+.add-col { width: 62px; }
 .cart-fab { display: none; }
 @media (max-width: 991px) {
     .cart-fab {
