@@ -77,6 +77,9 @@
                 <a href="{{ route('my.academies.index') }}" class="nav-item {{ $startsWith('my.academies') }}">
                     <i class="bi bi-building"></i> 거래처(학원)
                 </a>
+                <a href="{{ route('my.featured-academies.index') }}" class="nav-item {{ $startsWith('my.featured-academies') }}">
+                    <i class="bi bi-buildings"></i> 대표 이용학원
+                </a>
                 <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
                     <i class="bi bi-graph-up-arrow"></i> 예상 수익보기
                 </a>
@@ -137,6 +140,9 @@
                 </a>
                 <a href="{{ route('my.agent.student.import') }}" class="nav-item d-none d-md-flex {{ $is('my.agent.student.import') }}">
                     <i class="bi bi-people"></i> 학급&학생
+                </a>
+                <a href="{{ route('my.featured-academies.index') }}" class="nav-item {{ $startsWith('my.featured-academies') }}">
+                    <i class="bi bi-buildings"></i> 대표 이용학원
                 </a>
                 <a href="{{ route('my.invite.show') }}" class="nav-item {{ $startsWith('my.invite') }}">
                     <i class="bi bi-link-45deg"></i> 학원 가입 링크

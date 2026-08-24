@@ -225,6 +225,12 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/export-logistics',
             [\App\Http\Controllers\Public\OrderExportController::class, 'export'])->name('orders.export_logistics');
 
+        // 대표 이용학원 등록 (영업자·총판) — 노출 여부는 관리자가 정한다
+        Route::get('featured-academies',         [\App\Http\Controllers\Public\FeaturedAcademyController::class, 'index'])->name('featured-academies.index');
+        Route::post('featured-academies',        [\App\Http\Controllers\Public\FeaturedAcademyController::class, 'store'])->name('featured-academies.store');
+        Route::put('featured-academies/{id}',    [\App\Http\Controllers\Public\FeaturedAcademyController::class, 'update'])->name('featured-academies.update');
+        Route::delete('featured-academies/{id}', [\App\Http\Controllers\Public\FeaturedAcademyController::class, 'destroy'])->name('featured-academies.destroy');
+
         // 반품 관리 (영업자·총판) — 품목별 수량 접수 → 총판 확정 시 PG 부분취소
         Route::get('returns',                    [\App\Http\Controllers\Public\ReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/{id}',               [\App\Http\Controllers\Public\ReturnController::class, 'show'])->name('returns.show')->whereNumber('id');
