@@ -44,7 +44,7 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">시·도</label>
-                    <select name="region_id" class="form-select form-select-sm">
+                    <select name="region_id" class="form-select form-select-sm sido-select">
                         <option value="">선택 안 함</option>
                         @foreach($regions as $r)
                             <option value="{{ $r->id }}">{{ $r->name }}</option>
@@ -53,7 +53,9 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">시·군·구</label>
-                    <input type="text" name="city" class="form-control form-control-sm" maxlength="60" placeholder="예: 해운대구">
+                    <select name="city" class="form-select form-select-sm sigungu-select" data-selected="">
+                        <option value="">시·도를 먼저 선택하세요</option>
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">이미지 <span class="text-muted">(나중에 가능)</span></label>
@@ -120,14 +122,19 @@
                         </td>
                         <td><input type="text" name="name" form="f{{ $row->id }}" value="{{ $row->name }}" class="form-control form-control-sm" required maxlength="120"></td>
                         <td>
-                            <select name="region_id" form="f{{ $row->id }}" class="form-select form-select-sm">
+                            <select name="region_id" form="f{{ $row->id }}" class="form-select form-select-sm sido-select">
                                 <option value="">-</option>
                                 @foreach($regions as $r)
                                     <option value="{{ $r->id }}" @selected((int) $row->region_id === (int) $r->id)>{{ $r->name }}</option>
                                 @endforeach
                             </select>
                         </td>
-                        <td><input type="text" name="city" form="f{{ $row->id }}" value="{{ $row->city }}" class="form-control form-control-sm" maxlength="60"></td>
+                        <td>
+                            <select name="city" form="f{{ $row->id }}" class="form-select form-select-sm sigungu-select"
+                                    data-selected="{{ $row->city }}">
+                                <option value="{{ $row->city }}">{{ $row->city ?: '-' }}</option>
+                            </select>
+                        </td>
                         <td><input type="number" name="sort_order" form="f{{ $row->id }}" value="{{ $row->sort_order }}" class="form-control form-control-sm" min="0"></td>
                         <td>
                             <div class="form-check">
@@ -164,4 +171,56 @@
     랜딩에는 <strong>노출</strong>이 켜진 학원만 나옵니다. 지역탭은 등록된 시·도만 자동으로 생기고,
     이미지가 없으면 학원 이름 카드로 표시됩니다.
 </div>
+<script>
+// 시·도 → 시·군·구 드롭다운. city 는 이름 문자열로 저장되므로 option value 도 이름.
+// 행마다 select 가 있어 같은 시·도를 여러 번 부르지 않게 캐시한다.
+(function () {
+    var cache = {};
+    function load(sidoId) {
+        if (cache[sidoId]) return cache[sidoId];
+        cache[sidoId] = fetch('{{ route('admin.regions.sigungu') }}' + '?sido_id=' + encodeURIComponent(sidoId))
+            .then(function (r) { return r.json(); })
+            .catch(function () { return []; });
+        return cache[sidoId];
+    }
+    function fill(sel, sidoId, keep) {
+        if (! sidoId) {
+            sel.innerHTML = '<option value="">시·도를 먼저 선택하세요</option>';
+            return;
+        }
+        sel.innerHTML = '<option value="">불러오는 중...</option>';
+        load(sidoId).then(function (rows) {
+            sel.innerHTML = '<option value="">선택 안 함</option>';
+            var found = false;
+            rows.forEach(function (r) {
+                var o = document.createElement('option');
+                o.value = r.name; o.textContent = r.name;
+                if (keep && r.name === keep) { o.selected = true; found = true; }
+                sel.appendChild(o);
+            });
+            // 지역 개편 등으로 목록에 없는 옛 값이면 그대로 남겨 잃지 않게
+            if (keep && ! found) {
+                var o = document.createElement('option');
+                o.value = keep; o.textContent = keep + ' (목록에 없음)';
+                o.selected = true;
+                sel.appendChild(o);
+            }
+        });
+    }
+    function pair(sido) {
+        // 같은 행(또는 같은 폼 묶음)의 시군구 select 를 찾는다
+        var scope = sido.closest('tr') || sido.closest('.row') || sido.closest('form') || document;
+        return scope.querySelector('.sigungu-select');
+    }
+    document.querySelectorAll('.sido-select').forEach(function (sido) {
+        var sigungu = pair(sido);
+        if (! sigungu) return;
+        // 최초 진입 — 이미 시·도가 잡혀 있으면 목록을 채우고 기존 값을 고른 상태로
+        if (sido.value) fill(sigungu, sido.value, sigungu.dataset.selected || '');
+        sido.addEventListener('change', function () {
+            fill(sigungu, this.value, '');
+        });
+    });
+})();
+</script>
 @endsection
