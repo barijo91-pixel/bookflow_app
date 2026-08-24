@@ -620,14 +620,18 @@ function stepQty(btn, delta) {
 .qty-stepper .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .qty-stepper .qty-input { -moz-appearance: textfield; }
 @media (max-width: 991px) {
+    /* 모바일은 −/+ 를 숨기고 수량을 바로 입력한다.
+       버튼 두 개가 88px 을 먹어 도서 제목이 잘리던 것 — 폭을 제목에 돌려준다. */
+    .qty-stepper .qty-btn { display: none; }
+    /* 표 안에서는 100% 가 flex-shrink 에 밀려 안 먹는다 — 고정 폭으로 잡는다 */
+    .qty-stepper .qty-input { width: 54px; height: 44px; font-size: 1rem; flex: 0 0 54px; }
+    .qty-stepper { flex: 0 0 auto; }
     /* 터치 타겟 44px — 애플·구글 권장치 */
-    .qty-stepper .qty-btn { width: 44px; font-size: 1.2rem; }
-    .qty-stepper .qty-input { width: 52px; height: 44px; font-size: 1rem; }
-    .add-btn { min-height: 44px; }
+    .add-btn { min-height: 44px; min-width: 44px; }
     .scan-btn { min-width: 44px; min-height: 44px; }
-    .qty-col { width: 148px; }
-    .add-col { width: 52px; }
-    .add-btn { min-width: 44px; }
+    /* 세 자리 수량(999)까지 눌러 넣을 수 있는 폭 */
+    .qty-col { width: 68px; }
+    .add-col { width: 54px; }
     .del-btn { min-width: 44px; min-height: 44px; }
 }
 
