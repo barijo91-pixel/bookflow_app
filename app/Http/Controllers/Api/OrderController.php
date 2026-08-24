@@ -251,8 +251,9 @@ class OrderController extends Controller
     public function accept(Request $request, Order $order, NotificationService $notify)
     {
         $user = $request->user();
-        if ($user->role_code !== 'distributor') {
-            return response()->json(['ok' => false, 'error' => '총판만 가능'], 403);
+        // 배정된 총판 본인만 — 역할만 보면 다른 총판이 남의 주문을 접수할 수 있다 (웹 transition 과 동일 기준)
+        if ($user->role_code !== 'distributor' || (int) $order->distributor_user_id !== (int) $user->id) {
+            return response()->json(['ok' => false, 'error' => '권한 없음'], 403);
         }
         if ($order->status_code !== 'confirmed') {
             return response()->json(['ok' => false, 'error' => "현재 상태({$order->status_code})에서는 접수 불가"], 400);
