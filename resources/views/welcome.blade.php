@@ -50,6 +50,11 @@
         .bg-navy-soft { background: var(--navy-soft); }
         .btn-navy { background: var(--navy); border-color: var(--navy); color: #fff; }
         .btn-navy:hover, .btn-navy:focus { background: var(--navy-dark); border-color: var(--navy-dark); color: #fff; }
+        /* 상단 CTA — 히어로 버튼을 없앤 뒤 유일한 진입점이라 기본 버튼보다 키운다 */
+        .topbar-cta { font-size: .95rem; font-weight: 600; padding: .5rem 1.1rem; }
+        @media (max-width: 575.98px) {
+            .topbar-cta { font-size: .875rem; padding: .4rem .8rem; }
+        }
         .btn-outline-navy { color: var(--navy); border-color: var(--navy); }
         .btn-outline-navy:hover { background: var(--navy); color: #fff; }
 
@@ -146,26 +151,27 @@
         <a href="/" class="brand">
             <i class="bi bi-book-half"></i>BookSys
         </a>
+        {{-- 히어로에서 CTA 를 뺐으므로 이 버튼들이 유일한 진입점 — 눈에 띄게 키운다 (.topbar-cta) --}}
         <nav class="d-flex align-items-center gap-2">
             @auth
                 @if(auth()->user()->role_code === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-navy btn-sm">
+                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-navy topbar-cta">
                         <i class="bi bi-speedometer2"></i> 관리자 콘솔
                     </a>
                 @else
-                    <a href="{{ route('mypage') }}" class="btn btn-outline-navy btn-sm">
+                    <a href="{{ route('mypage') }}" class="btn btn-outline-navy topbar-cta">
                         <i class="bi bi-person"></i> 마이페이지
                     </a>
                 @endif
                 <form method="POST" action="{{ route('public.logout') }}" class="m-0">
                     @csrf
-                    <button class="btn btn-sm btn-outline-secondary">로그아웃</button>
+                    <button class="btn btn-outline-secondary topbar-cta">로그아웃</button>
                 </form>
             @else
-                <a href="{{ route('public.login') }}" class="btn btn-outline-navy btn-sm">
+                <a href="{{ route('public.login') }}" class="btn btn-outline-navy topbar-cta">
                     <i class="bi bi-box-arrow-in-right"></i> 로그인
                 </a>
-                <a href="{{ route('public.register') }}" class="btn btn-navy btn-sm">
+                <a href="{{ route('public.register') }}" class="btn btn-navy topbar-cta">
                     <i class="bi bi-person-plus"></i> 가입
                 </a>
             @endauth
@@ -179,31 +185,14 @@
         <span class="badge-tag mb-3 d-inline-block">교재 도매 유통 전문 플랫폼</span>
         <h1 class="mb-3">총판·영업자·학원·학부모<br>모두를 연결하는 올인원 솔루션</h1>
         <p class="lead mb-4">전화와 카카오톡으로 비효율적이던 영어 교재 유통.<br>이제 BookSys에서 디지털로 간편하게.</p>
-        <div class="d-flex gap-2 justify-content-center flex-wrap">
-            @auth
-                @if(auth()->user()->role_code === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="btn btn-light btn-lg px-4">
-                        <i class="bi bi-speedometer2"></i> 관리자 콘솔
-                    </a>
-                @else
-                    <a href="{{ route('mypage') }}" class="btn btn-light btn-lg px-4">
-                        <i class="bi bi-person"></i> 마이페이지
-                    </a>
-                @endif
-            @else
-                <a href="{{ route('public.register') }}" class="btn btn-light btn-lg px-4">
-                    <i class="bi bi-person-plus"></i> 이용하기
-                </a>
-                <a href="{{ route('public.login') }}" class="btn btn-outline-light btn-lg px-4">
-                    <i class="bi bi-box-arrow-in-right"></i> 로그인
-                </a>
-            @endauth
-            @if(setting('app_download_active') === '1' && (setting('app_download_android_url') || setting('app_download_ios_url')))
+        {{-- 로그인·가입·마이페이지 버튼은 상단 헤더에만 둔다 (히어로에서 중복 노출하지 않음) --}}
+        @if(setting('app_download_active') === '1' && (setting('app_download_android_url') || setting('app_download_ios_url')))
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
                 <a href="#download" class="btn btn-outline-light btn-lg px-4">
                     <i class="bi bi-phone"></i> 앱 다운로드
                 </a>
-            @endif
-        </div>
+            </div>
+        @endif
     </div>
 </div>
 
