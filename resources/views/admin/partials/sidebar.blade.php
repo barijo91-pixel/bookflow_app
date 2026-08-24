@@ -65,6 +65,9 @@
         <a href="{{ route('admin.notifications.templates') }}" class="nav-item {{ $is('admin.notifications.templates') . $is('admin.notifications.logs') }}">
             <i class="bi bi-bell"></i> 알림 템플릿/이력
         </a>
+        <a href="{{ route('admin.featured-academies.index') }}" class="nav-item {{ $is('admin.featured-academies') }}">
+            <i class="bi bi-buildings"></i> 대표 이용학원
+        </a>
         <a href="{{ route('admin.settings.edit') }}" class="nav-item {{ $is('admin.settings') }}">
             <i class="bi bi-gear"></i> 사이트 설정
         </a>

@@ -28,7 +28,15 @@ Route::get('/', function () {
         ->orderByDesc('id')
         ->limit(8)
         ->get(['title', 'isbn', 'price', 'cover_path', 'author']);
-    return view('welcome', compact('featuredBooks'));
+    // 대표 이용학원 — 지역탭은 실제 등록된 시·도만 만든다
+    $featuredAcademies = \Illuminate\Support\Facades\DB::table('featured_academies as f')
+        ->leftJoin('regions as r', 'r.id', '=', 'f.region_id')
+        ->where('f.is_active', 1)
+        ->orderBy('r.sort_order')->orderBy('f.sort_order')->orderBy('f.id')
+        ->limit(200)
+        ->get(['f.name', 'f.city', 'f.logo_path', 'f.homepage_url', 'f.region_id', 'r.name as region_name']);
+
+    return view('welcome', compact('featuredBooks', 'featuredAcademies'));
 })->name('home');
 
 // 학부모 공유링크 (공개, 토큰 기반)
@@ -384,6 +392,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('code-groups/{group_code}/codes',         [CodeController::class, 'store'])->name('codes.store');
         Route::put('code-groups/{group_code}/codes/{id}',     [CodeController::class, 'update'])->name('codes.update');
         Route::delete('code-groups/{group_code}/codes/{id}',  [CodeController::class, 'destroy'])->name('codes.destroy');
+
+        // 대표 이용학원 (랜딩 노출)
+        Route::get('featured-academies',           [\App\Http\Controllers\Admin\FeaturedAcademyController::class, 'index'])->name('featured-academies.index');
+        Route::post('featured-academies',          [\App\Http\Controllers\Admin\FeaturedAcademyController::class, 'store'])->name('featured-academies.store');
+        Route::put('featured-academies/{id}',      [\App\Http\Controllers\Admin\FeaturedAcademyController::class, 'update'])->name('featured-academies.update');
+        Route::delete('featured-academies/{id}',   [\App\Http\Controllers\Admin\FeaturedAcademyController::class, 'destroy'])->name('featured-academies.destroy');
 
         // 매출 조회 (전사) — 결제액 기준, 총판·영업자·거래구분 필터
         Route::get('sales', [\App\Http\Controllers\Admin\SalesReportController::class, 'index'])->name('sales.index');

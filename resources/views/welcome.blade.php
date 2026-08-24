@@ -55,6 +55,28 @@
         @media (max-width: 575.98px) {
             .topbar-cta { font-size: .875rem; padding: .4rem .8rem; }
         }
+        /* 대표 이용학원 — 카드를 작게 잡아 한 화면에 많이 걸리게 */
+        .aca-card {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: .4rem; height: 100%; min-height: 92px; padding: .8rem .5rem;
+            background: #fff; border: 1px solid #e6e9ef; border-radius: 10px;
+            text-decoration: none; color: inherit; text-align: center;
+            transition: transform .15s, box-shadow .15s, border-color .15s;
+        }
+        a.aca-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(31,58,95,.1); border-color: var(--navy); }
+        .aca-card img { max-width: 100%; max-height: 42px; object-fit: contain; }
+        .aca-card .aca-name { font-weight: 700; color: var(--navy); font-size: .95rem; line-height: 1.25; word-break: keep-all; }
+        .aca-meta { display: flex; flex-direction: column; gap: .1rem; line-height: 1.2; }
+        /* 로고가 있으면 이름은 작게 보조로, 없으면 위 .aca-name 이 대표 표기라 숨긴다 */
+        .aca-card img ~ .aca-meta .aca-label { font-size: .78rem; color: var(--text); font-weight: 500; }
+        .aca-card .aca-name ~ .aca-meta .aca-label { display: none; }
+        .aca-region { font-size: .72rem; color: var(--muted); }
+        @media (max-width: 575.98px) {
+            .aca-card { min-height: 78px; padding: .6rem .35rem; }
+            .aca-card img { max-height: 32px; }
+            .aca-card .aca-name { font-size: .82rem; }
+        }
+
         .btn-outline-navy { color: var(--navy); border-color: var(--navy); }
         .btn-outline-navy:hover { background: var(--navy); color: #fff; }
 
@@ -335,6 +357,92 @@
         </div>
     </div>
 </section>
+
+{{-- 대표 이용학원 — 지역탭 + 로고 그리드. 이미지는 관리자에서 나중에 채워도 되게 이름 카드로 폴백 --}}
+@php $acaAll = $featuredAcademies ?? collect(); @endphp
+@if($acaAll->isNotEmpty())
+    @php
+        // 지역탭은 실제 등록된 시·도만 — 빈 탭을 만들지 않는다
+        $acaRegions = $acaAll->filter(fn ($a) => $a->region_id)
+            ->unique('region_id')->values()
+            ->map(fn ($a) => ['id' => $a->region_id, 'name' => $a->region_name]);
+        $acaNoRegion = $acaAll->whereNull('region_id')->count();
+    @endphp
+    <section id="academies" style="background:#f8f9fc; padding:4rem 1rem;">
+        <div class="container">
+            <h2 class="section-title">대표 이용학원</h2>
+            <p class="section-sub">
+                전국 <strong>{{ number_format($acaAll->count()) }}곳</strong>이 넘는 학원이 BookSys로 교재를 주문합니다.<br>
+                전화·카카오톡으로 주고받던 주문서를 없애고, 교재 선택부터 학부모 결제·배송까지 한 번에 끝냅니다.
+            </p>
+
+            @if($acaRegions->count() > 1 || $acaNoRegion)
+                <div class="d-flex flex-wrap gap-1 justify-content-center mb-4">
+                    <button type="button" class="btn btn-sm btn-navy aca-tab" data-region="all">전체</button>
+                    @foreach($acaRegions as $reg)
+                        <button type="button" class="btn btn-sm btn-outline-navy aca-tab" data-region="{{ $reg['id'] }}">{{ $reg['name'] }}</button>
+                    @endforeach
+                    @if($acaNoRegion)
+                        <button type="button" class="btn btn-sm btn-outline-navy aca-tab" data-region="none">기타</button>
+                    @endif
+                </div>
+            @endif
+
+            <div class="row g-2 g-md-3" id="acaGrid">
+                @foreach($acaAll as $a)
+                    <div class="col-4 col-md-3 col-lg-2 aca-item" data-region="{{ $a->region_id ?: 'none' }}">
+                        @php
+                            $tag  = $a->homepage_url ? 'a' : 'div';
+                            $href = $a->homepage_url ? ' href="'.e($a->homepage_url).'" target="_blank" rel="noopener noreferrer"' : '';
+                        @endphp
+                        <{{ $tag }}{!! $href !!} class="aca-card">
+                            @if($a->logo_path)
+                                <img src="{{ asset('storage/'.$a->logo_path) }}" alt="{{ $a->name }}" loading="lazy"
+                                     onerror="this.remove()">
+                            @else
+                                <span class="aca-name">{{ $a->name }}</span>
+                            @endif
+                            <div class="aca-meta">
+                                <span class="aca-label">{{ $a->name }}</span>
+                                @if($a->region_name || $a->city)
+                                    <span class="aca-region">{{ trim(($a->region_name ?? '').' '.($a->city ?? '')) }}</span>
+                                @endif
+                            </div>
+                        </{{ $tag }}>
+                    </div>
+                @endforeach
+            </div>
+            <p class="text-center text-muted small mt-4 mb-0" id="acaEmpty" style="display:none;">
+                이 지역에는 아직 등록된 학원이 없습니다.
+            </p>
+        </div>
+    </section>
+
+    <script>
+    (function () {
+        var tabs  = document.querySelectorAll('.aca-tab');
+        var items = document.querySelectorAll('.aca-item');
+        var empty = document.getElementById('acaEmpty');
+        if (! tabs.length) return;
+        tabs.forEach(function (t) {
+            t.addEventListener('click', function () {
+                var pick = t.dataset.region;
+                tabs.forEach(function (x) {
+                    x.classList.toggle('btn-navy', x === t);
+                    x.classList.toggle('btn-outline-navy', x !== t);
+                });
+                var shown = 0;
+                items.forEach(function (i) {
+                    var on = pick === 'all' || i.dataset.region === pick;
+                    i.style.display = on ? '' : 'none';
+                    if (on) shown++;
+                });
+                empty.style.display = shown ? 'none' : '';
+            });
+        });
+    })();
+    </script>
+@endif
 
 {{-- 대표 교재 (정가 안내 — 전자상거래 상품·가격 노출) --}}
 <section style="background:#fff; padding:4rem 1rem;">
