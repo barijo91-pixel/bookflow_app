@@ -114,23 +114,46 @@
     // 물류로 넘길 수 있는 주문만 체크 가능 — 확정 이후 (접수 대기·취소는 제외)
     $canExport = in_array($user->role_code, ['agent', 'distributor'], true);
     $exportable = \App\Http\Controllers\Public\OrderExportController::EXPORTABLE_STATUS;
+    // 영업자는 미결제 여신 주문을 일괄 확정할 수 있다 (결제 주문은 자동확정)
+    $canBulkConfirm = $user->role_code === 'agent';
+    // 행별 결제/여신 상태
+    $payInfo = function ($o) use ($paidMap) {
+        $total = (int) $o->total_amount;
+        $paid  = (int) ($paidMap[$o->id] ?? 0);
+        return [
+            'paid'   => $total > 0 && $paid >= $total,
+            'credit' => (bool) ($o->credit_allowed ?? false),
+        ];
+    };
 @endphp
 
 @if($canExport)
-    {{-- 선택 주문을 물류센터 출고 엑셀로 --}}
-    <form method="POST" action="{{ route('my.orders.export_logistics') }}" id="logisticsForm" class="d-none d-md-block mb-2">
-        @csrf
-        <input type="hidden" name="order_ids" id="logisticsIds" value="">
-        <div class="d-flex align-items-center gap-2">
+    {{-- 일괄 작업 바 (체크박스 선택) --}}
+    <div class="d-none d-md-flex align-items-center gap-2 mb-2 flex-wrap">
+        @if($canBulkConfirm)
+            {{-- 여신 미결제 주문 일괄 확정 --}}
+            <form method="POST" action="{{ route('my.orders.bulk_confirm') }}" id="confirmForm" class="m-0"
+                  onsubmit="return confirm('선택한 여신 주문을 일괄 확정할까요?')">
+                @csrf
+                <input type="hidden" name="order_ids" id="confirmIds" value="">
+                <button type="submit" class="btn btn-sm btn-success" id="confirmBtn" disabled>
+                    <i class="bi bi-check2-all"></i> 선택 확정<span id="confirmCount"></span>
+                </button>
+            </form>
+        @endif
+        {{-- 선택 주문을 물류센터 출고 엑셀로 --}}
+        <form method="POST" action="{{ route('my.orders.export_logistics') }}" id="logisticsForm" class="m-0">
+            @csrf
+            <input type="hidden" name="order_ids" id="logisticsIds" value="">
             <button type="submit" class="btn btn-sm btn-navy" id="logisticsBtn" disabled>
-                <i class="bi bi-file-earmark-excel"></i> 물류센터 출고 엑셀
-                <span id="logisticsCount"></span>
+                <i class="bi bi-file-earmark-excel"></i> 물류센터 출고 엑셀<span id="logisticsCount"></span>
             </button>
-            <span class="small text-muted">
-                주문일 앞 체크박스로 고르세요. <strong>확정 이후</strong>의 주문만 선택할 수 있습니다.
-            </span>
-        </div>
-    </form>
+        </form>
+        <span class="small text-muted">
+            주문일 앞 체크박스로 고르세요.
+            @if($canBulkConfirm)<strong>여신 미결제</strong>는 확정, <strong>확정 이후</strong>는 출고엑셀 대상.@else <strong>확정 이후</strong>의 주문만 선택할 수 있습니다.@endif
+        </span>
+    </div>
 @endif
 
 <div class="card section-card">
@@ -141,7 +164,7 @@
                 <tr>
                     @if($canExport)
                         <th style="width:34px;">
-                            <input type="checkbox" class="form-check-input" id="logisticsAll" title="선택 가능한 주문 전체 선택">
+                            <input type="checkbox" class="form-check-input" id="orderPickAll" title="선택 가능한 주문 전체 선택">
                         </th>
                     @endif
                     <th><x-sort-link field="date" label="주문일" :sort="$sort" :dir="$dir" /></th>
@@ -164,11 +187,17 @@
                 @forelse($orders as $o)
                     <tr class="order-row" style="cursor:pointer" onclick="location.href='{{ route('my.orders.show', $o->id) }}'">
                         @if($canExport)
-                            @php $selectable = in_array($o->status_code, $exportable, true); @endphp
+                            @php
+                                $pi = $payInfo($o);
+                                $canConfirmRow = $canBulkConfirm && $o->status_code === 'requested' && $pi['credit'] && ! $pi['paid'];
+                                $canExportRow  = in_array($o->status_code, $exportable, true);
+                                $selectable = $canConfirmRow || $canExportRow;
+                            @endphp
                             <td onclick="event.stopPropagation()">
-                                <input type="checkbox" class="form-check-input logistics-pick" value="{{ $o->id }}"
+                                <input type="checkbox" class="form-check-input order-pick" value="{{ $o->id }}"
+                                       data-confirm="{{ $canConfirmRow ? 1 : 0 }}" data-export="{{ $canExportRow ? 1 : 0 }}"
                                        {{ $selectable ? '' : 'disabled' }}
-                                       title="{{ $selectable ? '물류 출고 엑셀에 포함' : '확정 이후의 주문만 내보낼 수 있습니다' }}">
+                                       title="{{ $canConfirmRow ? '여신 주문 확정 대상' : ($canExportRow ? '물류 출고 엑셀 대상' : '선택할 수 없는 상태') }}">
                             </td>
                         @endif
                         <td class="small text-muted text-nowrap">
@@ -205,6 +234,19 @@
                         <td>
                             @php $opt = $statusOptions[$o->status_code] ?? [$o->status_code, 'bg-light text-dark']; @endphp
                             <span class="badge {{ $opt[1] }}">{{ $opt[0] }}</span>
+                            {{-- 결제 상태 — 접수 단계에서만 의미 있음(확정 이후는 이미 결제/여신 처리됨) --}}
+                            @php $pi2 = $payInfo($o); @endphp
+                            @if($o->status_code === 'requested')
+                                <div class="small mt-1">
+                                    @if($pi2['paid'])
+                                        <span class="text-success"><i class="bi bi-check-circle-fill"></i> 결제완료</span>
+                                    @elseif($pi2['credit'])
+                                        <span class="text-warning"><i class="bi bi-credit-card-2-back"></i> 여신</span>
+                                    @else
+                                        <span class="text-muted"><i class="bi bi-hourglass-split"></i> 미결제</span>
+                                    @endif
+                                </div>
+                            @endif
                         </td>
                         @if($user->role_code !== 'agent')
                             <td class="small text-muted">{{ $o->agent_name ?? '-' }}</td>
@@ -272,22 +314,35 @@
     @endif
 </div>
 @if($canExport)
-{{-- 체크박스 → 선택 주문 id 를 폼에 실어 보낸다 --}}
+{{-- 체크박스 → 두 가지 일괄 작업(여신 확정 / 물류 엑셀)에 각각 해당 주문만 실어 보낸다 --}}
 <script>
 (function () {
-    var form  = document.getElementById('logisticsForm');
-    if (! form) return;
-    var btn   = document.getElementById('logisticsBtn');
-    var cnt   = document.getElementById('logisticsCount');
-    var hid   = document.getElementById('logisticsIds');
-    var all   = document.getElementById('logisticsAll');
-    var picks = function () { return Array.prototype.slice.call(document.querySelectorAll('.logistics-pick:not(:disabled)')); };
+    var picks = function () { return Array.prototype.slice.call(document.querySelectorAll('.order-pick:not(:disabled)')); };
+    if (! picks().length && ! document.getElementById('orderPickAll')) return;
+    var all = document.getElementById('orderPickAll');
+
+    var confirmBtn   = document.getElementById('confirmBtn'),
+        confirmIds   = document.getElementById('confirmIds'),
+        confirmCount = document.getElementById('confirmCount');
+    var logiBtn   = document.getElementById('logisticsBtn'),
+        logiIds   = document.getElementById('logisticsIds'),
+        logiCount = document.getElementById('logisticsCount');
 
     function sync() {
         var on = picks().filter(function (c) { return c.checked; });
-        hid.value  = on.map(function (c) { return c.value; }).join(',');
-        btn.disabled = on.length === 0;
-        cnt.textContent = on.length ? '(' + on.length + '건)' : '';
+        var confSel = on.filter(function (c) { return c.dataset.confirm === '1'; });
+        var expSel  = on.filter(function (c) { return c.dataset.export === '1'; });
+
+        if (confirmBtn) {
+            confirmIds.value = confSel.map(function (c) { return c.value; }).join(',');
+            confirmBtn.disabled = confSel.length === 0;
+            confirmCount.textContent = confSel.length ? ' (' + confSel.length + ')' : '';
+        }
+        if (logiBtn) {
+            logiIds.value = expSel.map(function (c) { return c.value; }).join(',');
+            logiBtn.disabled = expSel.length === 0;
+            logiCount.textContent = expSel.length ? ' (' + expSel.length + ')' : '';
+        }
         if (all) {
             var total = picks().length;
             all.checked = total > 0 && on.length === total;

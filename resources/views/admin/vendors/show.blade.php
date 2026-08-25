@@ -82,6 +82,17 @@
                             </select>
                         </div>
                         <div class="col-md-3">
+                            <label class="form-label small text-muted">여신(외상) 구매</label>
+                            <div class="form-check mt-2">
+                                <input type="checkbox" name="credit_allowed" value="1" class="form-check-input" id="creditAllowed"
+                                       @checked(old('credit_allowed', $vendor->credit_allowed ?? false))>
+                                <label class="form-check-label small" for="creditAllowed">
+                                    결제 없이 확정 허용
+                                </label>
+                            </div>
+                            <div class="small text-muted">켜면 미결제 주문을 영업자가 수동 확정 가능</div>
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label small text-muted">대표자</label>
                             <input type="text" name="owner_name" class="form-control" value="{{ old('owner_name', $vendor->owner_name) }}">
                         </div>

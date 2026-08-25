@@ -355,7 +355,7 @@ class VendorController extends Controller
     // -------------------- helpers --------------------
     private function validatePayload(Request $request, ?int $vendorId = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name'           => ['required', 'string', 'max:150'],
             'owner_name'     => ['nullable', 'string', 'max:100'],
             'business_no'    => ['nullable', 'string', 'max:20'],
@@ -368,8 +368,12 @@ class VendorController extends Controller
             'region_id'      => ['nullable', 'integer', 'exists:regions,id'],
             'address'        => ['nullable', 'string', 'max:255'],
             'address_detail' => ['nullable', 'string', 'max:255'],
+            'credit_allowed' => ['nullable', 'boolean'],
             'memo'           => ['nullable', 'string', 'max:2000'],
         ]);
+        // 체크박스는 미체크 시 요청에서 빠지므로 항상 명시적으로 세팅
+        $data['credit_allowed'] = $request->boolean('credit_allowed');
+        return $data;
         // 정산 계좌는 거래처(학원)에서 받지 않음 — 수금은 총판 계좌로 일원화
     }
 }

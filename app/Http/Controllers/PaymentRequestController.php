@@ -125,6 +125,9 @@ class PaymentRequestController extends Controller
             'mock'       => false,
         ]);
 
+        // 결제 완료 → 주문 자동 확정
+        \App\Services\OrderWorkflowService::autoConfirmIfPaid($order->id);
+
         return response()->json([
             'success'      => true,
             'message'      => '교재비 결제가 완료되었습니다.',
@@ -434,6 +437,9 @@ class PaymentRequestController extends Controller
             ]);
         });
 
+        // 결제 완료 → 주문 자동 확정 (전액 결제된 경우)
+        \App\Services\OrderWorkflowService::autoConfirmIfPaid($pr->order_id);
+
         return redirect()->route('public.pay', $token)
             ->with('success', '결제가 완료되었습니다. (테스트 모드)');
     }
@@ -512,6 +518,9 @@ class PaymentRequestController extends Controller
                 'parent_paid'   => $pr->amount,
             ]);
         });
+
+        // 결제 완료 → 주문 자동 확정 (전액 결제된 경우)
+        \App\Services\OrderWorkflowService::autoConfirmIfPaid($pr->order_id);
 
         return response()->json([
             'success' => true,

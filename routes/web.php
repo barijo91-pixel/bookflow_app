@@ -222,6 +222,10 @@ Route::middleware('auth')->group(function () {
         Route::get('sales', [\App\Http\Controllers\Public\SalesReportController::class, 'index'])->name('sales.index');
 
         // 물류센터 출고 요청 엑셀 — 주문 목록에서 고른 주문 (확정 이후만)
+        // 여신 주문 일괄 확정 (영업자) — 결제 주문은 자동확정이라 미결제 여신만 대상
+        Route::post('orders/bulk-confirm',
+            [\App\Http\Controllers\MyPageController::class, 'bulkConfirmOrders'])->name('orders.bulk_confirm');
+
         Route::post('orders/export-logistics',
             [\App\Http\Controllers\Public\OrderExportController::class, 'export'])->name('orders.export_logistics');
 

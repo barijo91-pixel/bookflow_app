@@ -804,6 +804,20 @@ class MyPageController extends Controller
         $to = $data['to_status'];
         $from = $order->status_code;
 
+        // 영업자 확정은 결제/여신 규칙을 워크플로 서비스가 판정한다.
+        // (결제된 주문은 자동확정 대상, 미결제는 여신 학원만 확정 가능)
+        if ($to === 'confirmed') {
+            if ($user->role_code !== 'agent' || $order->agent_user_id != $user->id) {
+                return back()->with('error', '담당 영업자만 확정할 수 있습니다.');
+            }
+            // 배송 방식 선택이 있으면 먼저 저장 (여신 확정 시에도 유효)
+            if (! empty($data['delivery_type'])) {
+                DB::table('orders')->where('id', $order->id)->update(['delivery_type' => $data['delivery_type']]);
+            }
+            $res = \App\Services\OrderWorkflowService::confirmByAgent($order, $user->id, $notify);
+            return back()->with($res['ok'] ? 'success' : 'error', $res['message']);
+        }
+
         // 역할별 허용 전이 확인
         $allowed = false;
         if ($to === 'confirmed' && $user->role_code === 'agent' && $from === 'requested' && $order->agent_user_id == $user->id) $allowed = true;
@@ -860,6 +874,45 @@ class MyPageController extends Controller
             'canceled'  => '주문을 취소했습니다.',
             default     => '상태가 변경되었습니다.',
         };
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * 여신 주문 일괄 확정 (영업자 전용).
+     * 결제된 주문은 이미 자동 확정되므로, 여기 대상은 미결제 여신 주문이다.
+     */
+    public function bulkConfirmOrders(Request $request, \App\Services\NotificationService $notify)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'agent') {
+            abort(403, '영업자만 일괄 확정할 수 있습니다.');
+        }
+
+        $ids = $request->input('order_ids', []);
+        if (is_string($ids)) $ids = explode(',', $ids);
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) $ids))));
+        if (! $ids) return back()->with('error', '확정할 주문을 선택해 주세요.');
+        if (count($ids) > 500) return back()->with('error', '한 번에 500건까지 처리할 수 있습니다.');
+
+        // 본인 담당 + 접수 상태만
+        $orders = \App\Models\Order::whereIn('id', $ids)
+            ->where('agent_user_id', $user->id)
+            ->where('status_code', 'requested')
+            ->whereNull('deleted_at')
+            ->get();
+
+        $done = 0; $blocked = 0;
+        foreach ($orders as $order) {
+            $res = \App\Services\OrderWorkflowService::confirmByAgent($order, $user->id, $notify);
+            if ($res['ok']) $done++; else $blocked++;
+        }
+        $skipped = count($ids) - $orders->count();
+
+        if ($done === 0) {
+            return back()->with('error', '일괄 확정할 수 있는 주문이 없습니다. (미결제 여신 주문만 대상)');
+        }
+        $msg = "주문 {$done}건을 확정했습니다.";
+        if ($blocked > 0) $msg .= " ({$blocked}건은 결제 미완료·여신 아님으로 제외)";
         return back()->with('success', $msg);
     }
 
@@ -1047,7 +1100,7 @@ class MyPageController extends Controller
                 'o.id', 'o.order_no', 'o.status_code', 'o.total_amount',
                 'o.requested_at', 'o.confirmed_at', 'o.accepted_at',
                 'o.shipped_at', 'o.completed_at', 'o.created_at',
-                'v.name as vendor_name', 'v.trade_type',
+                'v.name as vendor_name', 'v.trade_type', 'v.credit_allowed',
                 'ag.name as agent_name', 'ag.login_id as agent_login_id',
                 'ac.name as class_name',
                 DB::raw("COALESCE(NULLIF(ds.business_name, ''), ds.name) as distributor_name")
@@ -1150,10 +1203,21 @@ class MyPageController extends Controller
                 ];
             }
         }
+
+        // 주문별 결제 완료액 — 결제상태 배지·확정 가능 판정용 (N+1 방지 배치)
+        $paidMap = [];
+        if ($orderIds) {
+            $paidMap = DB::table('payment_requests')
+                ->whereIn('order_id', $orderIds)->where('status', 'paid')
+                ->selectRaw('order_id, COALESCE(SUM(amount),0) as paid')
+                ->groupBy('order_id')->pluck('paid', 'order_id')->all();
+        }
+
         return view('public.mypage.orders', [
             'user'   => $user,
             'orders' => $orders,
             'itemSummaries' => $itemSummaries,
+            'paidMap' => $paidMap,
             'title'  => $title,
             'status' => $status,
             'dateFrom' => $dateFrom,
