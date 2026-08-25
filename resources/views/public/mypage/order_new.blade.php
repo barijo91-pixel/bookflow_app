@@ -83,10 +83,10 @@
                 <div class="d-flex flex-wrap gap-2">
                     {{-- 분류 변경 시 학년/학기 초기화 --}}
                     <a href="{{ $buildUrl(['school' => null, 'grade' => null, 'semester' => null]) }}"
-                       class="btn btn-sm rounded-pill {{ ! $activeFilters['school'] ? 'btn-navy' : 'btn-outline-secondary' }}">전체</a>
+                       class="btn btn-sm rounded-2 {{ ! $activeFilters['school'] ? 'btn-navy' : 'btn-outline-secondary' }}">전체</a>
                     @foreach($filterOptions['school'] as $o)
                         <a href="{{ $buildUrl(['school' => $o->code, 'grade' => null, 'semester' => null]) }}"
-                           class="btn btn-sm rounded-pill {{ $isActive('school', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">{{ $o->name }}</a>
+                           class="btn btn-sm rounded-2 {{ $isActive('school', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">{{ $o->name }}</a>
                     @endforeach
                 </div>
             </div>
@@ -94,10 +94,10 @@
                 <label class="form-label small text-muted mb-1"><i class="bi bi-bookmark"></i> 과목</label>
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ $buildUrl(['subject' => null]) }}"
-                       class="btn btn-sm rounded-pill {{ ! $activeFilters['subject'] ? 'btn-navy' : 'btn-outline-secondary' }}">전체</a>
+                       class="btn btn-sm rounded-2 {{ ! $activeFilters['subject'] ? 'btn-navy' : 'btn-outline-secondary' }}">전체</a>
                     @foreach($filterOptions['subject'] as $o)
                         <a href="{{ $buildUrl(['subject' => $o->code]) }}"
-                           class="btn btn-sm rounded-pill {{ $isActive('subject', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">{{ $o->name }}</a>
+                           class="btn btn-sm rounded-2 {{ $isActive('subject', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">{{ $o->name }}</a>
                     @endforeach
                 </div>
             </div>
