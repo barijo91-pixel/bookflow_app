@@ -77,6 +77,18 @@
 <div class="card section-card mb-3 filter-card">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('my.order_new') }}" class="row g-2 align-items-end">
+            {{-- 과목 — 가장 먼저 고르는 값이라 상단 한 줄로 뺐다 (분류·학년·학기는 아래에서 숨김) --}}
+            <div class="col-12">
+                <label class="form-label small text-muted mb-1"><i class="bi bi-bookmark"></i> 과목</label>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ $buildUrl(['subject' => null]) }}"
+                       class="btn btn-sm rounded-pill {{ ! $activeFilters['subject'] ? 'btn-navy' : 'btn-outline-secondary' }}">전체</a>
+                    @foreach($filterOptions['subject'] as $o)
+                        <a href="{{ $buildUrl(['subject' => $o->code]) }}"
+                           class="btn btn-sm rounded-pill {{ $isActive('subject', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">{{ $o->name }}</a>
+                    @endforeach
+                </div>
+            </div>
             @if($actingAsAgent)
                 {{-- 대행 주문 — 영업자는 본인 고정, 대신 대상 학원을 고른다 --}}
                 <div class="col-md-3">
@@ -242,6 +254,9 @@
     $hasActiveFilter = !empty($filterSummary);
 @endphp
 
+{{-- 분류·학년·학기 필터 — 우선 숨김 (2026-08-25). 과목은 위 상단 라인으로 이동.
+     되살리려면 이 블록의 @if(false) → @if(true) 로 바꾸면 된다. --}}
+@if(false)
 {{-- 필터 카드 - Progressive Disclosure --}}
 <div class="card section-card mb-3">
     {{-- 모바일 전용 접이식 헤더 --}}
@@ -343,6 +358,8 @@
         @endif
     </div>
 </div>
+@endif
+{{-- /분류·학년·학기 필터 숨김 끝 --}}
 
 <div class="row g-3">
     {{-- 좌측: 도서 목록 --}}
