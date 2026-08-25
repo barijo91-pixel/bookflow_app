@@ -443,7 +443,10 @@
                                         </div>
                                 </td>
                                 <td>
-                                        <button class="btn btn-sm btn-outline-navy w-100 add-btn"><i class="bi bi-plus"></i></button>
+                                        {{-- 담기 — 스테퍼의 +와 겹쳐 보이지 않게 장바구니 아이콘으로 --}}
+                                        <button class="btn btn-sm btn-navy w-100 add-btn" title="장바구니에 담기">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
