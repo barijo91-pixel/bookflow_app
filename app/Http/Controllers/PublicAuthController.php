@@ -172,9 +172,13 @@ class PublicAuthController extends Controller
 
     private function redirectAfterLogin(User $user)
     {
-        // 관리자는 admin 대시보드, 나머지는 마이페이지
+        // 관리자는 admin 대시보드, 학원은 바로 도서주문, 나머지는 마이페이지(종합현황)
         if ($user->role_code === 'admin') {
             return redirect()->intended(route('admin.dashboard'));
+        }
+        if ($user->role_code === 'academy') {
+            // 학원장은 로그인하면 곧장 도서주문 화면 — 종합현황은 메뉴로 접근
+            return redirect()->intended(route('my.order_new'));
         }
         return redirect()->intended(route('mypage'));
     }
