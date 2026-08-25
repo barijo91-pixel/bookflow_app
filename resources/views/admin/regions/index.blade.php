@@ -96,7 +96,8 @@
                                     </td>
                                 </tr>
 
-                                {{-- Edit modal for sigungu --}}
+                                {{-- Edit modal for sigungu — <tbody> 안에 두면 backdrop 이 이중이라 클릭이 막힌다. @push 로 밖에 --}}
+                                @push('sg_modals')
                                 <div class="modal fade" id="sgEditModal-{{ $sg->id }}" tabindex="-1">
                                     <div class="modal-dialog">
                                         <form method="POST" action="{{ route('admin.regions.update', $sg->id) }}" class="modal-content">
@@ -119,6 +120,7 @@
                                         </form>
                                     </div>
                                 </div>
+                                @endpush
                             @empty
                                 <tr><td colspan="6" class="text-center text-muted py-4">시·군·구가 없습니다.</td></tr>
                             @endforelse
@@ -126,6 +128,9 @@
                     </table>
                 </div>
             </div>
+
+            {{-- 테이블 밖으로 빼낸 시·군·구 편집 모달들 --}}
+            @stack('sg_modals')
 
             {{-- Sido Edit Modal --}}
             <div class="modal fade" id="sidoEditModal-{{ $selectedSido->id }}" tabindex="-1">

@@ -56,6 +56,9 @@
                         </td>
                     </tr>
 
+                    {{-- 편집 모달은 <tbody> 안에 두면 HTML 위반이라 브라우저가 테이블 밖으로 밀어내 열리지 않는다.
+                         @push 로 모아 페이지 끝(테이블 밖)에 렌더한다. --}}
+                    @push('code_modals')
                     <div class="modal fade" id="codeEditModal-{{ $c->id }}" tabindex="-1">
                         <div class="modal-dialog">
                             <form method="POST" action="{{ route('admin.codes.update', [$group->group_code, $c->id]) }}" class="modal-content">
@@ -94,6 +97,7 @@
                             </form>
                         </div>
                     </div>
+                    @endpush
                 @empty
                     <tr><td colspan="7" class="text-center text-muted py-4">코드가 없습니다.</td></tr>
                 @endforelse
@@ -101,6 +105,9 @@
         </table>
     </div>
 </div>
+
+{{-- 테이블 밖으로 빼낸 편집 모달들 --}}
+@stack('code_modals')
 
 <div class="modal fade" id="codeCreateModal" tabindex="-1">
     <div class="modal-dialog">

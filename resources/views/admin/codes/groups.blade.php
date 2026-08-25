@@ -62,7 +62,8 @@
                         </td>
                     </tr>
 
-                    {{-- Edit modal --}}
+                    {{-- Edit modal — <tbody> 안에 두면 HTML 위반이라 backdrop 이 이중으로 생겨 클릭이 막힌다. @push 로 밖에 렌더 --}}
+                    @push('group_modals')
                     <div class="modal fade" id="groupEditModal-{{ $g->id }}" tabindex="-1">
                         <div class="modal-dialog">
                             <form method="POST" action="{{ route('admin.code-groups.update', $g->group_code) }}" class="modal-content">
@@ -101,6 +102,7 @@
                             </form>
                         </div>
                     </div>
+                    @endpush
                 @empty
                     <tr><td colspan="8" class="text-center text-muted py-4">데이터가 없습니다.</td></tr>
                 @endforelse
@@ -108,6 +110,9 @@
         </table>
     </div>
 </div>
+
+{{-- 테이블 밖으로 빼낸 편집 모달들 --}}
+@stack('group_modals')
 
 {{-- Create modal --}}
 <div class="modal fade" id="groupCreateModal" tabindex="-1">
