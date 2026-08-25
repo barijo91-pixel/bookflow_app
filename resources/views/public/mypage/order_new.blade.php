@@ -358,8 +358,8 @@
                         <tr>
                             <th>도서</th>
                             {{-- 정가는 모바일에서 숨긴다 — 좁은 폭에서 담기 버튼이 찌그러진다 --}}
-                            <th class="text-end d-none d-lg-table-cell">정가</th>
-                            <th class="text-end">할인가</th>
+                            <th class="text-end text-nowrap d-none d-lg-table-cell">정가</th>
+                            <th class="text-end text-nowrap">할인가</th>
                             <th class="text-center qty-col">수량</th>
                             <th class="text-center add-col">담기</th>
                         </tr>
@@ -375,8 +375,8 @@
                                 <td>
                                     <strong>{{ $b->title }}</strong>@if($b->subtitle)<span class="text-muted"> — {{ $b->subtitle }}</span>@endif<span class="text-muted small ms-2"><code>{{ $b->isbn }}</code>@if($b->publisher_name) · {{ $b->publisher_name }}@endif</span>
                                 </td>
-                                <td class="text-end text-muted d-none d-lg-table-cell">{{ number_format($b->price) }}원</td>
-                                <td class="text-end">
+                                <td class="text-end text-muted text-nowrap d-none d-lg-table-cell">{{ number_format($b->price) }}원</td>
+                                <td class="text-end text-nowrap">
                                     <span class="fw-bold navy">{{ number_format($unit) }}원</span>
                                     <span class="text-muted small ms-1">{{ rtrim(rtrim($rate, '0'), '.') }}%@if($hasBookDiscount) <i class="bi bi-star-fill text-warning" title="개별 할인율"></i>@endif</span>
                                 </td>
