@@ -77,9 +77,9 @@
 <div class="card section-card mb-3 filter-card">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('my.order_new') }}" class="row g-2 align-items-end">
-            {{-- 과목·분류 — 가장 먼저 고르는 값이라 상단 한 줄에 나란히 (학년·학기는 아래에서 숨김) --}}
+            {{-- 과목·분류 — 가장 먼저 고르는 값. 아래 영업자·출판사 줄과 분리되게 배경 박스로 감쌌다 (학년·학기는 아래에서 숨김) --}}
             <div class="col-12">
-                <div class="d-flex flex-wrap align-items-center" style="column-gap:1.75rem; row-gap:.5rem;">
+                <div class="d-flex flex-wrap align-items-center subject-band" style="column-gap:1.75rem; row-gap:.5rem;">
                     {{-- 1. 과목 --}}
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <span class="small text-muted fw-bold"><i class="bi bi-bookmark"></i> 과목</span>
@@ -90,6 +90,8 @@
                                class="btn btn-sm rounded-2 {{ $isActive('subject', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">{{ $o->name }}</a>
                         @endforeach
                     </div>
+                    {{-- 그룹 구분선 --}}
+                    <div class="subject-band-divider"></div>
                     {{-- 2. 분류 --}}
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <span class="small text-muted fw-bold"><i class="bi bi-collection"></i> 분류</span>
@@ -103,6 +105,7 @@
                     </div>
                 </div>
             </div>
+            <div class="col-12"><hr class="my-1 text-secondary opacity-25"></div>
             @if($actingAsAgent)
                 {{-- 대행 주문 — 영업자는 본인 고정, 대신 대상 학원을 고른다 --}}
                 <div class="col-md-3">
@@ -740,6 +743,20 @@ function stepQty(btn, delta) {
 }
 #coverZoom img { display: block; width: 240px; height: auto; border-radius: 4px; }
 @media (max-width: 991px) { #coverZoom img { width: 180px; } }
+
+/* 과목·분류 밴드 — 아래 영업자/출판사 줄과 분리된 느낌 */
+.subject-band {
+    background: #f4f7fb; border: 1px solid #e6ecf4; border-radius: 8px;
+    padding: .55rem .8rem;
+}
+.subject-band-divider {
+    width: 1px; align-self: stretch; min-height: 26px;
+    background: #d7dee8; margin: 0 .25rem;
+}
+@media (max-width: 575.98px) {
+    /* 좁은 화면에서 세로 구분선은 어색하니 숨긴다 (줄바꿈으로 이미 분리됨) */
+    .subject-band-divider { display: none; }
+}
 
 .cart-fab { display: none; }
 @media (max-width: 991px) {
