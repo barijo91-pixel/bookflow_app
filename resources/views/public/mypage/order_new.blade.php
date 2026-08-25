@@ -373,7 +373,22 @@
                             @endphp
                             <tr>
                                 <td>
-                                    <strong>{{ $b->title }}</strong>@if($b->subtitle)<span class="text-muted"> — {{ $b->subtitle }}</span>@endif<span class="text-muted small ms-2"><code>{{ $b->isbn }}</code>@if($b->publisher_name) · {{ $b->publisher_name }}@endif</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {{-- 표지 썸네일 — 마우스 올리면 확대. 없으면 책 아이콘 --}}
+                                        @php $coverUrl = $b->cover_path ? (str_starts_with($b->cover_path, 'http') ? $b->cover_path : asset('storage/'.$b->cover_path)) : null; @endphp
+                                        <div class="book-thumb">
+                                            @if($coverUrl)
+                                                <img src="{{ $coverUrl }}" alt="{{ $b->title }}" loading="lazy"
+                                                     onerror="this.parentElement.classList.add('no-cover');this.remove();">
+                                            @else
+                                                <i class="bi bi-book"></i>
+                                            @endif
+                                        </div>
+                                        <div class="min-w-0">
+                                            <strong>{{ $b->title }}</strong>@if($b->subtitle)<span class="text-muted"> — {{ $b->subtitle }}</span>@endif
+                                            @if($b->publisher_name)<div class="text-muted small">{{ $b->publisher_name }}</div>@endif
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="text-end text-muted text-nowrap d-none d-lg-table-cell">{{ number_format($b->price) }}원</td>
                                 <td class="text-end text-nowrap">
@@ -571,6 +586,43 @@
 
 @push('scripts')
 <script>
+// 표지 확대 미리보기 — 썸네일에 마우스 올리면 fixed 팝업으로 크게 (overflow 잘림 회피)
+(function () {
+    var box = document.getElementById('coverZoom');
+    if (! box) {
+        box = document.createElement('div');
+        box.id = 'coverZoom';
+        box.innerHTML = '<img alt="">';
+        document.body.appendChild(box);
+    }
+    var img = box.querySelector('img');
+
+    function place(e) {
+        var pad = 16, w = box.offsetWidth || 252, h = box.offsetHeight || 340;
+        var x = e.clientX + pad, y = e.clientY - h / 2;
+        if (x + w > window.innerWidth)  x = e.clientX - w - pad;   // 오른쪽 넘치면 왼쪽에
+        if (y < 8) y = 8;
+        if (y + h > window.innerHeight) y = window.innerHeight - h - 8;
+        box.style.left = x + 'px';
+        box.style.top  = y + 'px';
+    }
+    // 이벤트 위임 — 목록이 다시 그려져도 동작
+    document.addEventListener('mouseover', function (e) {
+        var t = e.target.closest('.book-thumb img');
+        if (! t) return;
+        img.src = t.currentSrc || t.src;
+        box.style.display = 'block';
+        place(e);
+    });
+    document.addEventListener('mousemove', function (e) {
+        if (box.style.display === 'block') place(e);
+    });
+    document.addEventListener('mouseout', function (e) {
+        if (e.target.closest('.book-thumb img')) box.style.display = 'none';
+    });
+})();
+</script>
+<script>
 // 수량 −/+ — 입력칸을 직접 두드리지 않아도 되게
 function stepQty(btn, delta) {
     var input = btn.parentElement.querySelector('.qty-input');
@@ -637,6 +689,27 @@ function stepQty(btn, delta) {
 
 .qty-col { width: 62px; }
 .add-col { width: 62px; }
+/* 도서 목록 표지 썸네일 + hover 확대 */
+.book-thumb {
+    position: relative; flex-shrink: 0;
+    width: 40px; height: 54px; border-radius: 4px; overflow: visible;
+    background: #f1f4f9; display: flex; align-items: center; justify-content: center;
+}
+.book-thumb img {
+    width: 40px; height: 54px; object-fit: cover; border-radius: 4px;
+    border: 1px solid #e6e9ef; background: #fff; cursor: zoom-in;
+}
+.book-thumb.no-cover, .book-thumb:not(:has(img)) { color: #b6c0cd; font-size: 1.2rem; }
+.min-w-0 { min-width: 0; }
+/* 확대 미리보기 — 표가 overflow 컨테이너라 fixed 팝업으로 띄운다(안 잘림) */
+#coverZoom {
+    position: fixed; z-index: 2000; pointer-events: none; display: none;
+    padding: 6px; background: #fff; border: 1px solid #d7dee8; border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.3);
+}
+#coverZoom img { display: block; width: 240px; height: auto; border-radius: 4px; }
+@media (max-width: 991px) { #coverZoom img { width: 180px; } }
+
 .cart-fab { display: none; }
 @media (max-width: 991px) {
     .cart-fab {
