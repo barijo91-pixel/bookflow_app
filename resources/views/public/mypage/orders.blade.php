@@ -16,9 +16,9 @@
 @endphp
 
 <div class="mb-3">
+    {{-- 도서주문 제목과 동일하게 한 크기로 — 건수는 아래 '전체(N)' 탭에 이미 있어 제거 --}}
     <h1 class="h4 navy mb-1">
         <i class="bi bi-receipt"></i> {{ $title }}
-        <small class="text-muted fs-6">{{ $orders->total() }}건</small>
     </h1>
     <p class="text-muted small mb-0">
         @if($user->role_code === 'agent')
