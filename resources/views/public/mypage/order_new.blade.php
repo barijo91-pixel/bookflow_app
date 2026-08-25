@@ -77,7 +77,19 @@
 <div class="card section-card mb-3 filter-card">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('my.order_new') }}" class="row g-2 align-items-end">
-            {{-- 과목 — 가장 먼저 고르는 값이라 상단 한 줄로 뺐다 (분류·학년·학기는 아래에서 숨김) --}}
+            {{-- 분류·과목 — 가장 먼저 고르는 값이라 상단 라인으로 뺐다 (학년·학기는 아래에서 숨김) --}}
+            <div class="col-12">
+                <label class="form-label small text-muted mb-1"><i class="bi bi-collection"></i> 분류</label>
+                <div class="d-flex flex-wrap gap-2">
+                    {{-- 분류 변경 시 학년/학기 초기화 --}}
+                    <a href="{{ $buildUrl(['school' => null, 'grade' => null, 'semester' => null]) }}"
+                       class="btn btn-sm rounded-pill {{ ! $activeFilters['school'] ? 'btn-navy' : 'btn-outline-secondary' }}">전체</a>
+                    @foreach($filterOptions['school'] as $o)
+                        <a href="{{ $buildUrl(['school' => $o->code, 'grade' => null, 'semester' => null]) }}"
+                           class="btn btn-sm rounded-pill {{ $isActive('school', $o->code) ? 'btn-navy' : 'btn-outline-secondary' }}">{{ $o->name }}</a>
+                    @endforeach
+                </div>
+            </div>
             <div class="col-12">
                 <label class="form-label small text-muted mb-1"><i class="bi bi-bookmark"></i> 과목</label>
                 <div class="d-flex flex-wrap gap-2">
