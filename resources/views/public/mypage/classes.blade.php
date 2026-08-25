@@ -129,7 +129,7 @@
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0" id="studentTable">
                     <thead class="table-light"><tr>
-                        <th>학생</th><th>학부모</th><th>연락처</th><th></th>
+                        <th>학생</th><th>학부모</th><th>연락처</th><th>주소</th><th></th>
                     </tr></thead>
                     <tbody>
                         @forelse($students as $s)
@@ -140,6 +140,10 @@
                                 </td>
                                 <td class="small">{{ $s->parent_name ?? '-' }}</td>
                                 <td class="small text-muted">{{ $s->parent_phone ? format_phone($s->parent_phone) : '-' }}</td>
+                                <td class="small text-muted">
+                                    @php $addr = trim(($s->parent_address ?? '').' '.($s->parent_address_detail ?? '')); @endphp
+                                    {{ $addr !== '' ? $addr : '-' }}
+                                </td>
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-1">
                                         {{-- 학생 수정 (학부모 연락처·주소 포함) --}}
@@ -167,7 +171,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr class="empty-row"><td colspan="4" class="text-center small">
+                            <tr class="empty-row"><td colspan="5" class="text-center small">
                                 <i class="bi bi-people d-block mb-1"></i>
                                 등록된 학생이 없습니다. 위의 「학생 등록」으로 추가하세요.
                             </td></tr>
