@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="uZrfA7sbZJFW8qDsaeJax1i8HCIj7hr9pJEamStm">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <title>주문 확인 · BookSys</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1f3a5f;
+            --navy-dark: #15294a;
+            --navy-soft: #eaf0fa;
+            --btn-blue: #2c5282;        /* 버튼 공통 — 딥네이비보다 밝은 톤 */
+            --btn-blue-dark: #24446e;   /* 버튼 호버 */
+            --link-blue: #1b6ac9;       /* 리스트 이름 링크 — 클릭 가능함이 보이게 한 톤 밝게 */
+            --link-blue-dark: #12508f;  /* 링크 호버 */
+            --sidebar-bg: #14264a;            /* 짙은 네이비 (coolenglish.kr 라이브 톤) */
+            --sidebar-border: #22345c;
+            --sidebar-text: #e8eefb;
+            --sidebar-text-strong: #ffffff;
+            --sidebar-section: #93c5fd;
+            --sidebar-active-bg: #2d4b70;
+            --sidebar-hover-bg: rgba(255,255,255,0.08);
+            --content-bg: #f6f7fb;
+            --text-muted-2: #6c757d;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: var(--content-bg); color: #212529; margin: 0; }
+        .navy { color: var(--navy); }
+        /* 버튼 톤 — 딥네이비(#1f3a5f)는 어두워 한 단계 밝은 네이비블루로 통일.
+           btn-navy/btn-primary 를 같은 색으로 맞춰 화면 간 버튼색 차이 제거 */
+        .btn-navy, .btn-primary { background: var(--btn-blue); border-color: var(--btn-blue); color: #fff; }
+        .btn-navy:hover, .btn-navy:focus,
+        .btn-primary:hover, .btn-primary:focus { background: var(--btn-blue-dark); border-color: var(--btn-blue-dark); color: #fff; }
+        .btn-outline-navy { color: var(--btn-blue); border-color: var(--btn-blue); }
+        .btn-outline-navy:hover { background: var(--btn-blue); color: #fff; }
+        a { color: var(--navy); }
+        /* 리스트에서 상세로 들어가는 이름 링크 — 클릭 가능한 걸 색으로 알림 */
+        .link-name { color: var(--link-blue); text-decoration: none; font-weight: 700; }
+        .link-name:hover, .link-name:focus { color: var(--link-blue-dark); text-decoration: underline; }
+        code { font-size: .85em; color: var(--navy); background: var(--navy-soft); padding: .1em .4em; border-radius: 4px; }
+        .badge.bg-navy { background: var(--navy); color: #fff; }
+        .card { border: 0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+        /* 폼 포커스 — 테마 네이비/하늘색 링으로 통일 */
+        .form-control:focus, .form-select:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 .2rem rgba(20, 38, 74, .12);
+        }
+        .card-header.bg-white strong { color: var(--navy); }
+
+        /* ---------- Public shell with sidebar (인증 사용자) ---------- */
+        .public-shell { display: flex; min-height: 100vh; }
+        .public-sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #1e365f 0%, #16294c 26%, #0e1c39 100%);
+            border-right: 1px solid var(--sidebar-border);
+            position: fixed; top: 0; left: 0; bottom: 0;
+            display: flex; flex-direction: column; z-index: 100;
+        }
+        .public-sidebar-brand { padding: 1.2rem 1.3rem; border-bottom: 1px solid var(--sidebar-border); }
+        .public-sidebar-brand a {
+            display: flex; align-items: center; gap: .6rem;
+            color: var(--sidebar-text-strong); text-decoration: none; font-weight: 700; font-size: 1.15rem;
+        }
+        .public-sidebar-brand i { font-size: 1.4rem; }
+        .public-nav { flex: 1; overflow-y: auto; padding: .6rem 0 2rem; }
+        .public-nav::-webkit-scrollbar { width: 6px; }
+        .public-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+        .public-nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+        .public-nav .nav-section {
+            padding: .9rem 1.3rem .35rem; font-size: .7rem; color: var(--sidebar-section);
+            text-transform: uppercase; letter-spacing: .06em; font-weight: 600;
+        }
+        .public-nav .nav-item {
+            display: flex; align-items: center; gap: .7rem;
+            padding: .6rem 1.3rem; color: var(--sidebar-text); text-decoration: none;
+            font-size: .92rem; transition: background .15s, color .15s;
+            border-left: 3px solid transparent;
+        }
+        /* 아이콘 — 하늘색 액센트(섹션 라벨과 동일 톤) */
+        .public-nav .nav-item i { width: 18px; text-align: center; color: #93c5fd; opacity: .95; }
+        .public-nav .nav-item:hover { background: var(--sidebar-hover-bg); color: var(--sidebar-text-strong); }
+        .public-nav .nav-item:hover i { opacity: 1; }
+        .public-nav .nav-item.active {
+            background: var(--sidebar-active-bg); color: var(--sidebar-text-strong); font-weight: 600;
+            border-left-color: #93c5fd;
+        }
+        .public-nav .nav-item.active i { opacity: 1; }
+        /* ---------- 사이드바 아이콘 색상 ----------
+           메뉴를 색으로 먼저 찾게 한다. 아이콘 종류로 매핑해서 뷰 수정 없이 적용된다.
+           본문은 무채색+네이비 액센트 유지 — 색은 사이드바 안에서만 쓴다. */
+        .nav-item i.bi-speedometer2,
+        .public-nav .nav-item i.bi-speedometer2      { color: #93c5fd; }  /* 종합현황 — 하늘 */
+        .nav-item i.bi-receipt,
+        .nav-item i.bi-clipboard-data,
+        .nav-item i.bi-bag-plus,
+        .nav-item i.bi-bag-heart,
+        .public-nav .nav-item i.bi-receipt,
+        .public-nav .nav-item i.bi-clipboard-data,
+        .public-nav .nav-item i.bi-bag-plus,
+        .public-nav .nav-item i.bi-bag-heart         { color: #fbbf24; }  /* 주문 — 앰버 */
+        .nav-item i.bi-journals,
+        .nav-item i.bi-book-half,
+        .public-nav .nav-item i.bi-journals,
+        .public-nav .nav-item i.bi-book-half         { color: #5eead4; }  /* 교재·도서 — 민트 */
+        .nav-item i.bi-building,
+        .nav-item i.bi-building-add,
+        .public-nav .nav-item i.bi-building,
+        .public-nav .nav-item i.bi-building-add      { color: #c4b5fd; }  /* 학원·거래처 — 라벤더 */
+        .nav-item i.bi-people,
+        .nav-item i.bi-person-badge,
+        .nav-item i.bi-person-plus,
+        .nav-item i.bi-mortarboard,
+        .public-nav .nav-item i.bi-people,
+        .public-nav .nav-item i.bi-person-badge,
+        .public-nav .nav-item i.bi-mortarboard       { color: #f0abfc; }  /* 사람 — 연보라 */
+        .nav-item i.bi-percent,
+        .public-nav .nav-item i.bi-percent           { color: #f9a8d4; }  /* 할인율 — 핑크 */
+        .nav-item i.bi-graph-up-arrow,
+        .public-nav .nav-item i.bi-graph-up-arrow    { color: #fdba74; }  /* 수익 — 오렌지 */
+        .nav-item i.bi-cash-stack,
+        .nav-item i.bi-calculator,
+        .public-nav .nav-item i.bi-cash-stack        { color: #86efac; }  /* 정산 — 그린 */
+        .nav-item i.bi-box-seam,
+        .public-nav .nav-item i.bi-box-seam          { color: #7dd3fc; }  /* 재고 — 스카이 */
+        .nav-item i.bi-receipt-cutoff,
+        .public-nav .nav-item i.bi-receipt-cutoff    { color: #cbd5e1; }  /* 세무 — 실버 */
+        .nav-item i.bi-link-45deg,
+        .public-nav .nav-item i.bi-link-45deg        { color: #67e8f9; }  /* 링크 — 시안 */
+        .nav-item i.bi-bell,
+        .nav-item i.bi-chat-dots                     { color: #fca5a5; }  /* 알림 — 살몬 */
+        .nav-item i.bi-gear,
+        .nav-item i.bi-tags,
+        .nav-item i.bi-geo-alt                       { color: #a5b4fc; }  /* 설정·코드·지역 — 인디고 */
+        .nav-item i.bi-shield-check,
+        .nav-item i.bi-clipboard-check               { color: #fcd34d; }  /* 감사·점검 — 골드 */
+        .public-main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; }
+        .public-topbar {
+            background: var(--sidebar-bg); border-bottom: 1px solid var(--sidebar-border);
+            padding: .8rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+            color: var(--sidebar-text);
+        }
+        .public-topbar .user-info { font-size: .85rem; color: var(--sidebar-text); }
+        .public-topbar .btn-outline-secondary {
+            color: var(--sidebar-text); border-color: rgba(255,255,255,0.25);
+        }
+        .public-topbar .btn-outline-secondary:hover,
+        .public-topbar .btn-outline-secondary:focus {
+            background: rgba(255,255,255,0.1); color: var(--sidebar-text-strong);
+            border-color: rgba(255,255,255,0.4);
+        }
+        .public-topbar .user-info .badge { margin-left: .3rem; }
+        .public-content { flex: 1; padding: 1.5rem 1.5rem 2rem; }
+
+        /* ---------- 모바일 하단 탭바 (앱 스타일) ---------- */
+        .mobile-bottom-nav { display: none; }
+        .sidebar-overlay { display: none; }
+
+        /* 모바일 (768px 이하): 사이드바 오프캔버스 + 하단 탭바 */
+        @media (max-width: 768px) {
+            .public-sidebar {
+                transform: translateX(-100%); transition: transform .22s ease;
+                box-shadow: 4px 0 12px rgba(0,0,0,.1); width: 270px;
+            }
+            .public-sidebar.show { transform: translateX(0); }
+            .public-main { margin-left: 0; }
+            .public-topbar .hamburger { display: inline-flex; }
+
+            /* 배경 오버레이 (사이드바 열렸을 때) */
+            .sidebar-overlay {
+                position: fixed; inset: 0; background: rgba(0,0,0,.45);
+                z-index: 99; opacity: 0; transition: opacity .22s;
+            }
+            .sidebar-overlay.show { display: block; opacity: 1; }
+
+            /* 하단 탭바 */
+            .mobile-bottom-nav {
+                display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 150;
+                background: #fff; border-top: 1px solid #e5e7eb;
+                box-shadow: 0 -2px 12px rgba(0,0,0,.07);
+                padding-bottom: env(safe-area-inset-bottom, 0);
+            }
+            .mbn-item {
+                position: relative; flex: 1; display: flex; flex-direction: column;
+                align-items: center; justify-content: center; gap: 2px;
+                padding: .45rem 0 .4rem; min-height: 56px;
+                color: #8a93a2; text-decoration: none; font-size: .68rem; font-weight: 500;
+                background: none; border: 0; cursor: pointer;
+            }
+            .mbn-item i { font-size: 1.35rem; line-height: 1; }
+            .mbn-item.active { color: var(--navy); }
+            .mbn-item.active i { transform: translateY(-1px); }
+            .mbn-badge {
+                position: absolute; top: 5px; left: 50%; margin-left: 4px;
+                background: #dc3545; color: #fff; font-size: .6rem; font-weight: 700;
+                min-width: 16px; height: 16px; line-height: 16px; text-align: center;
+                border-radius: 999px; padding: 0 4px;
+            }
+
+            /* 콘텐츠/푸터가 하단 탭바에 가리지 않게 */
+            .public-content { padding: 1rem 1rem 5rem; }
+            .public-footer { margin-bottom: 3.6rem; }
+
+            /* 모바일 터치 타겟 확대 */
+            .public-content .btn { min-height: 42px; }
+        }
+        @media (min-width: 769px) {
+            .public-topbar .hamburger { display: none; }
+        }
+
+        /* ---------- Guest layout (사이드바 없음) ---------- */
+        .guest-shell { display: flex; flex-direction: column; min-height: 100vh; }
+        .guest-topbar { background: #fff; border-bottom: 1px solid var(--sidebar-border); }
+        .guest-topbar .brand { color: var(--navy); font-weight: 700; font-size: 1.3rem; text-decoration: none; }
+        .guest-main { flex: 1; padding: 2rem 1rem; }
+        footer.public-footer {
+            background: #fff; border-top: 1px solid var(--sidebar-border);
+            padding: 1.5rem 1rem; color: var(--text-muted-2); font-size: .85rem; text-align: center;
+        }
+    </style>
+    <link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1a1d2e">
+<meta name="application-name" content="BookSys">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BookSys">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+
+<style>
+    /* ===== 입력 폼 가독성 (공통) — 보더 강화 + focus 액센트 ===== */
+    .form-control, .form-select {
+        border-color: #b6c0cd !important;  /* 진한 회색 — 폼 경계 명확 */
+        background-color: #fbfcfd !important;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #1f3a5f !important;
+        background-color: #fff !important;
+        box-shadow: 0 0 0 .15rem rgba(31, 58, 95, 0.15) !important;
+    }
+    .form-control:disabled, .form-control[readonly], .form-select:disabled {
+        background-color: #eef2f7 !important;
+    }
+
+    /* ===== 조회/필터 영역 (공통) — 본문과 구분되는 톤 + 좌측 액센트 ===== */
+    form[method="GET"].card,
+    .filter-card {
+        background: #d4e0ee !important;
+        border-left: 4px solid #1f3a5f !important;
+    }
+    form[method="GET"].card .form-label,
+    .filter-card .form-label {
+        color: #1f3a5f !important;
+        font-weight: 600;
+    }
+
+    /* ===== 섹션 카드 (공통) — 영역 구분 명확 + 가독성 ===== */
+    /* 사용법: <div class="card section-card"> ... </div> */
+    /* card-header / card-body / card-footer 구조 자동 스타일링 */
+    .section-card {
+        border: 1px solid #eef2f7 !important;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(20, 38, 74, 0.04), 0 6px 16px rgba(20, 38, 74, 0.06) !important;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .section-card > .card-header {
+        /* !important 없이 — bg-danger/bg-warning 등은 Bootstrap이 우선 적용 (!important 사용) */
+        background: #f6f9fd;  /* 밝고 깔끔한 네이비 틴트 헤더 */
+        border-bottom: 1px solid #e6edf6 !important;
+        padding: .85rem 1.15rem;
+        font-size: .95rem;
+        color: #1f3a5f;  /* strong/i가 상속 — bg-danger.text-white 헤더는 .text-white(!important)가 우선 */
+    }
+    .section-card > .card-header strong { font-weight: 700; }
+    .section-card > .card-header i.bi   { margin-right: .15rem; }
+    /* 헤더 위 outline 버튼 — 헤더 배경(#e3ebf5)과 톤이 비슷해 묻히는 것 방지 */
+    .section-card > .card-header .btn[class*="btn-outline-"] {
+        background-color: #fff !important;
+    }
+    .section-card > .card-header .btn[class*="btn-outline-"]:hover {
+        background-color: #1f3a5f !important;
+        color: #fff !important;
+    }
+    .section-card > .card-footer {
+        background: #fbfcfe !important;
+        border-top: 1px solid #eef2f7 !important;
+        padding: .8rem 1.15rem;
+    }
+    .section-card > .card-footer .form-label { color: #1f3a5f; font-weight: 600; }
+    /* 빈 상태 행/블록 — 무미건조한 한 줄 대신 살짝 강조 */
+    .section-card .empty-row td,
+    .section-card .empty-state {
+        background: #fafbfc !important;
+        color: #6c757d;
+        padding: 1.5rem 1rem !important;
+        text-align: center;
+    }
+    .section-card .empty-row i.bi,
+    .section-card .empty-state i.bi {
+        font-size: 1.5rem; color: #b0bac5;
+        display: block; margin-bottom: .25rem;
+    }
+    /* 통계 카드 (공통) — 관리자 admin.css 의 .stat-card 와 동일 톤 */
+    .stat-card {
+        background: linear-gradient(180deg, #f6f9fd 0%, #eef4fb 100%);
+        border: 1px solid #e3ecf7;
+        border-left: 3px solid #1f3a5f;
+        border-radius: 10px;
+        padding: 1.1rem 1.3rem;
+        box-shadow: 0 1px 3px rgba(20, 38, 74, 0.05);
+        height: 100%;
+    }
+    .stat-label { font-size: .82rem; color: #6c757d; }
+    .stat-value { font-size: 1.7rem; font-weight: 700; color: #1f3a5f; margin-top: .25rem; }
+
+    /* 안내 배너 톤 — 좌측 네이비 액센트로 정보성 강조 */
+    .section-card.info-banner {
+        border-left: 4px solid #1f3a5f !important;
+        background: linear-gradient(to right, #f4f7fb 0%, #fff 30%) !important;
+    }
+
+    /* 테이블 (공통) — coolenglish 표준 밀도/폰트에 맞춤 (14.5px, 조밀한 1줄 행) */
+    .section-card table { font-size: 14.5px; }
+    .section-card table thead th,
+    .section-card table thead.table-light th {
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: -.005em;
+        padding: 8px 14px;
+        border-bottom: 1px solid #e2e8f0 !important;
+        white-space: nowrap;
+    }
+    .section-card table tbody td {
+        padding: 5px 14px;   /* 행 높이 조밀하게 (관리자와 동일) */
+        height: 42px;        /* 최소높이 — 버튼 있는 행/없는 행 줄간격 통일 */
+        color: #334155;
+        vertical-align: middle;
+    }
+    /* 셀 안 보조정보(ISBN·출판사 등)는 살짝 작게 — 1줄 유지 */
+    .section-card table tbody td .text-muted.small,
+    .section-card table tbody td .sub { font-size: 12.8px; }
+    /* 표준 정규화 — 셀 자체에 .small/.text-muted 를 준 곳도 표준 폰트/색으로 통일
+       (셀 안의 span/div.small 보조정보는 계속 작게 표시됨) */
+    .section-card table tbody > tr > td.small { font-size: 14.5px; }
+    .section-card table tbody > tr > td.text-muted { color: #334155; }
+    .section-card table tbody tr { transition: background .12s; }
+    .section-card table tbody tr:hover { background: #f6f9fe; }
+    /* 배지 — 부트스트랩 기본값(.75em)이면 표(14.5px) 안에서 10.9px 라 읽기 어렵다.
+       관리자·공개 리스트 공통으로 한 단계 올린다. */
+    .section-card table .badge,
+    .admin-content .table .badge { font-size: 11.6px; }
+
+    /* 타임라인 (상태 이력 등) — 점 + 세로선 */
+    .timeline-list { list-style: none; padding: 0; margin: 0; position: relative; }
+    .timeline-list::before {
+        content: ''; position: absolute;
+        left: 6px; top: 8px; bottom: 8px; width: 2px;
+        background: #e9ecef;
+    }
+    .timeline-item {
+        position: relative; padding-left: 1.5rem; padding-bottom: 1rem;
+    }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-dot {
+        position: absolute; left: 0; top: 4px;
+        width: 14px; height: 14px; border-radius: 50%;
+        background: #1f3a5f; border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #1f3a5f;
+    }
+    .timeline-item:last-child .timeline-dot { background: #fff; }
+
+    /* 표지 썸네일 (도서 상세) — 비어있을 때도 작고 안정감 있게 */
+    .cover-thumb {
+        width: 120px;
+        height: 160px;
+        background: #fafbfc;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+        margin: 0 auto;
+    }
+    .cover-thumb img {
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 4px;
+        object-fit: contain;
+    }
+    .cover-thumb .bi {
+        font-size: 2.5rem;
+        color: #b0bac5;
+    }
+
+    /* form-label과 input 사이 기본 간격 — 라벨이 input에 너무 붙는 것 방지 */
+    .form-label.small { margin-bottom: .25rem; }
+
+    /* 폼 안 서브섹션 구분 — hr 대신 라벨 + 가는 선 */
+    .section-divider {
+        position: relative;
+        border-top: 1px solid #e9ecef;
+        padding-top: .5rem;
+    }
+    .section-divider small {
+        color: #1f3a5f !important;
+        letter-spacing: .03em;
+        font-size: .72rem;
+    }
+
+    /* 체크박스 알약(pill) 그룹 — 학년/학기/난이도 등 다중 선택 */
+    .check-pill-group {
+        display: flex; flex-wrap: wrap; gap: .35rem;
+        padding: .5rem; background: #fafbfc;
+        border: 1px solid #e9ecef; border-radius: 6px;
+    }
+    .check-pill {
+        display: inline-flex; align-items: center; gap: .25rem;
+        padding: .3rem .7rem;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        font-size: .82rem;
+        cursor: pointer;
+        transition: all .12s;
+        user-select: none;
+    }
+    .check-pill:hover { border-color: #1f3a5f; background: #f4f7fb; }
+    .check-pill input[type=checkbox] {
+        margin: 0;
+        accent-color: #1f3a5f;
+    }
+    .check-pill input[type=checkbox]:checked + span {
+        color: #1f3a5f; font-weight: 600;
+    }
+    .check-pill:has(input:checked) {
+        background: #d4e0ee;
+        border-color: #1f3a5f;
+    }
+
+    /* 테이블 헤더(thead.table-light) — 카드 헤더와 본문 사이 중간 톤 */
+    /* 카드 헤더 #e3ebf5 (진) → thead #eef2f8 (중간) → 본문 #fff (밝음) 자연 계조 */
+    .table > thead.table-light th,
+    .table > thead.table-light td {
+        --bs-table-bg: #eef2f8;
+        --bs-table-color: #1f3a5f;
+        background-color: #eef2f8 !important;
+        color: #1f3a5f !important;
+        border-bottom: 1px solid #d8e0eb;
+        font-weight: 600;
+        font-size: .875rem;  /* '학생 등록' 등 small 라벨과 동일 사이즈 */
+    }
+
+    /* ===== 페이지네이션 (전 페이지 공통) — 가운데 정렬 + Showing 텍스트 숨김 ===== */
+    /* Laravel Bootstrap5 paginator는 nav 안에 좌우 분배 wrapper(.d-sm-flex.justify-content-between) 사용
+       → 그 wrapper의 justify-content를 center로 override + Showing 텍스트 숨김 */
+    .card-footer nav .justify-content-between {
+        justify-content: center !important;
+    }
+    /* Showing N to M of T results 텍스트(p) 숨김 */
+    .card-footer nav p {
+        display: none !important;
+    }
+    /* 모바일용 Previous/Next 큰 박스 (sm 미만 표시) — 데스크탑에서 보일 가능성 차단 */
+    @media (min-width: 576px) {
+        .card-footer nav > .d-sm-none,
+        .card-footer nav .d-flex.d-sm-none {
+            display: none !important;
+        }
+    }
+    /* 페이지네이션 ul 가운데 */
+    .pagination {
+        justify-content: center !important;
+        margin: 0 !important;
+    }
+
+    /* ===== 테이블 행 hover 강조 (공통) — 네이비 톤 + 좌측 액센트 ===== */
+    /* Bootstrap .table은 td마다 --bs-table-bg가 깔려 tr:hover bg를 덮음 → > * 로 적용 */
+    .table-row-highlight tbody tr > * {
+        transition: background-color .12s;
+    }
+    .table-row-highlight tbody tr:hover > * {
+        background-color: #d4e0ee !important;
+        --bs-table-bg-state: #d4e0ee;
+        --bs-table-accent-bg: #d4e0ee;
+    }
+    .table-row-highlight tbody tr:hover > td:first-child {
+        box-shadow: inset 4px 0 0 0 #1f3a5f;
+    }
+    /* 클릭형(클릭 가능) 행 표시 */
+    .table-row-highlight tbody tr.clickable { cursor: pointer; }
+    /* 다크 사이드바 톤과 어울리도록 카드 헤더가 별도 있으면 그대로 (form 단독 카드만 적용) */
+
+    /* 할인율 stepper (모바일·웹 공통) */
+    .rate-stepper { width: 100%; max-width: 220px; }
+    .rate-stepper .btn { padding: .25rem .55rem; font-weight: 600; min-width: 32px; }
+    .rate-stepper input[type=number] {
+        min-width: 60px;
+        -moz-appearance: textfield;
+    }
+    .rate-stepper input[type=number]::-webkit-inner-spin-button,
+    .rate-stepper input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none; margin: 0;
+    }
+    .rate-stepper .input-group-text { padding-left: .4rem; padding-right: .4rem; }
+    @media (max-width: 575.98px) {
+        .rate-stepper { max-width: 200px; }
+        .rate-stepper .btn { padding: .25rem .45rem; min-width: 28px; }
+    }
+
+    /* 앱 설치 안내 floating 버튼 */
+    .pwa-install-btn {
+        position: fixed; right: 20px; bottom: 20px;
+        background: #1a1d2e; color: #fff;
+        border: none; border-radius: 999px;
+        padding: 12px 20px; font-size: 14px; font-weight: 600;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        cursor: pointer; z-index: 9999;
+        display: none; align-items: center; gap: 8px;
+        font-family: 'Noto Sans KR', sans-serif;
+        transition: transform .15s, box-shadow .15s;
+    }
+    .pwa-install-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+    .pwa-install-btn .close { margin-left: 4px; opacity: .7; font-size: 16px; line-height: 1; }
+    .pwa-install-btn .close:hover { opacity: 1; }
+    .pwa-install-modal {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5);
+        display: none; align-items: center; justify-content: center;
+        z-index: 10000; padding: 20px;
+        font-family: 'Noto Sans KR', sans-serif;
+    }
+    .pwa-install-modal.show { display: flex; }
+    .pwa-install-modal .box {
+        background: #fff; border-radius: 16px;
+        max-width: 360px; width: 100%;
+        padding: 24px; text-align: center;
+    }
+    .pwa-install-modal h3 { color: #1f3a5f; margin: 0 0 12px; font-size: 18px; font-weight: 700; }
+    .pwa-install-modal p { color: #495057; font-size: 14px; line-height: 1.6; margin: 0 0 16px; }
+    .pwa-install-modal .step { background: #f6f7fb; border-radius: 8px; padding: 10px; margin: 8px 0; font-size: 13px; color: #495057; }
+    .pwa-install-modal button { background: #1a1d2e; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+</style>
+
+<button id="pwaInstallBtn" class="pwa-install-btn" type="button" aria-label="북시스 앱설치">
+    <i class="bi bi-download"></i> <span id="pwaInstallBtnText">북시스 앱설치</span>
+    <span class="close" id="pwaInstallClose" title="이번엔 안 함">×</span>
+</button>
+
+<div id="pwaInstallModal" class="pwa-install-modal" role="dialog" aria-modal="true">
+    <div class="box">
+        <h3><i class="bi bi-download"></i> BookSys 설치 안내</h3>
+        <p class="text-start mb-2"><strong>크롬·엣지 (PC)</strong></p>
+        <div class="step text-start">주소창 우측 <strong>⊕ 아이콘</strong> 또는 ⋮ 메뉴 → <strong>"BookSys 설치"</strong> 클릭</div>
+        <p class="text-start mb-2 mt-3"><strong>안드로이드 크롬</strong></p>
+        <div class="step text-start">⋮ 메뉴 → <strong>"홈 화면에 추가"</strong> 선택</div>
+        <p class="text-start mb-2 mt-3"><strong>아이폰 사파리</strong></p>
+        <div class="step text-start">하단 공유 <strong>⬆️</strong> → <strong>"홈 화면에 추가"</strong></div>
+        <p class="small text-muted mt-3 mb-0">이미 설치되어 있다면 주소창 우측 "앱에서 열기" 사용</p>
+        <button type="button" class="mt-3" onclick="document.getElementById('pwaInstallModal').classList.remove('show')">닫기</button>
+    </div>
+</div>
+
+<script>
+// Service worker 등록은 즉시 가능
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+    });
+}
+
+// 나머지 DOM 요소 의존 로직은 DOMContentLoaded 후 실행
+// (이 스크립트는 <head>에 있어서 body의 heroInstallBtn이 아직 없는 시점)
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('pwaInstallBtn');
+    const modal = document.getElementById('pwaInstallModal');
+    const closeBtn = document.getElementById('pwaInstallClose');
+    // 사이드바(로그아웃 아래) 설치 버튼 — 로그인 사용자에게만 표시
+    const sidebarBtn = document.getElementById('sidebarInstallBtn');
+    const sidebarHint = document.getElementById('sidebarInstalledHint');
+
+    // 2. 이미 standalone(설치된 상태) 감지
+    const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true ||
+        document.referrer.startsWith('android-app://');
+
+    // 3. iOS Safari 감지
+    const ua = navigator.userAgent.toLowerCase();
+    const isIos = /iphone|ipad|ipod/.test(ua);
+    const isSafari = /safari/.test(ua) && !/chrome|crios|fxios|edgios/.test(ua);
+
+    let deferredPrompt = null;
+    const DISMISS_KEY = 'pwa-install-dismissed-at';
+
+    function showButtons() {
+        // 사이드바 버튼만 노출 (floating 사용 X)
+        if (sidebarBtn) sidebarBtn.style.display = '';
+    }
+
+    function markAsInstalled() {
+        // 이미 설치된 사용자: 설치 버튼 숨기고 안내 텍스트만 노출
+        hideButtons();
+        if (sidebarHint) sidebarHint.style.display = '';
+    }
+
+    function hideButtons() {
+        if (btn) btn.style.display = 'none';
+        if (sidebarBtn) sidebarBtn.style.display = 'none';
+    }
+
+    // 4. 이미 standalone(PWA로 실행 중) → 모두 숨김
+    if (isStandalone) {
+        hideButtons();
+        return;
+    }
+
+    // floating은 더 이상 표시 X (사이드바로 옮김)
+    if (btn) btn.style.display = 'none';
+
+    // 5. Chrome/Edge/Android: beforeinstallprompt 캡처
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showButtons();
+    });
+
+    // 6. iOS Safari는 beforeinstallprompt 없으니 바로 노출
+    if (isIos && isSafari) {
+        showButtons();
+    }
+
+    // 7. 1.5초 후에도 beforeinstallprompt 안 오면 → 이미 설치된 상태로 간주
+    setTimeout(() => {
+        if (!deferredPrompt && !isStandalone && !(isIos && isSafari)) {
+            markAsInstalled();
+        }
+    }, 1500);
+
+    // 8. 클릭 핸들러 (floating, hero 공용)
+    async function triggerInstall() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const choice = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            hideButtons();
+            if (choice.outcome === 'dismissed') {
+                localStorage.setItem(DISMISS_KEY, String(Date.now()));
+            }
+        } else if (isIos && isSafari) {
+            modal.classList.add('show');
+        } else {
+            // beforeinstallprompt가 안 오는 경우 — 이미 설치되어 있거나 브라우저가 PWA 미지원
+            modal.classList.add('show');
+        }
+    }
+
+    if (btn) {
+        btn.addEventListener('click', (e) => {
+            if (e.target === closeBtn) return;
+            triggerInstall();
+        });
+    }
+    if (sidebarBtn) {
+        sidebarBtn.addEventListener('click', triggerInstall);
+    }
+
+    // 9. 닫기(X)
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (btn) btn.style.display = 'none';
+            localStorage.setItem(DISMISS_KEY, String(Date.now()));
+        });
+    }
+
+    // 10. 설치 완료 시 자동 숨김
+    window.addEventListener('appinstalled', () => {
+        hideButtons();
+        deferredPrompt = null;
+        if (sidebarHint) sidebarHint.style.display = '';
+    });
+
+    // 11. 모달 바깥 클릭 시 닫기
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.remove('show');
+        });
+    }
+});
+</script>
+    <style>
+.order-card-m {
+    display: block; padding: .85rem 1rem; border-bottom: 1px solid #eef0f4;
+    text-decoration: none; color: #212529;
+}
+.order-card-m:last-child { border-bottom: 0; }
+.order-card-m:active { background: #f6f7fb; }
+</style>
+</head>
+<body>
+
+
+<div class="public-shell">
+    <aside class="public-sidebar">
+    <div class="public-sidebar-brand">
+        <a href="/">
+            <i class="bi bi-book-half"></i>
+            <span>BookSys</span>
+        </a>
+    </div>
+
+    <nav class="public-nav">
+        <a href="/mypage" class="nav-item ">
+            <i class="bi bi-speedometer2"></i> 종합현황
+        </a>
+
+                        <div class="nav-section">영업자 메뉴</div>
+                <a href="/mypage/orders" class="nav-item active">
+                    <i class="bi bi-receipt"></i> 주문 확인
+                    <span class="badge bg-danger ms-auto">3</span>                </a>
+                <a href="/mypage/books" class="nav-item ">
+                    <i class="bi bi-journals"></i> 교재 조회
+                </a>
+                <a href="/mypage/order/new" class="nav-item ">
+                    <i class="bi bi-bag-plus"></i> 도서 주문(대행)
+                </a>
+                <a href="/mypage/vendors" class="nav-item ">
+                    <i class="bi bi-building"></i> 거래처(학원)
+                </a>
+                <a href="/mypage/discounts" class="nav-item ">
+                    <i class="bi bi-percent"></i> 할인율 관리
+                </a>
+                <a href="/mypage/income-simulator" class="nav-item ">
+                    <i class="bi bi-graph-up-arrow"></i> 예상 수익보기
+                </a>
+                <a href="/mypage/tax" class="nav-item ">
+                    <i class="bi bi-receipt-cutoff"></i> 세무 정보
+                </a>
+                <a href="/mypage/sales" class="nav-item ">
+                    <i class="bi bi-bar-chart-line"></i> 매출 조회
+                </a>
+                <a href="/mypage/returns" class="nav-item ">
+                    <i class="bi bi-arrow-return-left"></i> 반품 관리
+                </a>
+                <a href="/mypage/settlements" class="nav-item ">
+                    <i class="bi bi-cash-stack"></i> 정산 내역
+                </a>
+                
+                <a href="/mypage/vendors/create" class="nav-item ">
+                    <i class="bi bi-building-add"></i> 학원 등록
+                </a>
+                <a href="/mypage/student-import" class="nav-item d-none d-md-flex ">
+                    <i class="bi bi-people"></i> 학급&학생
+                </a>
+                <a href="/mypage/featured-academies" class="nav-item ">
+                    <i class="bi bi-buildings"></i> 대표 이용학원
+                </a>
+                <a href="/mypage/invite" class="nav-item ">
+                    <i class="bi bi-link-45deg"></i> 학원 가입 링크
+                </a>
+                
+        <div class="nav-section">계정</div>
+        <a href="/mypage/profile" class="nav-item ">
+            <i class="bi bi-person"></i> 정보 수정
+        </a>
+        <form method="POST" action="/logout" class="m-0">
+            <input type="hidden" name="_token" value="uZrfA7sbZJFW8qDsaeJax1i8HCIj7hr9pJEamStm" autocomplete="off">            <button class="nav-item w-100 border-0 bg-transparent text-start" type="submit">
+                <i class="bi bi-box-arrow-right"></i> 로그아웃
+            </button>
+        </form>
+        
+        <button type="button" id="sidebarInstallBtn" class="nav-item w-100 border-0 bg-transparent text-start" style="display:none; margin-top:1.5rem;">
+            <i class="bi bi-download"></i> 북시스 앱 설치
+        </button>
+        <div id="sidebarInstalledHint" class="small mt-2 px-3" style="display:none; color:#94a3b8;">
+            <i class="bi bi-check-circle"></i> 설치 완료
+        </div>
+    </nav>
+</aside>
+    <div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+    <div class="public-main">
+        <header class="public-topbar">
+            <button type="button" class="btn btn-sm btn-outline-secondary hamburger" onclick="toggleMobileMenu()">
+                <i class="bi bi-list"></i>
+            </button>
+            <span class="user-info">
+                <i class="bi bi-person-circle"></i>
+                김영업
+                <span class="badge bg-light text-dark">영업자</span>
+                <code class="ms-1">agent01</code>
+            </span>
+
+            
+                    </header>
+        <main class="public-content">
+            <div style="max-width: 1400px;">
+                                                                
+<div class="mb-3">
+    
+    <h1 class="h4 navy mb-1">
+        <i class="bi bi-receipt"></i> 주문 확인
+    </h1>
+    <p class="text-muted small mb-0">
+                    학원이 올린 주문을 확인하고 영업자가 확정 처리합니다.
+            </p>
+</div>
+
+
+<div class="card section-card mb-3">
+    <div class="card-body py-2 d-flex flex-wrap gap-2 align-items-center">
+                <a href="/mypage/orders?date_from=2026-01-01"
+           class="btn btn-sm btn-outline-secondary">
+            전체 (6)
+        </a>
+                                                <a href="/mypage/orders?date_from=2026-01-01&amp;status=requested"
+                   class="btn btn-sm btn-navy">
+                    접수 (3)
+                </a>
+                                                            <a href="/mypage/orders?date_from=2026-01-01&amp;status=confirmed"
+                   class="btn btn-sm btn-outline-secondary">
+                    확정 (1)
+                </a>
+                                                                                            <a href="/mypage/orders?date_from=2026-01-01&amp;status=shipped"
+                   class="btn btn-sm btn-outline-secondary">
+                    출고 (1)
+                </a>
+                                                            <a href="/mypage/orders?date_from=2026-01-01&amp;status=in_transit"
+                   class="btn btn-sm btn-outline-secondary">
+                    배송중 (1)
+                </a>
+                                                                                                        
+        <a href="/mypage/orders?date_from=2026-01-01&amp;status=canceled"
+           class="btn btn-sm ms-auto btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> 취소 (0)
+        </a>
+    </div>
+</div>
+
+
+<form method="GET" action="/mypage/orders" class="card section-card mb-3">
+    <div class="card-body py-3">
+        
+                <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">시작일</label>
+                <input type="date" name="date_from" value="2026-01-01" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">종료일</label>
+                <input type="date" name="date_to" value="2026-08-26" class="form-control form-control-sm">
+            </div>
+                        <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">학원</label>
+                <select name="vendor_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">전체 학원</option>
+                                            <option value="2" >브라이트영어학원</option>
+                                            <option value="1" >이런어학원 강남캠퍼스</option>
+                                    </select>
+            </div>
+                        <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">주문번호</label>
+                <input type="text" name="q" value="" class="form-control form-control-sm" placeholder="주문번호">
+            </div>
+                        <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">거래구분</label>
+                <select name="trade_type" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">전체</option>
+                    <option value="retail" >소매</option>
+                    <option value="wholesale" >도매</option>
+                </select>
+            </div>
+                        <div class="col-md-2 d-flex gap-1">
+                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-search"></i> 조회</button>
+                <a href="/mypage/orders" class="btn btn-sm btn-outline-secondary" title="초기화">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+            <input type="hidden" name="status" value="requested">        </div>
+    </div>
+</form>
+
+
+    
+    <div class="d-none d-md-flex align-items-center gap-2 mb-2 flex-wrap">
+                    
+            <form method="POST" action="/mypage/orders/bulk-confirm" id="confirmForm" class="m-0"
+                  onsubmit="return confirm('선택한 여신 주문을 일괄 확정할까요?')">
+                <input type="hidden" name="_token" value="uZrfA7sbZJFW8qDsaeJax1i8HCIj7hr9pJEamStm" autocomplete="off">                <input type="hidden" name="order_ids" id="confirmIds" value="">
+                <button type="submit" class="btn btn-sm btn-success" id="confirmBtn" disabled>
+                    <i class="bi bi-check2-all"></i> 선택 확정<span id="confirmCount"></span>
+                </button>
+            </form>
+                
+        <form method="POST" action="/mypage/orders/export-logistics" id="logisticsForm" class="m-0">
+            <input type="hidden" name="_token" value="uZrfA7sbZJFW8qDsaeJax1i8HCIj7hr9pJEamStm" autocomplete="off">            <input type="hidden" name="order_ids" id="logisticsIds" value="">
+            <button type="submit" class="btn btn-sm btn-navy" id="logisticsBtn" disabled>
+                <i class="bi bi-file-earmark-excel"></i> 물류센터 출고 엑셀<span id="logisticsCount"></span>
+            </button>
+        </form>
+        <span class="small text-muted">
+            주문일 앞 체크박스로 고르세요.
+            <strong>여신 미결제</strong>는 확정, <strong>확정 이후</strong>는 출고엑셀 대상.        </span>
+    </div>
+
+<div class="card section-card">
+    
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-hover align-middle mb-0 table-row-highlight">
+            <thead class="table-light">
+                <tr>
+                                            <th style="width:34px;">
+                            <input type="checkbox" class="form-check-input" id="orderPickAll" title="선택 가능한 주문 전체 선택">
+                        </th>
+                                        <th><a href="/mypage/orders?status=requested&amp;date_from=2026-01-01&amp;sort=date&amp;dir=asc&amp;page=1" class="text-decoration-none navy fw-bold">주문일<i class="bi bi-caret-down-fill small ms-1"></i></a>
+</th>
+                    
+                    <th><a href="/mypage/orders?status=requested&amp;date_from=2026-01-01&amp;sort=order_no&amp;dir=asc&amp;page=1" class="text-decoration-none text-dark">주문번호 (학급)<i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i></a>
+</th>
+                    <th>주문교재</th>
+                    <th><a href="/mypage/orders?status=requested&amp;date_from=2026-01-01&amp;sort=vendor&amp;dir=asc&amp;page=1" class="text-decoration-none text-dark">학원<i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i></a>
+</th><th>구분</th>                    <th class="text-end"><a href="/mypage/orders?status=requested&amp;date_from=2026-01-01&amp;sort=amount&amp;dir=asc&amp;page=1" class="text-decoration-none text-dark">금액<i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i></a>
+</th>
+                    <th><a href="/mypage/orders?status=requested&amp;date_from=2026-01-01&amp;sort=status&amp;dir=asc&amp;page=1" class="text-decoration-none text-dark">상태<i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i></a>
+</th>
+                                        
+                                            <th><a href="/mypage/orders?status=requested&amp;date_from=2026-01-01&amp;sort=distributor&amp;dir=asc&amp;page=1" class="text-decoration-none text-dark">총판<i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i></a>
+</th>
+                                    </tr>
+            </thead>
+            <tbody>
+                                    <tr class="order-row" style="cursor:pointer" onclick="location.href='/mypage/orders/1'">
+                                                                                <td onclick="event.stopPropagation()">
+                                <input type="checkbox" class="form-check-input order-pick" value="1"
+                                       data-confirm="0" data-export="0"
+                                       disabled
+                                       title="선택할 수 없는 상태">
+                            </td>
+                                                <td class="small text-muted text-nowrap">
+                            2026-08-13 14:12
+                        </td>
+                        <td class="text-nowrap">
+                            <a href="/mypage/orders/1" class="text-decoration-none navy fw-bold" onclick="event.stopPropagation()">
+                                <code>BF202608130001</code>
+                            </a>
+                                                            
+                                <span class="text-muted small">(학급 미지정)</span>
+                                                    </td>
+                        <td class="small">
+                                                                                        <span class="fw-semibold navy">Bricks Phonics 1</span>
+                                                                    <span class="text-muted">외 2종</span>
+                                                                <span class="text-muted">· 18권</span>
+                                                    </td>
+                                                    <td class="small">이런어학원 강남캠퍼스</td>
+                            <td><span class="badge bg-light text-dark">소매</span></td>
+                                                <td class="text-end">145,600원</td>
+                        <td>
+                                                        <span class="badge bg-warning text-dark">접수</span>
+                            
+                                                                                        <div class="small mt-1">
+                                                                            <span class="text-muted"><i class="bi bi-hourglass-split"></i> 미결제</span>
+                                                                    </div>
+                                                    </td>
+                                                                            <td class="small text-muted">한국교재총판</td>
+                                            </tr>
+                                    <tr class="order-row" style="cursor:pointer" onclick="location.href='/mypage/orders/8'">
+                                                                                <td onclick="event.stopPropagation()">
+                                <input type="checkbox" class="form-check-input order-pick" value="8"
+                                       data-confirm="1" data-export="0"
+                                       
+                                       title="여신 주문 확정 대상">
+                            </td>
+                                                <td class="small text-muted text-nowrap">
+                            2026-08-09 15:12
+                        </td>
+                        <td class="text-nowrap">
+                            <a href="/mypage/orders/8" class="text-decoration-none navy fw-bold" onclick="event.stopPropagation()">
+                                <code>BF202608090008</code>
+                            </a>
+                                                    </td>
+                        <td class="small">
+                                                                                        <span class="fw-semibold navy">Bricks Reading 50</span>
+                                                                    <span class="text-muted">외 1종</span>
+                                                                <span class="text-muted">· 14권</span>
+                                                    </td>
+                                                    <td class="small">브라이트영어학원</td>
+                            <td><span class="badge bg-secondary">도매</span></td>
+                                                <td class="text-end">133,125원</td>
+                        <td>
+                                                        <span class="badge bg-warning text-dark">접수</span>
+                            
+                                                                                        <div class="small mt-1">
+                                                                            <span class="text-warning"><i class="bi bi-credit-card-2-back"></i> 여신</span>
+                                                                    </div>
+                                                    </td>
+                                                                            <td class="small text-muted">잉글리시북스</td>
+                                            </tr>
+                                    <tr class="order-row" style="cursor:pointer" onclick="location.href='/mypage/orders/7'">
+                                                                                <td onclick="event.stopPropagation()">
+                                <input type="checkbox" class="form-check-input order-pick" value="7"
+                                       data-confirm="0" data-export="0"
+                                       disabled
+                                       title="선택할 수 없는 상태">
+                            </td>
+                                                <td class="small text-muted text-nowrap">
+                            2026-08-06 17:12
+                        </td>
+                        <td class="text-nowrap">
+                            <a href="/mypage/orders/7" class="text-decoration-none navy fw-bold" onclick="event.stopPropagation()">
+                                <code>BF202608060007</code>
+                            </a>
+                                                            
+                                <span class="text-muted small">(학급 미지정)</span>
+                                                    </td>
+                        <td class="small">
+                                                                                        <span class="fw-semibold navy">Bricks Reading 50</span>
+                                                                    <span class="text-muted">외 1종</span>
+                                                                <span class="text-muted">· 10권</span>
+                                                    </td>
+                                                    <td class="small">이런어학원 강남캠퍼스</td>
+                            <td><span class="badge bg-light text-dark">소매</span></td>
+                                                <td class="text-end">88,200원</td>
+                        <td>
+                                                        <span class="badge bg-warning text-dark">접수</span>
+                            
+                                                                                        <div class="small mt-1">
+                                                                            <span class="text-muted"><i class="bi bi-hourglass-split"></i> 미결제</span>
+                                                                    </div>
+                                                    </td>
+                                                                            <td class="small text-muted">한국교재총판</td>
+                                            </tr>
+                            </tbody>
+        </table>
+    </div>
+
+    
+    <div class="d-md-none">
+                                <a href="/mypage/orders/1" class="order-card-m">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <code class="navy fw-bold">BF202608130001</code>
+                    <span class="badge bg-warning text-dark">접수</span>
+                </div>
+                                                    <div class="fw-bold mb-1">이런어학원 강남캠퍼스
+                        <span class="badge bg-light text-dark">소매</span>
+                    </div>
+                                <div class="d-flex justify-content-between align-items-end">
+                    <div class="small text-muted">
+                                                한국교재총판 ·                         <span class="navy fw-bold">145,600원</span>
+                    </div>
+                    <div class="text-muted" style="font-size:.72rem">
+                        08-13 14:12
+                    </div>
+                </div>
+            </a>
+                                <a href="/mypage/orders/8" class="order-card-m">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <code class="navy fw-bold">BF202608090008</code>
+                    <span class="badge bg-warning text-dark">접수</span>
+                </div>
+                                                    <div class="fw-bold mb-1">브라이트영어학원
+                        <span class="badge bg-secondary">도매</span>
+                    </div>
+                                <div class="d-flex justify-content-between align-items-end">
+                    <div class="small text-muted">
+                                                잉글리시북스 ·                         <span class="navy fw-bold">133,125원</span>
+                    </div>
+                    <div class="text-muted" style="font-size:.72rem">
+                        08-09 15:12
+                    </div>
+                </div>
+            </a>
+                                <a href="/mypage/orders/7" class="order-card-m">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <code class="navy fw-bold">BF202608060007</code>
+                    <span class="badge bg-warning text-dark">접수</span>
+                </div>
+                                                    <div class="fw-bold mb-1">이런어학원 강남캠퍼스
+                        <span class="badge bg-light text-dark">소매</span>
+                    </div>
+                                <div class="d-flex justify-content-between align-items-end">
+                    <div class="small text-muted">
+                                                한국교재총판 ·                         <span class="navy fw-bold">88,200원</span>
+                    </div>
+                    <div class="text-muted" style="font-size:.72rem">
+                        08-06 17:12
+                    </div>
+                </div>
+            </a>
+            </div>
+
+    </div>
+
+<script>
+(function () {
+    var picks = function () { return Array.prototype.slice.call(document.querySelectorAll('.order-pick:not(:disabled)')); };
+    if (! picks().length && ! document.getElementById('orderPickAll')) return;
+    var all = document.getElementById('orderPickAll');
+
+    var confirmBtn   = document.getElementById('confirmBtn'),
+        confirmIds   = document.getElementById('confirmIds'),
+        confirmCount = document.getElementById('confirmCount');
+    var logiBtn   = document.getElementById('logisticsBtn'),
+        logiIds   = document.getElementById('logisticsIds'),
+        logiCount = document.getElementById('logisticsCount');
+
+    function sync() {
+        var on = picks().filter(function (c) { return c.checked; });
+        var confSel = on.filter(function (c) { return c.dataset.confirm === '1'; });
+        var expSel  = on.filter(function (c) { return c.dataset.export === '1'; });
+
+        if (confirmBtn) {
+            confirmIds.value = confSel.map(function (c) { return c.value; }).join(',');
+            confirmBtn.disabled = confSel.length === 0;
+            confirmCount.textContent = confSel.length ? ' (' + confSel.length + ')' : '';
+        }
+        if (logiBtn) {
+            logiIds.value = expSel.map(function (c) { return c.value; }).join(',');
+            logiBtn.disabled = expSel.length === 0;
+            logiCount.textContent = expSel.length ? ' (' + expSel.length + ')' : '';
+        }
+        if (all) {
+            var total = picks().length;
+            all.checked = total > 0 && on.length === total;
+            all.indeterminate = on.length > 0 && on.length < total;
+        }
+    }
+    picks().forEach(function (c) { c.addEventListener('change', sync); });
+    if (all) all.addEventListener('change', function () {
+        picks().forEach(function (c) { c.checked = all.checked; });
+        sync();
+    });
+    sync();
+})();
+</script>
+            </div>
+        </main>
+        <footer class="public-footer">
+            &copy; 2026 BookSys · 이런
+        </footer>
+    </div>
+    
+    <nav class="mobile-bottom-nav">
+    
+    <a href="/mypage" class="mbn-item ">
+        <i class="bi bi-house-door"></i><span>홈</span>
+    </a>
+
+                <a href="/mypage/orders" class="mbn-item active">
+                <i class="bi bi-receipt"></i><span>주문</span>
+                <span class="mbn-badge">3</span>            </a>
+            <a href="/mypage/vendors" class="mbn-item ">
+                <i class="bi bi-building"></i><span>거래처</span>
+            </a>
+            <a href="/mypage/settlements" class="mbn-item ">
+                <i class="bi bi-cash-stack"></i><span>정산</span>
+            </a>
+            
+    
+    <button type="button" class="mbn-item" onclick="toggleMobileMenu()">
+        <i class="bi bi-list"></i><span>더보기</span>
+    </button>
+</nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 모바일 메뉴(오프캔버스 사이드바) 토글 — 하단 '더보기' + 상단 햄버거 공용
+    function toggleMobileMenu() {
+        document.querySelector('.public-sidebar')?.classList.toggle('show');
+        document.querySelector('.sidebar-overlay')?.classList.toggle('show');
+    }
+    function closeMobileMenu() {
+        document.querySelector('.public-sidebar')?.classList.remove('show');
+        document.querySelector('.sidebar-overlay')?.classList.remove('show');
+    }
+    // 사이드바 내 링크 클릭 시 자동 닫기 (모바일)
+    document.querySelectorAll('.public-sidebar .nav-item').forEach(el => {
+        el.addEventListener('click', () => { if (window.innerWidth <= 768) closeMobileMenu(); });
+    });
+</script>
+<script>
+// students-row-required
+// 학생 여러 명 등록 표 — 한 줄에 뭐라도 입력하면 그 줄의 4개 항목을 필수로 만든다.
+// 빈 줄은 저장 대상이 아니므로 필수를 걸지 않는다.
+// 이렇게 해야 브라우저가 제출 전에 잡아줘서 모달이 닫히지 않고 입력값도 남는다.
+document.addEventListener('input', function (e) {
+    var cell = e.target.closest('td');
+    if (! cell) return;
+    var row = cell.parentElement;
+    if (! row) return;
+    var inputs = row.querySelectorAll('input[name^="students["]');
+    if (inputs.length < 4) return;
+
+    var filled = false;
+    inputs.forEach(function (i) { if (i.value.trim() !== '') filled = true; });
+    inputs.forEach(function (i) { i.required = filled; });
+});
+</script>
+</body>
+</html>

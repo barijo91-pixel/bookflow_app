@@ -122,36 +122,39 @@
                         </form>
                     @endif
 
-                    @if($canAccept)
-                        <form method="POST" action="{{ route('my.orders.transition', $order->id) }}" class="mb-2"
-                              onsubmit="return confirm('주문을 접수하시겠습니까? 접수 후 출고 준비 단계로 진행됩니다.')">
-                            @csrf
-                            <input type="hidden" name="to_status" value="accepted">
-                            <button class="btn btn-primary w-100">
-                                <i class="bi bi-check-lg"></i> 총판 접수
-                            </button>
-                        </form>
-                    @endif
-
                     @if($canShip)
                         @php $isDirect = ($order->delivery_type ?? 'parcel') === 'direct'; @endphp
-                        <form method="POST" action="{{ route('my.orders.ship', $order->id) }}" class="mb-2">
+                        <form method="POST" action="{{ route('my.orders.ship', $order->id) }}" class="mb-2" id="shipForm">
                             @csrf
-                            @if($isDirect)
-                                {{-- 직접배송: 화물·용달 기사 정보 입력 (계획서 6-2장) --}}
-                                <div class="alert alert-warning py-2 small mb-2">
-                                    <i class="bi bi-truck"></i> <strong>직접배송 요청</strong> — 화물·용달 배차 후 기사 정보를 입력해주세요.
-                                    @if(! empty($order->delivery_memo))
-                                        <div class="small text-muted mt-1">📝 영업자 메모: {{ $order->delivery_memo }}</div>
-                                    @endif
+                            {{-- 출고확정 단계에서 배송 방식 선택 (택배 기본 / 직접배송) --}}
+                            <div class="mb-2 p-2 rounded" style="background:#f6f9fd; border:1px solid #d7e3f2;">
+                                <div class="small fw-bold navy mb-1"><i class="bi bi-truck"></i> 배송 방식</div>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="ship_method" value="parcel"
+                                               id="shipParcel" @checked(! $isDirect) onchange="toggleShipMethod()">
+                                        <label class="form-check-label small" for="shipParcel">택배</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="ship_method" value="direct"
+                                               id="shipDirect" @checked($isDirect) onchange="toggleShipMethod()">
+                                        <label class="form-check-label small" for="shipDirect">직접배송 (화물·용달)</label>
+                                    </div>
                                 </div>
+                                @if(! empty($order->delivery_memo))
+                                    <div class="small text-muted mt-1">📝 영업자 메모: {{ $order->delivery_memo }}</div>
+                                @endif
+                            </div>
+
+                            {{-- 직접배송 입력 --}}
+                            <div id="shipDirectFields" style="{{ $isDirect ? '' : 'display:none' }}">
                                 <div class="mb-2">
                                     <label class="form-label small text-muted mb-1">기사 이름 *</label>
-                                    <input type="text" name="driver_name" class="form-control form-control-sm" maxlength="50" required>
+                                    <input type="text" name="driver_name" class="form-control form-control-sm" maxlength="50">
                                 </div>
                                 <div class="mb-2">
                                     <label class="form-label small text-muted mb-1">기사 연락처 *</label>
-                                    <input type="tel" name="driver_phone" class="form-control form-control-sm" maxlength="20" placeholder="010-0000-0000" required>
+                                    <input type="tel" name="driver_phone" class="form-control form-control-sm" maxlength="20" placeholder="010-0000-0000">
                                 </div>
                                 <div class="row g-2 mb-2">
                                     <div class="col-7">
@@ -163,14 +166,13 @@
                                         <input type="number" name="delivery_fee" class="form-control form-control-sm text-end" min="0" step="1000" value="0">
                                     </div>
                                 </div>
-                                <button class="btn btn-success w-100">
-                                    <i class="bi bi-send"></i> 배차 정보 저장 + 출고 처리
-                                </button>
-                            @else
-                                {{-- 택배 --}}
+                            </div>
+
+                            {{-- 택배 입력 --}}
+                            <div id="shipParcelFields" style="{{ $isDirect ? 'display:none' : '' }}">
                                 <div class="mb-2">
                                     <label class="form-label small text-muted mb-1">택배사</label>
-                                    <select name="courier_code" class="form-select form-select-sm" required>
+                                    <select name="courier_code" class="form-select form-select-sm">
                                         <option value="">선택</option>
                                         @foreach($courierOptions as $c)
                                             <option value="{{ $c->code }}">{{ $c->name }}</option>
@@ -179,14 +181,32 @@
                                 </div>
                                 <div class="mb-2">
                                     <label class="form-label small text-muted mb-1">송장번호</label>
-                                    <input type="text" name="tracking_no" class="form-control form-control-sm" required>
+                                    <input type="text" name="tracking_no" class="form-control form-control-sm">
                                 </div>
-                                <button class="btn btn-success w-100">
-                                    <i class="bi bi-truck"></i> 출고 처리
-                                </button>
-                            @endif
+                            </div>
+
+                            <button class="btn btn-success w-100" onclick="return prepShipRequired()">
+                                <i class="bi bi-truck"></i> 출고확정
+                            </button>
                         </form>
+                        <script>
+                        function toggleShipMethod() {
+                            var direct = document.getElementById('shipDirect').checked;
+                            document.getElementById('shipDirectFields').style.display = direct ? '' : 'none';
+                            document.getElementById('shipParcelFields').style.display = direct ? 'none' : '';
+                        }
+                        // 선택된 방식의 필수값만 required 로 (숨긴 쪽은 검증 제외)
+                        function prepShipRequired() {
+                            var direct = document.getElementById('shipDirect').checked;
+                            document.querySelector('[name=driver_name]').required = direct;
+                            document.querySelector('[name=driver_phone]').required = direct;
+                            document.querySelector('[name=courier_code]').required = ! direct;
+                            document.querySelector('[name=tracking_no]').required = ! direct;
+                            return confirm(direct ? '직접배송으로 출고확정할까요?' : '택배로 출고확정할까요?');
+                        }
+                        </script>
                     @endif
+
 
                     {{-- 영업자 전용: 배송 안내 + 직접배송(옵션) — 확정/접수 단계, 일반배송일 때 --}}
                     @if($user->role_code === 'agent' && $order->agent_user_id == $user->id

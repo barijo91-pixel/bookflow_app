@@ -441,8 +441,11 @@ class MyPageController extends Controller
 
         // 역할별 가능한 액션
         $canConfirm = ($user->role_code === 'agent' && $order->agent_user_id == $user->id && $order->status_code === 'requested');
-        $canAccept  = ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id && $order->status_code === 'confirmed');
-        $canShip    = ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id && $order->status_code === 'accepted');
+        // 총판 접수·출고를 '출고확정' 한 단계로 통합 — 확정(confirmed)부터 바로 출고 가능.
+        // 레거시 accepted 주문도 계속 출고할 수 있게 둘 다 허용.
+        $canAccept  = false;
+        $canShip    = ($user->role_code === 'distributor' && $order->distributor_user_id == $user->id
+                       && in_array($order->status_code, ['confirmed', 'accepted'], true));
         // 학원도 본인 주문이고 아직 'requested' 상태면 취소 가능 / 영업자·총판은 더 넓은 범위
         $canCancel = false;
         if (in_array($order->status_code, ['requested','confirmed','accepted'])) {
@@ -925,12 +928,20 @@ class MyPageController extends Controller
         if ($user->role_code !== 'distributor' || $order->distributor_user_id != $user->id) {
             abort(403, '총판만 출고 처리할 수 있습니다.');
         }
-        if ($order->status_code !== 'accepted') {
-            return back()->with('error', "출고는 '총판접수' 상태에서만 가능합니다. 현재: {$order->status_code}");
+        // 출고확정 = confirmed 또는 (레거시) accepted 에서 바로 shipped
+        if (! in_array($order->status_code, ['confirmed', 'accepted'], true)) {
+            return back()->with('error', "출고확정은 '확정' 상태에서 가능합니다. 현재: {$order->status_code}");
         }
+        $fromStatus = $order->status_code;
 
+        // 출고확정 단계에서 택배/직접 선택 (영업자 확정이 자동화돼 여기로 옮김)
+        $deliveryType = $order->delivery_type ?? 'parcel';
+        if (in_array($request->input('ship_method'), ['parcel', 'direct'], true)) {
+            $deliveryType = $request->input('ship_method');
+            DB::table('orders')->where('id', $order->id)->update(['delivery_type' => $deliveryType]);
+        }
         // 배송 방식에 따라 분기 — 계획서 6-2장 (직접배송 신규 필요)
-        $isDirect = ($order->delivery_type ?? 'parcel') === 'direct';
+        $isDirect = $deliveryType === 'direct';
 
         if ($isDirect) {
             // 직접배송: 기사 정보 입력
@@ -976,7 +987,7 @@ class MyPageController extends Controller
             ];
         }
 
-        DB::transaction(function () use ($order, $shipmentData, $logReason) {
+        DB::transaction(function () use ($order, $shipmentData, $logReason, $fromStatus) {
             DB::table('order_shipments')->updateOrInsert(
                 ['order_id' => $order->id],
                 array_merge($shipmentData, [
@@ -991,7 +1002,7 @@ class MyPageController extends Controller
             ]);
             DB::table('order_status_logs')->insert([
                 'order_id'   => $order->id,
-                'from_status'=> 'accepted',
+                'from_status'=> $fromStatus,
                 'to_status'  => 'shipped',
                 'changed_by' => auth()->id(),
                 'reason'     => $logReason,
@@ -1000,7 +1011,7 @@ class MyPageController extends Controller
         });
 
         AuditLog::log('orders', $order->id, 'ship',
-            ['status_code' => 'accepted'],
+            ['status_code' => $fromStatus],
             array_merge(['status_code' => 'shipped'], $shipmentData));
 
         $this->dispatchOrderNotification($order->fresh(), 'shipped', $notify, null, $notifyExtra);
