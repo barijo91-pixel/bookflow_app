@@ -139,7 +139,7 @@
 
                                 </td>
                                 <td class="small">{{ $s->parent_name ?? '-' }}</td>
-                                <td class="small text-muted">{{ $s->parent_phone ? format_phone($s->parent_phone) : '-' }}</td>
+                                <td class="small"><span class="fw-semibold navy">{{ $s->parent_phone ? format_phone($s->parent_phone) : '-' }}</span></td>
                                 <td class="small text-muted">
                                     @php $addr = trim(($s->parent_address ?? '').' '.($s->parent_address_detail ?? '')); @endphp
                                     {{ $addr !== '' ? $addr : '-' }}
