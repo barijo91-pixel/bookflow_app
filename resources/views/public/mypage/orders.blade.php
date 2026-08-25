@@ -188,7 +188,7 @@
                         <td class="small">
                             @php $sum = $itemSummaries[$o->id] ?? null; @endphp
                             @if($sum)
-                                {{ $sum['first'] }}
+                                <span class="fw-semibold navy">{{ $sum['first'] }}</span>
                                 @if($sum['kinds'] > 1)
                                     <span class="text-muted">외 {{ $sum['kinds'] - 1 }}종</span>
                                 @endif
