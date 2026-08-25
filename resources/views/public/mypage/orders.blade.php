@@ -111,11 +111,13 @@
 </form>
 
 @php
-    // 물류로 넘길 수 있는 주문만 체크 가능 — 확정 이후 (접수 대기·취소는 제외)
-    $canExport = in_array($user->role_code, ['agent', 'distributor'], true);
     $exportable = \App\Http\Controllers\Public\OrderExportController::EXPORTABLE_STATUS;
+    // 물류센터 출고 엑셀은 총판 역할 (영업자 화면에선 노출 안 함)
+    $canExportLogistics = $user->role_code === 'distributor';
     // 영업자는 미결제 여신 주문을 일괄 확정할 수 있다 (결제 주문은 자동확정)
     $canBulkConfirm = $user->role_code === 'agent';
+    // 체크박스·일괄 작업 바는 둘 중 하나라도 가능할 때만
+    $canExport = $canExportLogistics || $canBulkConfirm;
     // 행별 결제/여신 상태
     $payInfo = function ($o) use ($paidMap) {
         $total = (int) $o->total_amount;
@@ -141,17 +143,19 @@
                 </button>
             </form>
         @endif
-        {{-- 선택 주문을 물류센터 출고 엑셀로 --}}
-        <form method="POST" action="{{ route('my.orders.export_logistics') }}" id="logisticsForm" class="m-0">
-            @csrf
-            <input type="hidden" name="order_ids" id="logisticsIds" value="">
-            <button type="submit" class="btn btn-sm btn-navy" id="logisticsBtn" disabled>
-                <i class="bi bi-file-earmark-excel"></i> 물류센터 출고 엑셀<span id="logisticsCount"></span>
-            </button>
-        </form>
+        {{-- 물류센터 출고 엑셀 — 총판만 --}}
+        @if($canExportLogistics)
+            <form method="POST" action="{{ route('my.orders.export_logistics') }}" id="logisticsForm" class="m-0">
+                @csrf
+                <input type="hidden" name="order_ids" id="logisticsIds" value="">
+                <button type="submit" class="btn btn-sm btn-navy" id="logisticsBtn" disabled>
+                    <i class="bi bi-file-earmark-excel"></i> 물류센터 출고 엑셀<span id="logisticsCount"></span>
+                </button>
+            </form>
+        @endif
         <span class="small text-muted">
             주문일 앞 체크박스로 고르세요.
-            @if($canBulkConfirm)<strong>여신 미결제</strong>는 확정, <strong>확정 이후</strong>는 출고엑셀 대상.@else <strong>확정 이후</strong>의 주문만 선택할 수 있습니다.@endif
+            @if($canBulkConfirm)<strong>여신 미결제</strong> 주문을 골라 확정하세요.@else <strong>확정 이후</strong>의 주문만 선택할 수 있습니다.@endif
         </span>
     </div>
 @endif
@@ -190,7 +194,7 @@
                             @php
                                 $pi = $payInfo($o);
                                 $canConfirmRow = $canBulkConfirm && $o->status_code === 'requested' && $pi['credit'] && ! $pi['paid'];
-                                $canExportRow  = in_array($o->status_code, $exportable, true);
+                                $canExportRow  = $canExportLogistics && in_array($o->status_code, $exportable, true);
                                 $selectable = $canConfirmRow || $canExportRow;
                             @endphp
                             <td onclick="event.stopPropagation()">

@@ -33,8 +33,9 @@ class OrderExportController extends Controller
     public function export(Request $request)
     {
         $user = Auth::user();
-        if (! $user || ! in_array($user->role_code, ['agent', 'distributor'], true)) {
-            abort(403, '영업자 또는 총판만 사용할 수 있습니다.');
+        // 물류센터 출고 엑셀은 총판 역할 — 영업자는 제외
+        if (! $user || $user->role_code !== 'distributor') {
+            abort(403, '총판만 물류 출고 엑셀을 사용할 수 있습니다.');
         }
 
         $ids = $request->input('order_ids', []);
