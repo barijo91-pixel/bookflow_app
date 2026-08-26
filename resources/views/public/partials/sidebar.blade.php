@@ -113,9 +113,15 @@
                 <a href="{{ route('my.books.index') }}" class="nav-item {{ $startsWith('my.books') }}">
                     <i class="bi bi-journals"></i> 교재 조회
                 </a>
+                {{-- 도서 주문(대행) — 숨김.
+                     화면은 열리지만 장바구니 담기(cart/*)와 결제요청·직접결제가 모두 학원 전용이라
+                     영업자는 담을 수도, 결제를 태울 수도 없다. 결제 없이는 주문확정도 안 된다.
+                     요청이 오면 cart/* 와 결제 경로에 영업자 대행을 열고 이 메뉴를 되살릴 것.
+                     라우트는 살아 있어 /mypage/order/new 로 직접 접근 가능.
                 <a href="{{ route('my.order_new') }}" class="nav-item {{ $is('my.order_new') }}">
                     <i class="bi bi-bag-plus"></i> 도서 주문(대행)
                 </a>
+                --}}
                 <a href="{{ route('my.vendors.index') }}" class="nav-item {{ $is('my.vendors.index') }}">
                     <i class="bi bi-building"></i> 거래처(학원)
                 </a>
