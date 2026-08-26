@@ -89,10 +89,14 @@
                             {{-- 편집 가능한 값이라는 걸 배경색으로 알린다 --}}
                             <div class="input-group input-group-sm rate-stepper mx-auto">
                                 <button type="button" class="btn rate-down" tabindex="-1" aria-label="감소">−</button>
-                                <input type="number" step="0.5" min="0" max="100" name="discount_rate"
+                                {{-- type=number 는 "2." 같은 입력 중간 상태를 무효로 보고 값을 비워버려
+                                     소수점이 씹힌다(2.5 → 25). text + inputmode 로 받고 JS/서버에서 검증한다. --}}
+                                <input type="text" name="discount_rate"
                                        form="vendor-edit-{{ $v->avd_id }}"
                                        value="{{ rtrim(rtrim($v->discount_rate, '0'), '.') }}"
-                                       class="form-control text-center" inputmode="decimal">
+                                       data-step="0.5" data-min="0" data-max="100"
+                                       class="form-control text-center rate-input" inputmode="decimal"
+                                       autocomplete="off">
                                 <button type="button" class="btn rate-up" tabindex="-1" aria-label="증가">+</button>
                                 <span class="input-group-text">%</span>
                             </div>
@@ -239,20 +243,44 @@
 @push('scripts')
 <script>
 // 할인율 입력 +/- 버튼 (모바일 친화 0.5% 단위 stepper)
+// text 입력이므로 min/max/step 은 data-* 에서 읽는다
 document.addEventListener('click', function (e) {
     const btn = e.target.closest('.rate-stepper .rate-up, .rate-stepper .rate-down');
     if (!btn) return;
     const wrap = btn.closest('.rate-stepper');
-    const input = wrap.querySelector('input[type=number]');
+    const input = wrap.querySelector('.rate-input');
     if (!input) return;
     let v = parseFloat(input.value) || 0;
-    const step = parseFloat(input.step) || 0.5;
-    const min = input.min !== '' ? parseFloat(input.min) : -Infinity;
-    const max = input.max !== '' ? parseFloat(input.max) : Infinity;
+    const step = parseFloat(input.dataset.step) || 0.5;
+    const min = parseFloat(input.dataset.min);
+    const max = parseFloat(input.dataset.max);
     v = btn.classList.contains('rate-up') ? v + step : v - step;
-    v = Math.max(min, Math.min(max, v));
+    if (!isNaN(min)) v = Math.max(min, v);
+    if (!isNaN(max)) v = Math.min(max, v);
     input.value = (Math.round(v * 10) / 10).toString().replace(/\.0$/, '');
 });
+
+// 숫자·소수점만 허용 (입력 중 "2." 상태는 그대로 두고, 벗어날 때 정리)
+document.addEventListener('input', function (e) {
+    const input = e.target.closest('.rate-input');
+    if (!input) return;
+    let v = input.value.replace(/[^0-9.]/g, '');       // 숫자·점만
+    const first = v.indexOf('.');
+    if (first !== -1) {                                 // 점은 하나만
+        v = v.slice(0, first + 1) + v.slice(first + 1).replace(/\./g, '');
+    }
+    if (v !== input.value) input.value = v;
+});
+document.addEventListener('blur', function (e) {
+    const input = e.target.closest('.rate-input');
+    if (!input) return;
+    const min = parseFloat(input.dataset.min), max = parseFloat(input.dataset.max);
+    let v = parseFloat(input.value);
+    if (isNaN(v)) { input.value = '0'; return; }
+    if (!isNaN(min)) v = Math.max(min, v);
+    if (!isNaN(max)) v = Math.min(max, v);
+    input.value = (Math.round(v * 100) / 100).toString();
+}, true);
 </script>
 @endpush
 @endsection

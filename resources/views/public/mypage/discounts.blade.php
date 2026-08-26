@@ -47,9 +47,9 @@
                                 <div class="col-8 col-sm-5">
                                     <div class="input-group input-group-sm rate-stepper">
                                         <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
-                                        <input type="number" step="0.5" min="0" max="100" name="discount_rate"
+                                        <input type="text" name="discount_rate" data-step="0.5" data-min="0" data-max="100" inputmode="decimal" autocomplete="off"
                                                value="{{ rtrim(rtrim($v->general_rate, '0'), '.') }}"
-                                               class="form-control text-end" inputmode="decimal">
+                                               class="form-control text-end rate-input">
                                         <button type="button" class="btn btn-outline-secondary rate-up" tabindex="-1">+</button>
                                         <span class="input-group-text">%</span>
                                     </div>
@@ -101,9 +101,9 @@
                                             <input type="hidden" name="book_id" value="{{ $bd->book_id }}">
                                             <div class="input-group input-group-sm rate-stepper ms-auto">
                                                 <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
-                                                <input type="number" step="0.5" min="0" max="100" name="discount_rate"
+                                                <input type="text" name="discount_rate" data-step="0.5" data-min="0" data-max="100" inputmode="decimal" autocomplete="off"
                                                        value="{{ rtrim(rtrim($bd->discount_rate, '0'), '.') }}"
-                                                       class="form-control text-end" inputmode="decimal">
+                                                       class="form-control text-end rate-input">
                                                 <button type="button" class="btn btn-outline-secondary rate-up" tabindex="-1">+</button>
                                                 <button class="btn btn-outline-navy" title="저장"><i class="bi bi-save"></i></button>
                                             </div>
@@ -144,9 +144,9 @@
                                 <label class="form-label small text-muted mb-1">할인율 %</label>
                                 <div class="input-group input-group-sm rate-stepper">
                                     <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
-                                    <input type="number" step="0.5" min="0" max="100" name="discount_rate"
+                                    <input type="text" name="discount_rate" data-step="0.5" data-min="0" data-max="100" inputmode="decimal" autocomplete="off"
                                            value="{{ rtrim(rtrim($selectedVendor->general_rate, '0'), '.') }}"
-                                           class="form-control text-end" inputmode="decimal">
+                                           class="form-control text-end rate-input">
                                     <button type="button" class="btn btn-outline-secondary rate-up" tabindex="-1">+</button>
                                 </div>
                             </div>
@@ -181,12 +181,12 @@ document.addEventListener('click', function (e) {
     const btn = e.target.closest('.rate-stepper .rate-up, .rate-stepper .rate-down');
     if (!btn) return;
     const wrap = btn.closest('.rate-stepper');
-    const input = wrap.querySelector('input[type=number]');
+    const input = wrap.querySelector('.rate-input');
     if (!input) return;
     let v = parseFloat(input.value) || 0;
-    const step = parseFloat(input.step) || 0.5;
-    const min = input.min !== '' ? parseFloat(input.min) : -Infinity;
-    const max = input.max !== '' ? parseFloat(input.max) : Infinity;
+    const step = parseFloat(input.dataset.step) || 0.5;
+    const min = isNaN(parseFloat(input.dataset.min)) ? -Infinity : parseFloat(input.dataset.min);
+    const max = isNaN(parseFloat(input.dataset.max)) ? Infinity : parseFloat(input.dataset.max);
     v = btn.classList.contains('rate-up') ? v + step : v - step;
     v = Math.max(min, Math.min(max, v));
     input.value = (Math.round(v * 10) / 10).toString().replace(/\.0$/, '');
@@ -263,6 +263,26 @@ document.addEventListener('click', function (e) {
         }
     });
 })();
+
+// 숫자·소수점만 허용 ("2." 중간 상태는 유지)
+document.addEventListener('input', function (e) {
+    const input = e.target.closest('.rate-input');
+    if (!input) return;
+    let v = input.value.replace(/[^0-9.]/g, '');
+    const first = v.indexOf('.');
+    if (first !== -1) v = v.slice(0, first + 1) + v.slice(first + 1).replace(/\./g, '');
+    if (v !== input.value) input.value = v;
+});
+document.addEventListener('blur', function (e) {
+    const input = e.target.closest('.rate-input');
+    if (!input) return;
+    const min = parseFloat(input.dataset.min), max = parseFloat(input.dataset.max);
+    let v = parseFloat(input.value);
+    if (isNaN(v)) { input.value = '0'; return; }
+    if (!isNaN(min)) v = Math.max(min, v);
+    if (!isNaN(max)) v = Math.min(max, v);
+    input.value = (Math.round(v * 100) / 100).toString();
+}, true);
 </script>
 @endif
 @endpush
