@@ -63,19 +63,19 @@
 {{-- 주문일자 + 키워드 검색 --}}
 <form method="GET" action="{{ route('my.orders.index') }}" class="card section-card mb-3">
     <div class="card-body py-3">
-        {{-- 필터는 한 줄 유지 — 컬럼 합이 12를 넘지 않게 배분 (역할별) --}}
+        {{-- 필터를 flex 로 배치해 폭 고정 — 좁아지면 자연스럽게 줄바꿈, 넓으면 한 줄 --}}
         @php $isAcademy = $user->role_code === 'academy'; @endphp
-        <div class="row g-2 align-items-end">
-            <div class="col-md-2">
+        <div class="d-flex flex-wrap align-items-end gap-2">
+            <div style="width:130px">
                 <label class="form-label small text-muted mb-1">시작일</label>
-                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm">
+                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm px-1">
             </div>
-            <div class="col-md-2">
+            <div style="width:130px">
                 <label class="form-label small text-muted mb-1">종료일</label>
-                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
+                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm px-1">
             </div>
             @if(! $isAcademy)
-            <div class="col-md-2">
+            <div style="width:132px">
                 <label class="form-label small text-muted mb-1">학원</label>
                 <select name="vendor_id" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체 학원</option>
@@ -85,30 +85,31 @@
                 </select>
             </div>
             @endif
-            <div class="col-md-{{ $isAcademy ? '6' : '2' }}">
-                <label class="form-label small text-muted mb-1">주문번호</label>
-                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="주문번호">
-            </div>
             @if(! $isAcademy)
-            <div class="col-md-2">
-                <label class="form-label small text-muted mb-1">거래구분</label>
-                <select name="trade_type" class="form-select form-select-sm" onchange="this.form.submit()">
+            <div style="width:78px">
+                <label class="form-label small text-muted mb-1">거래</label>
+                <select name="trade_type" class="form-select form-select-sm px-1" onchange="this.form.submit()">
                     <option value="">전체</option>
                     <option value="retail" @selected($tradeType === 'retail')>소매</option>
                     <option value="wholesale" @selected($tradeType === 'wholesale')>도매</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-muted mb-1">결제유형</label>
-                <select name="credit" class="form-select form-select-sm" onchange="this.form.submit()">
+            <div style="width:78px">
+                <label class="form-label small text-muted mb-1">결제</label>
+                <select name="credit" class="form-select form-select-sm px-1" onchange="this.form.submit()">
                     <option value="">전체</option>
                     <option value="normal" @selected($creditType === 'normal')>일반</option>
-                    <option value="credit" @selected($creditType === 'credit')>여신(외상)</option>
+                    <option value="credit" @selected($creditType === 'credit')>여신</option>
                 </select>
             </div>
             @endif
-            <div class="col-md-2 d-flex gap-1">
-                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-search"></i> 조회</button>
+            {{-- 주문번호는 조회 버튼 바로 앞 --}}
+            <div style="width:{{ $isAcademy ? '220px' : '124px' }}">
+                <label class="form-label small text-muted mb-1">주문번호</label>
+                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="주문번호">
+            </div>
+            <div class="d-flex gap-1 flex-shrink-0">
+                <button class="btn btn-sm btn-primary text-nowrap"><i class="bi bi-search"></i> 조회</button>
                 <a href="{{ route('my.orders.index') }}" class="btn btn-sm btn-outline-secondary" title="초기화">
                     <i class="bi bi-x-lg"></i>
                 </a>
@@ -122,8 +123,8 @@
     $exportable = \App\Http\Controllers\Public\OrderExportController::EXPORTABLE_STATUS;
     // 물류센터 출고 엑셀은 총판 역할 (영업자 화면에선 노출 안 함)
     $canExportLogistics = $user->role_code === 'distributor';
-    // 영업자는 미결제 여신 주문을 일괄 확정할 수 있다 (결제 주문은 자동확정)
-    $canBulkConfirm = $user->role_code === 'agent';
+    // 영업자 일괄 확정은 '결제유형=여신' 을 골랐을 때만 노출 (그래야 무슨 주문을 확정하는지 명확)
+    $canBulkConfirm = $user->role_code === 'agent' && $creditType === 'credit';
     // 체크박스·일괄 작업 바는 둘 중 하나라도 가능할 때만
     $canExport = $canExportLogistics || $canBulkConfirm;
     // 행별 결제/여신 상태
@@ -165,6 +166,11 @@
             주문일 앞 체크박스로 고르세요.
             @if($canBulkConfirm)<strong>여신 미결제</strong> 주문을 골라 확정하세요.@else <strong>확정 이후</strong>의 주문만 선택할 수 있습니다.@endif
         </span>
+    </div>
+@elseif($user->role_code === 'agent')
+    {{-- 여신 일괄확정 안내 — 여신 필터를 골라야 확정 버튼이 나온다 --}}
+    <div class="d-none d-md-block small text-muted mb-2">
+        <i class="bi bi-info-circle"></i> 미결제 여신 주문을 일괄 확정하려면 위 <strong>결제유형 → 여신</strong>을 선택하세요.
     </div>
 @endif
 
