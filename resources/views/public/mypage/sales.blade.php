@@ -48,45 +48,57 @@
     </div>
 </form>
 
-{{-- 요약 --}}
-<div class="row g-3 mb-3">
+{{-- 요약 — 라벨과 값을 한 줄에 두고 카드 높이를 줄인다 --}}
+<div class="row g-2 mb-3 sales-summary">
     <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-label">매출</div>
-            <div class="stat-value">{{ number_format($summary->revenue ?? 0) }}<span class="fs-6">원</span></div>
+        <div class="stat-card d-flex align-items-center gap-2">
+            <span class="stat-label mb-0">매출</span>
+            <span class="stat-value ms-auto">{{ number_format($summary->revenue ?? 0) }}<span class="fs-6">원</span></span>
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-label">결제 건수</div>
-            <div class="stat-value">{{ number_format($summary->cnt ?? 0) }}<span class="fs-6">건</span></div>
+        <div class="stat-card d-flex align-items-center gap-2">
+            <span class="stat-label mb-0">결제 건수</span>
+            <span class="stat-value ms-auto">{{ number_format($summary->cnt ?? 0) }}<span class="fs-6">건</span></span>
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-label">주문 수</div>
-            <div class="stat-value">{{ number_format($summary->orders ?? 0) }}<span class="fs-6">건</span></div>
+        <div class="stat-card d-flex align-items-center gap-2">
+            <span class="stat-label mb-0">주문 수</span>
+            <span class="stat-value ms-auto">{{ number_format($summary->orders ?? 0) }}<span class="fs-6">건</span></span>
         </div>
     </div>
     <div class="col-6 col-lg-3">
+        @php
+            $retail = (int) ($byTrade['retail']->revenue ?? 0);
+            $whole  = (int) ($byTrade['wholesale']->revenue ?? 0);
+            $sumT   = $retail + $whole;
+        @endphp
         <div class="stat-card">
-            <div class="stat-label">소매 / 도매</div>
-            @php
-                $retail = (int) ($byTrade['retail']->revenue ?? 0);
-                $whole  = (int) ($byTrade['wholesale']->revenue ?? 0);
-                $sumT   = $retail + $whole;
-            @endphp
-            <div class="stat-value" style="font-size:1.15rem; line-height:1.5;">
-                <div>소매 {{ number_format($retail) }}원
-                    <span class="text-muted fs-6">{{ $sumT ? round($retail / $sumT * 100) : 0 }}%</span>
-                </div>
-                <div>도매 {{ number_format($whole) }}원
-                    <span class="text-muted fs-6">{{ $sumT ? round($whole / $sumT * 100) : 0 }}%</span>
-                </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="stat-label mb-0">소매</span>
+                <span class="ms-auto fw-bold navy">{{ number_format($retail) }}원
+                    <span class="text-muted fw-normal small">{{ $sumT ? round($retail / $sumT * 100) : 0 }}%</span>
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="stat-label mb-0">도매</span>
+                <span class="ms-auto fw-bold navy">{{ number_format($whole) }}원
+                    <span class="text-muted fw-normal small">{{ $sumT ? round($whole / $sumT * 100) : 0 }}%</span>
+                </span>
             </div>
         </div>
     </div>
 </div>
+
+@push('head')
+<style>
+/* 요약 카드 — 한 줄 배치에 맞춰 세로 여백 축소 */
+.sales-summary .stat-card { padding: .6rem .9rem; height: auto; }
+.sales-summary .stat-value { font-size: 1.35rem; line-height: 1.2; margin-top: 0; }
+.sales-summary .stat-label { font-size: .85rem; }
+</style>
+@endpush
 
 @php
     $isBook  = in_array($view, ['book', 'publisher'], true);

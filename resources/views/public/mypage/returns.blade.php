@@ -39,43 +39,58 @@
     </div>
 </form>
 
-{{-- 요약 --}}
-<div class="row g-3 mb-3">
+{{-- 요약 — 라벨과 값을 한 줄에 두고 카드 높이를 줄인다 --}}
+<div class="row g-2 mb-3 sales-summary">
     <div class="col-6 col-lg-3">
         <div class="stat-card">
-            <div class="stat-label">반품 접수</div>
-            <div class="stat-value">{{ number_format($summary->total ?? 0) }}<span class="fs-6">건</span></div>
-            @if(($summary->requested ?? 0) > 0)
-                <div class="small text-danger fw-bold">확정 대기 {{ number_format($summary->requested) }}건</div>
-            @endif
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-label">확정 반품 수량</div>
-            <div class="stat-value">{{ number_format($summary->confirmed_qty ?? 0) }}<span class="fs-6">권</span></div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-label">확정 반품 금액</div>
-            <div class="stat-value">{{ number_format($summary->confirmed_amount ?? 0) }}<span class="fs-6">원</span></div>
-            @if(($summary->refunded_amount ?? 0) > 0)
-                <div class="small text-muted">환불 완료 {{ number_format($summary->refunded_amount) }}원</div>
-            @endif
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-label">반품률 <span class="text-muted fw-normal">(확정액 ÷ 기간 매출)</span></div>
-            <div class="stat-value">
-                @if($returnRate !== null){{ $returnRate }}<span class="fs-6">%</span>
-                @else<span class="fs-5 text-muted">매출 없음</span>@endif
+            <div class="d-flex align-items-center gap-2">
+                <span class="stat-label mb-0">반품 접수</span>
+                <span class="stat-value ms-auto">{{ number_format($summary->total ?? 0) }}<span class="fs-6">건</span></span>
             </div>
-            <div class="small text-muted">기간 매출 {{ number_format($sales) }}원</div>
+            @if(($summary->requested ?? 0) > 0)
+                <div class="small text-danger fw-bold text-end">확정 대기 {{ number_format($summary->requested) }}건</div>
+            @endif
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card d-flex align-items-center gap-2">
+            <span class="stat-label mb-0">확정 반품 수량</span>
+            <span class="stat-value ms-auto">{{ number_format($summary->confirmed_qty ?? 0) }}<span class="fs-6">권</span></span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center gap-2">
+                <span class="stat-label mb-0">확정 반품 금액</span>
+                <span class="stat-value ms-auto">{{ number_format($summary->confirmed_amount ?? 0) }}<span class="fs-6">원</span></span>
+            </div>
+            @if(($summary->refunded_amount ?? 0) > 0)
+                <div class="small text-muted text-end">환불 완료 {{ number_format($summary->refunded_amount) }}원</div>
+            @endif
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center gap-2">
+                <span class="stat-label mb-0">반품률</span>
+                <span class="stat-value ms-auto">
+                    @if($returnRate !== null){{ $returnRate }}<span class="fs-6">%</span>
+                    @else<span class="fs-6 text-muted fw-normal">매출 없음</span>@endif
+                </span>
+            </div>
+            <div class="small text-muted text-end">기간 매출 {{ number_format($sales) }}원</div>
         </div>
     </div>
 </div>
+
+@push('head')
+<style>
+/* 요약 카드 — 한 줄 배치에 맞춰 세로 여백 축소 (매출 조회와 동일) */
+.sales-summary .stat-card { padding: .6rem .9rem; height: auto; }
+.sales-summary .stat-value { font-size: 1.35rem; line-height: 1.2; margin-top: 0; }
+.sales-summary .stat-label { font-size: .85rem; }
+</style>
+@endpush
 
 @if($view === 'list')
     {{-- 상태 탭 --}}
