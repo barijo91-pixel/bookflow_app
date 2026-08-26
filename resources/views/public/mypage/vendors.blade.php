@@ -52,11 +52,12 @@
         <table class="table table-hover align-middle mb-0 table-row-highlight">
             <thead class="table-light">
                 <tr>
-                    {{-- 학원명만 남는 폭을 갖고, 지역·연락처는 내용에 맞춰 고정 --}}
+                    {{-- 학원명만 남는 폭을 갖고, 지역·연락처는 내용에 맞춰 고정.
+                         할인율은 가장 자주 만지는 값이라 연락처보다 앞에 둔다 --}}
                     <th>학원명</th>
                     <th class="text-nowrap">지역</th>
+                    <th style="width:186px">할인율</th>
                     <th class="text-nowrap">연락처</th>
-                    <th style="width:186px" class="text-center">할인율</th>
                     {{-- 두 컬럼이 헷갈리지 않게 이름을 분명히: 내 거래 여부 vs 학원 자체 상태 --}}
                     <th style="width:80px" class="text-center">내 거래</th>
                     <th style="width:96px" class="text-nowrap">학원 상태</th>
@@ -77,17 +78,9 @@
                         <td class="small text-muted text-nowrap">
                             {{ trim(($v->sido_name ?? '').' '.($v->sigungu_name ?? '')) ?: '-' }}
                         </td>
-                        <td class="small text-nowrap">
-                            @if($v->mobile)
-                                <i class="bi bi-phone"></i> {{ format_phone($v->mobile) }}
-                            @endif
-                            @if($v->tel)
-                                <div class="text-muted"><i class="bi bi-telephone"></i> {{ format_phone($v->tel) }}</div>
-                            @endif
-                        </td>
-                        <td class="text-center">
+                        <td>
                             {{-- 편집 가능한 값이라는 걸 배경색으로 알린다 --}}
-                            <div class="input-group input-group-sm rate-stepper mx-auto">
+                            <div class="input-group input-group-sm rate-stepper">
                                 <button type="button" class="btn rate-down" tabindex="-1" aria-label="감소">−</button>
                                 {{-- type=number 는 "2." 같은 입력 중간 상태를 무효로 보고 값을 비워버려
                                      소수점이 씹힌다(2.5 → 25). text + inputmode 로 받고 JS/서버에서 검증한다. --}}
@@ -100,6 +93,14 @@
                                 <button type="button" class="btn rate-up" tabindex="-1" aria-label="증가">+</button>
                                 <span class="input-group-text">%</span>
                             </div>
+                        </td>
+                        <td class="small text-nowrap">
+                            @if($v->mobile)
+                                <i class="bi bi-phone"></i> {{ format_phone($v->mobile) }}
+                            @endif
+                            @if($v->tel)
+                                <div class="text-muted"><i class="bi bi-telephone"></i> {{ format_phone($v->tel) }}</div>
+                            @endif
                         </td>
                         <td class="text-center">
                             <div class="form-check form-switch d-inline-block">
