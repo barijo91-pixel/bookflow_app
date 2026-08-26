@@ -57,7 +57,7 @@
 </form>
 
 {{-- 요약 --}}
-<div class="row g-2 mb-3">
+<div class="row g-2 mb-3 sales-summary">
     <div class="col-md-2">
         <div class="stat-card py-2">
             <div class="stat-label small">반품 접수</div>
@@ -303,3 +303,19 @@
     </div>
 @endif
 @endsection
+
+@push('head')
+<style>
+/* 요약 카드 — 위 필터 카드와 같은 계열이라 경계가 안 보인다 → 아이보리로 확실히 구분
+   (mypage 매출·반품과 같은 색) */
+.sales-summary .stat-card {
+    background: #fdf8ec;
+    border: 1px solid #ecdfc4;
+    border-left: 3px solid #c9a227;
+}
+/* text-danger 같은 경고색은 살려둔다 */
+.sales-summary .stat-value:not(.text-danger) { color: #7a5c00; }
+.sales-summary .stat-label { color: #8a7440; }
+.sales-summary .stat-card .navy { color: #7a5c00 !important; }
+</style>
+@endpush
