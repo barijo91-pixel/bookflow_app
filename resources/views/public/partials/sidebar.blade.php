@@ -62,11 +62,23 @@
 
         @switch($user->role_code)
             @case('distributor')
-                <div class="nav-section">총판 메뉴</div>
+                <div class="nav-section">주문 · 출고</div>
                 <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
                     <i class="bi bi-receipt"></i> 주문 관리
                     @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
                 </a>
+                <div class="nav-section">매출 · 정산</div>
+                <a href="{{ route('my.sales.index') }}" class="nav-item {{ $startsWith('my.sales') }}">
+                    <i class="bi bi-bar-chart-line"></i> 매출 조회
+                </a>
+                <a href="{{ route('my.returns.index') }}" class="nav-item {{ $startsWith('my.returns') }}">
+                    <i class="bi bi-arrow-return-left"></i> 반품 관리
+                    @if(($returnBadge ?? 0) > 0)<span class="badge bg-danger ms-auto">{{ $returnBadge }}</span>@endif
+                </a>
+                <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
+                    <i class="bi bi-cash-stack"></i> 정산 내역
+                </a>
+                <div class="nav-section">조직 · 거래처</div>
                 <a href="{{ route('my.agents.index') }}" class="nav-item {{ $startsWith('my.agents') }}">
                     <i class="bi bi-person-badge"></i> 영업자 관리
                 </a>
@@ -80,18 +92,9 @@
                 <a href="{{ route('my.featured-academies.index') }}" class="nav-item {{ $startsWith('my.featured-academies') }}">
                     <i class="bi bi-buildings"></i> 대표 이용학원
                 </a>
+                <div class="nav-section">참고</div>
                 <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
                     <i class="bi bi-graph-up-arrow"></i> 예상 수익보기
-                </a>
-                <a href="{{ route('my.sales.index') }}" class="nav-item {{ $startsWith('my.sales') }}">
-                    <i class="bi bi-bar-chart-line"></i> 매출 조회
-                </a>
-                <a href="{{ route('my.returns.index') }}" class="nav-item {{ $startsWith('my.returns') }}">
-                    <i class="bi bi-arrow-return-left"></i> 반품 관리
-                    @if(($returnBadge ?? 0) > 0)<span class="badge bg-danger ms-auto">{{ $returnBadge }}</span>@endif
-                </a>
-                <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
-                    <i class="bi bi-cash-stack"></i> 정산 내역
                 </a>
                 {{-- 재고 관리 — 숨김 (물류를 외부 업체가 맡아 재고 수치를 맞출 수 없다).
                      라우트는 살아 있어 /mypage/stocks 로 직접 접근 가능. 물류를 직접 다루게 되면 되살릴 것.
@@ -102,7 +105,7 @@
                 @break
 
             @case('agent')
-                <div class="nav-section">영업자 메뉴</div>
+                <div class="nav-section">주문 · 교재</div>
                 <a href="{{ route('my.orders.index') }}" class="nav-item {{ $startsWith('my.orders') }}">
                     <i class="bi bi-receipt"></i> 주문 확인
                     @if($orderBadge > 0)<span class="badge bg-danger ms-auto">{{ $orderBadge }}</span>@endif
@@ -119,6 +122,7 @@
                 <a href="{{ route('my.discounts.index') }}" class="nav-item {{ $startsWith('my.discounts') }}">
                     <i class="bi bi-percent"></i> 할인율 관리
                 </a>
+                <div class="nav-section">매출 · 정산</div>
                 <a href="{{ route('my.sales.index') }}" class="nav-item {{ $startsWith('my.sales') }}">
                     <i class="bi bi-bar-chart-line"></i> 매출 조회
                 </a>
@@ -129,6 +133,7 @@
                     <i class="bi bi-cash-stack"></i> 정산 내역
                 </a>
                 {{-- 등록 작업은 자주 쓰지 않아 아래로 --}}
+                <div class="nav-section">학원 관리</div>
                 <a href="{{ route('my.vendors.create') }}" class="nav-item {{ $is('my.vendors.create') }}">
                     <i class="bi bi-building-add"></i> 학원 등록
                 </a>
@@ -142,6 +147,7 @@
                     <i class="bi bi-buildings"></i> 대표 이용학원
                 </a>
                 {{-- 참고용 조회 메뉴는 맨 아래로 (자주 쓰지 않음) --}}
+                <div class="nav-section">참고</div>
                 <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
                     <i class="bi bi-graph-up-arrow"></i> 예상 수익보기
                 </a>
