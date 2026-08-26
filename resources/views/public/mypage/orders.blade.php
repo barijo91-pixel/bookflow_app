@@ -68,14 +68,14 @@
         <div class="d-flex flex-wrap align-items-end gap-2">
             <div style="width:130px">
                 <label class="form-label small text-muted mb-1">시작일</label>
-                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm px-1">
+                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm">
             </div>
             <div style="width:130px">
                 <label class="form-label small text-muted mb-1">종료일</label>
-                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm px-1">
+                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
             </div>
             @if(! $isAcademy)
-            <div style="width:132px">
+            <div style="width:170px">
                 <label class="form-label small text-muted mb-1">학원</label>
                 <select name="vendor_id" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체 학원</option>
@@ -84,19 +84,17 @@
                     @endforeach
                 </select>
             </div>
-            @endif
-            @if(! $isAcademy)
-            <div style="width:78px">
+            <div style="width:100px">
                 <label class="form-label small text-muted mb-1">거래</label>
-                <select name="trade_type" class="form-select form-select-sm px-1" onchange="this.form.submit()">
+                <select name="trade_type" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     <option value="retail" @selected($tradeType === 'retail')>소매</option>
                     <option value="wholesale" @selected($tradeType === 'wholesale')>도매</option>
                 </select>
             </div>
-            <div style="width:78px">
+            <div style="width:100px">
                 <label class="form-label small text-muted mb-1">결제</label>
-                <select name="credit" class="form-select form-select-sm px-1" onchange="this.form.submit()">
+                <select name="credit" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">전체</option>
                     <option value="normal" @selected($creditType === 'normal')>일반</option>
                     <option value="credit" @selected($creditType === 'credit')>여신</option>
@@ -104,7 +102,7 @@
             </div>
             @endif
             {{-- 주문번호는 조회 버튼 바로 앞 --}}
-            <div style="width:{{ $isAcademy ? '220px' : '124px' }}">
+            <div style="width:{{ $isAcademy ? '220px' : '175px' }}">
                 <label class="form-label small text-muted mb-1">주문번호</label>
                 <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="주문번호">
             </div>
@@ -162,15 +160,12 @@
                 </button>
             </form>
         @endif
-        <span class="small text-muted">
-            주문일 앞 체크박스로 고르세요.
-            @if($canBulkConfirm)<strong>여신 미결제</strong> 주문을 골라 확정하세요.@else <strong>확정 이후</strong>의 주문만 선택할 수 있습니다.@endif
-        </span>
-    </div>
-@elseif($user->role_code === 'agent')
-    {{-- 여신 일괄확정 안내 — 여신 필터를 골라야 확정 버튼이 나온다 --}}
-    <div class="d-none d-md-block small text-muted mb-2">
-        <i class="bi bi-info-circle"></i> 미결제 여신 주문을 일괄 확정하려면 위 <strong>결제유형 → 여신</strong>을 선택하세요.
+        {{-- 안내문은 여신 확정(영업자) 때만 — 총판 물류엑셀은 버튼만으로 충분 --}}
+        @if($canBulkConfirm)
+            <span class="small text-muted">
+                주문일 앞 체크박스로 <strong>여신 미결제</strong> 주문을 골라 확정하세요.
+            </span>
+        @endif
     </div>
 @endif
 
