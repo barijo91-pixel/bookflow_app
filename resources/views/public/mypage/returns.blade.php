@@ -85,10 +85,17 @@
 
 @push('head')
 <style>
-/* 요약 카드 — 한 줄 배치에 맞춰 세로 여백 축소 (매출 조회와 동일) */
-.sales-summary .stat-card { padding: .6rem .9rem; height: auto; }
-.sales-summary .stat-value { font-size: 1.35rem; line-height: 1.2; margin-top: 0; }
-.sales-summary .stat-label { font-size: .85rem; }
+/* 요약 카드 — 한 줄 배치 + 세로 여백 축소.
+   위 필터 카드가 연한 파랑이라 같은 계열이면 경계가 안 보인다 → 아이보리로 확실히 구분 */
+.sales-summary .stat-card {
+    padding: .6rem .9rem; height: auto;
+    background: #fdf8ec;
+    border: 1px solid #ecdfc4;
+    border-left: 3px solid #c9a227;
+}
+.sales-summary .stat-value { font-size: 1.35rem; line-height: 1.2; margin-top: 0; color: #7a5c00; }
+.sales-summary .stat-label { font-size: .85rem; color: #8a7440; }
+.sales-summary .stat-card .navy { color: #7a5c00 !important; }
 </style>
 @endpush
 
