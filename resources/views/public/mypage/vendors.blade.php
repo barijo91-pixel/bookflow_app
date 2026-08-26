@@ -54,13 +54,13 @@
                 <tr>
                     {{-- 학원명만 남는 폭을 갖고, 지역·연락처는 내용에 맞춰 고정 --}}
                     <th>학원명</th>
-                    <th style="width:120px">지역</th>
-                    <th style="width:150px">연락처</th>
-                    <th style="width:180px" class="text-center">할인율</th>
+                    <th class="text-nowrap">지역</th>
+                    <th class="text-nowrap">연락처</th>
+                    <th style="width:186px" class="text-center">할인율</th>
                     {{-- 두 컬럼이 헷갈리지 않게 이름을 분명히: 내 거래 여부 vs 학원 자체 상태 --}}
-                    <th style="width:90px" class="text-center">내 거래</th>
-                    <th style="width:110px">학원 상태</th>
-                    <th style="width:170px" class="text-end">작업</th>
+                    <th style="width:80px" class="text-center">내 거래</th>
+                    <th style="width:96px" class="text-nowrap">학원 상태</th>
+                    <th style="width:160px" class="text-end text-nowrap">작업</th>
                 </tr>
             </thead>
             <tbody>
@@ -74,7 +74,7 @@
                                 <span class="text-muted small ms-2">{{ $v->owner_name }}</span>
                             @endif
                         </td>
-                        <td class="small text-muted">
+                        <td class="small text-muted text-nowrap">
                             {{ trim(($v->sido_name ?? '').' '.($v->sigungu_name ?? '')) ?: '-' }}
                         </td>
                         <td class="small text-nowrap">
