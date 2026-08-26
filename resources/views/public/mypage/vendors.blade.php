@@ -55,9 +55,10 @@
                     <th>학원명</th>
                     <th>지역</th>
                     <th>연락처</th>
-                    <th style="width:240px" class="text-end">할인율</th>
-                    <th style="width:80px" class="text-center">활성</th>
-                    <th style="width:120px">상태</th>
+                    <th style="width:150px" class="text-center">할인율</th>
+                    {{-- 두 컬럼이 헷갈리지 않게 이름을 분명히: 내 거래 여부 vs 학원 자체 상태 --}}
+                    <th style="width:90px" class="text-center">내 거래</th>
+                    <th style="width:110px">학원 상태</th>
                     <th style="width:170px" class="text-end">작업</th>
                 </tr>
             </thead>
@@ -83,14 +84,15 @@
                                 <div class="text-muted"><i class="bi bi-telephone"></i> {{ format_phone($v->tel) }}</div>
                             @endif
                         </td>
-                        <td class="text-end">
-                            <div class="input-group input-group-sm rate-stepper ms-auto">
-                                <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1" aria-label="감소">−</button>
+                        <td class="text-center">
+                            {{-- 편집 가능한 값이라는 걸 배경색으로 알린다 --}}
+                            <div class="input-group input-group-sm rate-stepper mx-auto">
+                                <button type="button" class="btn rate-down" tabindex="-1" aria-label="감소">−</button>
                                 <input type="number" step="0.5" min="0" max="100" name="discount_rate"
                                        form="vendor-edit-{{ $v->avd_id }}"
                                        value="{{ rtrim(rtrim($v->discount_rate, '0'), '.') }}"
-                                       class="form-control text-end" inputmode="decimal">
-                                <button type="button" class="btn btn-outline-secondary rate-up" tabindex="-1" aria-label="증가">+</button>
+                                       class="form-control text-center" inputmode="decimal">
+                                <button type="button" class="btn rate-up" tabindex="-1" aria-label="증가">+</button>
                                 <span class="input-group-text">%</span>
                             </div>
                         </td>
@@ -103,15 +105,13 @@
                             </div>
                         </td>
                         <td>
+                            {{-- 학원 자체 상태(관리자 관할). '내 거래' 토글과는 별개라 중복 배지는 두지 않는다 --}}
                             @switch($v->status_code)
                                 @case('active')     <span class="badge bg-success">정상</span> @break
                                 @case('suspended')  <span class="badge bg-secondary">일시정지</span> @break
                                 @case('terminated') <span class="badge bg-dark">거래종료</span> @break
                                 @default <span class="badge bg-light text-dark">{{ $v->status_code }}</span>
                             @endswitch
-                            @if(!$v->discount_active)
-                                <div class="mt-1"><span class="badge bg-warning text-dark">매핑 비활성</span></div>
-                            @endif
                         </td>
                         <td class="text-end">
                             <button type="submit" form="vendor-edit-{{ $v->avd_id }}"
@@ -189,6 +189,8 @@
     <div class="mb-2"><i class="bi bi-info-circle navy"></i> <strong class="navy">안내</strong></div>
     <ul class="mb-0 ps-3">
         <li>할인율은 <strong>0.5% 단위</strong>로 조정할 수 있어요.</li>
+        <li><strong>내 거래</strong>는 나와 이 학원의 거래 연결이에요. 끄면 내 목록·주문 대상에서 빠집니다.</li>
+        <li><strong>학원 상태</strong>는 학원 자체의 상태(관리자 관할)라 내 거래 여부와 별개예요.</li>
         <li><strong>삭제</strong>를 누르면 거래가 일시 중단되며, 다시 시작하려면 관리자에게 문의해주세요.</li>
         <li>도서마다 다른 할인율을 주려면 <a href="{{ route('my.discounts.index') }}" class="text-decoration-none">할인율 관리</a> 페이지에서 설정하세요.</li>
     </ul>
@@ -202,6 +204,34 @@
 }
 .vendor-card-m:last-child { border-bottom: 0; }
 .vendor-card-m:active { background: #f6f7fb; }
+
+/* 할인율 스테퍼 — 편집 가능한 칸이라는 걸 연한 배경으로 인식시킨다 */
+.rate-stepper { width: 132px; }
+.rate-stepper .btn,
+.rate-stepper .input-group-text {
+    background: #eef4fb;
+    border-color: #cfe0f2;
+    color: var(--navy, #1f3a5f);
+    padding-left: .45rem; padding-right: .45rem;
+    font-weight: 700;
+}
+.rate-stepper .btn:hover { background: #dce9f8; }
+.rate-stepper .form-control {
+    background: #f8fbff;
+    border-color: #cfe0f2;
+    font-weight: 700;
+    color: var(--navy, #1f3a5f);
+    padding-left: .2rem; padding-right: .2rem;
+}
+.rate-stepper .form-control:focus {
+    background: #fff;
+    border-color: var(--navy, #1f3a5f);
+    box-shadow: 0 0 0 .15rem rgba(31,58,95,.12);
+}
+/* 숫자 입력 스핀 버튼 제거 — 좌우 −/+ 로 조절 */
+.rate-stepper .form-control::-webkit-outer-spin-button,
+.rate-stepper .form-control::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.rate-stepper .form-control { -moz-appearance: textfield; }
 </style>
 @endpush
 
