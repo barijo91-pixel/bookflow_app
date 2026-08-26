@@ -54,13 +54,13 @@
                 <tr>
                     {{-- 학원명만 남는 폭을 갖고, 지역·연락처는 내용에 맞춰 고정 --}}
                     <th>학원명</th>
-                    <th style="width:130px">지역</th>
-                    <th style="width:135px">연락처</th>
+                    <th style="width:120px">지역</th>
+                    <th style="width:150px">연락처</th>
                     <th style="width:180px" class="text-center">할인율</th>
                     {{-- 두 컬럼이 헷갈리지 않게 이름을 분명히: 내 거래 여부 vs 학원 자체 상태 --}}
                     <th style="width:90px" class="text-center">내 거래</th>
                     <th style="width:110px">학원 상태</th>
-                    <th style="width:150px" class="text-end">작업</th>
+                    <th style="width:170px" class="text-end">작업</th>
                 </tr>
             </thead>
             <tbody>
@@ -77,7 +77,7 @@
                         <td class="small text-muted">
                             {{ trim(($v->sido_name ?? '').' '.($v->sigungu_name ?? '')) ?: '-' }}
                         </td>
-                        <td class="small">
+                        <td class="small text-nowrap">
                             @if($v->mobile)
                                 <i class="bi bi-phone"></i> {{ format_phone($v->mobile) }}
                             @endif
@@ -118,7 +118,7 @@
                                 @default <span class="badge bg-light text-dark">{{ $v->status_code }}</span>
                             @endswitch
                         </td>
-                        <td class="text-end">
+                        <td class="text-end text-nowrap">
                             <button type="submit" form="vendor-edit-{{ $v->avd_id }}"
                                     class="btn btn-sm btn-outline-navy">
                                 <i class="bi bi-save"></i> 저장
