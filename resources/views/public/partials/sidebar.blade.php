@@ -119,12 +119,6 @@
                 <a href="{{ route('my.discounts.index') }}" class="nav-item {{ $startsWith('my.discounts') }}">
                     <i class="bi bi-percent"></i> 할인율 관리
                 </a>
-                <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
-                    <i class="bi bi-graph-up-arrow"></i> 예상 수익보기
-                </a>
-                <a href="{{ route('mypage.tax') }}" class="nav-item {{ $is('mypage.tax') }}">
-                    <i class="bi bi-receipt-cutoff"></i> 세무 정보
-                </a>
                 <a href="{{ route('my.sales.index') }}" class="nav-item {{ $startsWith('my.sales') }}">
                     <i class="bi bi-bar-chart-line"></i> 매출 조회
                 </a>
@@ -146,6 +140,13 @@
                 </a>
                 <a href="{{ route('my.invite.show') }}" class="nav-item {{ $startsWith('my.invite') }}">
                     <i class="bi bi-link-45deg"></i> 학원 가입 링크
+                </a>
+                {{-- 참고용 조회 메뉴는 맨 아래로 (자주 쓰지 않음) --}}
+                <a href="{{ route('mypage.income_simulator') }}" class="nav-item {{ $is('mypage.income_simulator') }}">
+                    <i class="bi bi-graph-up-arrow"></i> 예상 수익보기
+                </a>
+                <a href="{{ route('mypage.tax') }}" class="nav-item {{ $is('mypage.tax') }}">
+                    <i class="bi bi-receipt-cutoff"></i> 세무 정보
                 </a>
                 @break
 
