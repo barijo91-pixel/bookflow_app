@@ -11,6 +11,19 @@ use Illuminate\Support\Facades\DB;
 
 class AgentVendorController extends Controller
 {
+    /**
+     * 여신(외상) 설정 잠금.
+     *
+     * 여신 한도 체크·잔액 관리 로직이 아직 없어, 값만 저장해두면 실제로는
+     * 아무 제어도 안 되면서 "한도 관리 중"으로 오해되기 쉽다.
+     * 기준이 서고 기능이 붙을 때까지 영업자·총판 화면에서 입력을 막는다.
+     *
+     * 열 때: 이 상수를 false 로 바꾸고, vendor_create/vendor_show 뷰의
+     * 잠금 안내(credit-locked 블록)를 지우면 원래대로 동작한다.
+     * 이미 여신으로 지정된 학원 값은 잠금 중에도 그대로 유지된다.
+     */
+    public const CREDIT_LOCKED = true;
+
     /** 영업자만 접근 */
     private function authorizeAgent(): User
     {
@@ -127,7 +140,10 @@ class AgentVendorController extends Controller
             $phone = ! empty($data['vendor_mobile']) ? preg_replace('/[^0-9]/', '', $data['vendor_mobile']) : null;
             $tel   = ! empty($data['vendor_tel'])    ? preg_replace('/[^0-9]/', '', $data['vendor_tel'])    : null;
 
-            $paymentType = ($data['payment_type'] ?? 'cash') === 'credit' ? 'credit' : 'cash';
+            // 잠금 중에는 폼 값을 무시하고 현매로 등록 (화면 disabled 는 우회 가능)
+            $paymentType = self::CREDIT_LOCKED
+                ? 'cash'
+                : ((($data['payment_type'] ?? 'cash') === 'credit') ? 'credit' : 'cash');
             $creditLimit = $paymentType === 'credit' ? (int) ($data['credit_limit'] ?? 0) : 0;
 
             $vendorId = DB::table('vendors')->insertGetId([
@@ -301,8 +317,17 @@ class AgentVendorController extends Controller
 
         $mobile = ! empty($data['mobile']) ? preg_replace('/[^0-9]/', '', $data['mobile']) : null;
         $tel    = ! empty($data['tel'])    ? preg_replace('/[^0-9]/', '', $data['tel'])    : null;
-        $paymentType = ($data['payment_type'] ?? 'cash') === 'credit' ? 'credit' : 'cash';
-        $creditLimit = $paymentType === 'credit' ? (int) ($data['credit_limit'] ?? 0) : 0;
+        if (self::CREDIT_LOCKED) {
+            // 잠금 중에는 폼 값을 무시하고 지금 값을 그대로 둔다.
+            // (관리자가 이미 여신으로 잡아둔 학원을 수정 저장하다 현매로 되돌리면 안 된다)
+            $cur = DB::table('vendors')->where('id', $vendorId)
+                ->first(['payment_type', 'credit_limit']);
+            $paymentType = ($cur->payment_type ?? 'cash') === 'credit' ? 'credit' : 'cash';
+            $creditLimit = (int) ($cur->credit_limit ?? 0);
+        } else {
+            $paymentType = ($data['payment_type'] ?? 'cash') === 'credit' ? 'credit' : 'cash';
+            $creditLimit = $paymentType === 'credit' ? (int) ($data['credit_limit'] ?? 0) : 0;
+        }
 
         DB::table('vendors')->where('id', $vendorId)->update([
             'name'           => $data['name'],

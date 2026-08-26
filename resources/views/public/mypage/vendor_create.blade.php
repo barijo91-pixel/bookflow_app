@@ -147,6 +147,7 @@
     <div class="card section-card mb-3">
         <div class="card-header"><strong>4. 결제 구분</strong></div>
         <div class="card-body">
+            @php $creditLocked = \App\Http\Controllers\Public\AgentVendorController::CREDIT_LOCKED; @endphp
             <div class="row g-3 align-items-center">
                 <div class="col-md-4">
                     <div class="form-check form-check-inline">
@@ -156,19 +157,31 @@
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="payment_type" id="payCredit" value="credit"
-                               @checked(old('payment_type') === 'credit')>
-                        <label class="form-check-label" for="payCredit"><strong>여신</strong> (외상 매출)</label>
+                               @checked(! $creditLocked && old('payment_type') === 'credit')
+                               @disabled($creditLocked)>
+                        <label class="form-check-label {{ $creditLocked ? 'text-muted' : '' }}" for="payCredit">
+                            <strong>여신</strong> (외상 매출)
+                        </label>
                     </div>
                 </div>
                 <div class="col-md-4" id="creditLimitWrap">
                     <label class="form-label small text-muted mb-1">여신 한도 (원)</label>
                     <input type="number" name="credit_limit" min="0" step="10000"
-                           value="{{ old('credit_limit', 0) }}"
-                           class="form-control text-end" placeholder="예: 1000000">
+                           value="{{ $creditLocked ? 0 : old('credit_limit', 0) }}"
+                           class="form-control text-end" placeholder="예: 1000000"
+                           @disabled($creditLocked)>
                 </div>
                 <div class="col-md-4 small text-muted">
-                    <i class="bi bi-info-circle"></i>
-                    현재는 단순 구분 용도. 추후 한도 체크·여신 잔액 관리 기능이 추가될 예정.
+                    @if($creditLocked)
+                        {{-- credit-locked: 여신 잠금 안내. 잠금 해제 시 이 블록만 지우면 된다 --}}
+                        <i class="bi bi-lock"></i>
+                        <strong>여신은 현재 입력할 수 없습니다.</strong><br>
+                        여신 한도·잔액 관리 기능이 준비되지 않아 잠가두었습니다.
+                        기준이 정해지고 기능이 개발된 뒤 열립니다. 지금은 모두 <strong>현매</strong>로 등록됩니다.
+                    @else
+                        <i class="bi bi-info-circle"></i>
+                        현재는 단순 구분 용도. 추후 한도 체크·여신 잔액 관리 기능이 추가될 예정.
+                    @endif
                 </div>
             </div>
         </div>
@@ -230,6 +243,8 @@ function openAddrSearch() {
     const credit = document.getElementById('payCredit');
     const wrap = document.getElementById('creditLimitWrap');
     if (!cash || !credit || !wrap) return;
+    // 여신 잠금 중이면 라디오가 disabled — JS가 한도 입력을 되살리지 않게 여기서 끝낸다
+    if (credit.disabled) { wrap.style.opacity = '0.4'; return; }
     const input = wrap.querySelector('input[name="credit_limit"]');
     function sync() {
         const isCredit = credit.checked;

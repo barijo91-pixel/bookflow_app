@@ -128,25 +128,40 @@
                     <div class="section-divider mt-4 mb-2">
                         <small class="text-muted fw-bold text-uppercase">결제 구분</small>
                     </div>
+                    @php $creditLocked = \App\Http\Controllers\Public\AgentVendorController::CREDIT_LOCKED; @endphp
                     <div class="row g-3 align-items-center">
                         <div class="col-md-5">
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="payment_type" id="payCash" value="cash"
-                                       @checked(old('payment_type', $vendor->payment_type ?? 'cash') === 'cash')>
+                                       @checked(old('payment_type', $vendor->payment_type ?? 'cash') === 'cash')
+                                       @disabled($creditLocked)>
                                 <label class="form-check-label" for="payCash"><strong>현매</strong> (현금 매출)</label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="payment_type" id="payCredit" value="credit"
-                                       @checked(old('payment_type', $vendor->payment_type ?? 'cash') === 'credit')>
-                                <label class="form-check-label" for="payCredit"><strong>여신</strong> (외상 매출)</label>
+                                       @checked(old('payment_type', $vendor->payment_type ?? 'cash') === 'credit')
+                                       @disabled($creditLocked)>
+                                <label class="form-check-label {{ $creditLocked ? 'text-muted' : '' }}" for="payCredit">
+                                    <strong>여신</strong> (외상 매출)
+                                </label>
                             </div>
                         </div>
                         <div class="col-md-4" id="creditLimitWrap">
                             <label class="form-label small text-muted mb-1">여신 한도 (원)</label>
                             <input type="number" name="credit_limit" min="0" step="10000"
                                    value="{{ old('credit_limit', $vendor->credit_limit ?? 0) }}"
-                                   class="form-control text-end">
+                                   class="form-control text-end"
+                                   @disabled($creditLocked)>
                         </div>
+                        @if($creditLocked)
+                            {{-- credit-locked: 여신 잠금 안내. 잠금 해제 시 이 블록만 지우면 된다 --}}
+                            <div class="col-12 small text-muted">
+                                <i class="bi bi-lock"></i>
+                                <strong>결제 구분·여신 한도는 현재 수정할 수 없습니다.</strong>
+                                여신 한도·잔액 관리 기능이 준비되지 않아 잠가두었습니다.
+                                기준이 정해지고 기능이 개발된 뒤 열립니다. 저장해도 지금 값이 그대로 유지됩니다.
+                            </div>
+                        @endif
                     </div>
 
                     {{-- 메모 --}}
@@ -320,6 +335,8 @@ function openAddrSearch() {
     const credit = document.getElementById('payCredit');
     const wrap = document.getElementById('creditLimitWrap');
     if (!cash || !credit || !wrap) return;
+    // 여신 잠금 중이면 라디오가 disabled — JS가 한도 입력을 되살리지 않게 여기서 끝낸다
+    if (credit.disabled) { wrap.style.opacity = '0.4'; return; }
     const input = wrap.querySelector('input[name="credit_limit"]');
     function sync() {
         const isCredit = credit.checked;
