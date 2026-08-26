@@ -36,7 +36,7 @@
     <div class="card-body py-2 d-flex flex-wrap gap-2 align-items-center">
         @php
             // 전체 = 취소 제외 (기본 목록과 같은 기준)
-            $keep = request()->only(['date_from','date_to','q','vendor_id','trade_type']);
+            $keep = request()->only(['date_from','date_to','q','vendor_id','trade_type','credit']);
             $canceledCount = $statusCounts->get('canceled', 0);
         @endphp
         <a href="{{ route('my.orders.index', $keep) }}"
@@ -96,6 +96,14 @@
                     <option value="">전체</option>
                     <option value="retail" @selected($tradeType === 'retail')>소매</option>
                     <option value="wholesale" @selected($tradeType === 'wholesale')>도매</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">결제유형</label>
+                <select name="credit" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">전체</option>
+                    <option value="normal" @selected($creditType === 'normal')>일반</option>
+                    <option value="credit" @selected($creditType === 'credit')>여신(외상)</option>
                 </select>
             </div>
             @endif
@@ -231,7 +239,10 @@
                             @endif
                         </td>
                         @if($user->role_code !== 'academy')
-                            <td class="small">{{ $o->vendor_name ?? '-' }}</td>
+                            <td class="small">
+                                {{ $o->vendor_name ?? '-' }}
+                                @if($o->credit_allowed)<span class="badge bg-warning text-dark ms-1" style="font-size:.65rem;">여신</span>@endif
+                            </td>
                             <td><span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span></td>
                         @endif
                         <td class="text-end">{{ number_format($o->total_amount) }}원</td>
@@ -290,6 +301,7 @@
                 @if($user->role_code !== 'academy')
                     <div class="fw-bold mb-1">{{ $o->vendor_name ?? '-' }}
                         <span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span>
+                        @if($o->credit_allowed)<span class="badge bg-warning text-dark">여신</span>@endif
                     </div>
                 @endif
                 <div class="d-flex justify-content-between align-items-end">

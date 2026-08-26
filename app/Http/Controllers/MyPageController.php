@@ -1099,6 +1099,7 @@ class MyPageController extends Controller
         $dateTo   = $request->query('date_to')   ?: now()->format('Y-m-d');
         $q        = trim((string) $request->query('q'));
         $tradeType = $request->query('trade_type'); // retail/wholesale 필터 (영업자·총판용)
+        $creditType = $request->query('credit');    // 결제유형: normal(일반) / credit(여신)
         $selectedVendor = $request->query('vendor_id'); // 학원 선택 필터
 
         $query = DB::table('orders as o')
@@ -1144,6 +1145,8 @@ class MyPageController extends Controller
             $query->where('o.status_code', '!=', 'canceled');
         }
         if ($tradeType) $query->where('v.trade_type', $tradeType);
+        if ($creditType === 'credit')  $query->where('v.credit_allowed', 1);
+        if ($creditType === 'normal')  $query->where(fn ($w) => $w->where('v.credit_allowed', 0)->orWhereNull('v.credit_allowed'));
         if ($dateFrom) $query->whereDate('o.created_at', '>=', $dateFrom);
         if ($dateTo)   $query->whereDate('o.created_at', '<=', $dateTo);
         if ($q !== '') {
@@ -1235,6 +1238,7 @@ class MyPageController extends Controller
             'dateTo'   => $dateTo,
             'q'        => $q,
             'tradeType' => $tradeType,
+            'creditType' => $creditType,
             'statusCounts' => $statusCounts,
             'vendorOptions' => $vendorOptions,
             'selectedVendor' => $selectedVendor,
