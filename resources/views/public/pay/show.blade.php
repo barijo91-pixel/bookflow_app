@@ -272,9 +272,11 @@
                 @endif
             </div>
 
+            {{-- 계좌 입금 — 총판 계좌가 등록된 경우에만. 미등록이면 카드 결제만 보여준다
+                 (학부모에게 "설정 안 됨" 경고를 띄우는 건 고장난 화면으로 보인다) --}}
+            @if($distributor && $distributor->bank_account)
             <div class="pay-section">
                 <h6>또는 계좌 입금</h6>
-                @if($distributor && $distributor->bank_account)
                     <div class="bank-info">
                         <div class="bank-row"><span class="label">은행</span><strong>{{ $bankName ?? $distributor->bank_code }}</strong></div>
                         <div class="bank-row align-items-center">
@@ -293,12 +295,8 @@
                         <i class="bi bi-info-circle"></i>
                         입금 후 학원으로 연락 주시면 확인 후 교재가 전달됩니다.
                     </p>
-                @else
-                    <div class="alert alert-warning small mb-0">
-                        입금 계좌 정보가 아직 설정되지 않았습니다. 학원에 문의해주세요.
-                    </div>
-                @endif
             </div>
+            @endif
 
             @if($pr->memo)
                 <div class="pay-section">
