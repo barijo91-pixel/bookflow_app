@@ -110,6 +110,27 @@
         @endforeach
     </div>
 
+    @php
+        // 물류센터 반품 회수 엑셀 — 출고 엑셀과 같은 기준으로 총판 역할
+        $canExportPickup = $user->role_code === 'distributor';
+        $pickupStatus    = \App\Http\Controllers\Public\ReturnExportController::EXPORTABLE_STATUS;
+    @endphp
+
+    @if($canExportPickup)
+        <div class="d-none d-md-flex align-items-center gap-2 mb-2 flex-wrap">
+            <form method="POST" action="{{ route('my.returns.export_logistics') }}" id="pickupForm" class="m-0">
+                @csrf
+                <input type="hidden" name="return_ids" id="pickupIds" value="">
+                <button type="submit" class="btn btn-sm btn-navy" id="pickupBtn" disabled>
+                    <i class="bi bi-file-earmark-excel"></i> 물류센터 회수 엑셀<span id="pickupCount"></span>
+                </button>
+            </form>
+            <span class="small text-muted">
+                접수일 앞 체크박스로 <strong>확정된</strong> 반품을 골라 회수 요청을 만드세요.
+            </span>
+        </div>
+    @endif
+
     <div class="card section-card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <strong><i class="bi bi-table"></i> 반품 목록</strong>
@@ -119,6 +140,11 @@
             <table class="table table-hover align-middle mb-0 table-row-highlight">
                 <thead class="table-light">
                     <tr>
+                        @if($canExportPickup)
+                            <th style="width:34px" class="text-center">
+                                <input type="checkbox" id="returnPickAll" class="form-check-input" title="전체 선택">
+                            </th>
+                        @endif
                         <th>접수일</th>
                         <th>반품번호</th>
                         <th>주문번호</th>
@@ -141,6 +167,13 @@
                             $rfClass = ['done' => 'text-success', 'partial' => 'text-danger', 'failed' => 'text-danger'][$r->refund_status] ?? 'text-muted';
                         @endphp
                         <tr>
+                            @if($canExportPickup)
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input return-pick" value="{{ $r->id }}"
+                                           @disabled(! in_array($r->status, $pickupStatus, true))
+                                           title="{{ in_array($r->status, $pickupStatus, true) ? '회수 엑셀 대상' : '확정된 반품만 회수 요청할 수 있습니다' }}">
+                                </td>
+                            @endif
                             <td class="text-muted small">{{ \Carbon\Carbon::parse($r->requested_at)->format('m-d H:i') }}</td>
                             <td><a href="#" class="link-name fw-bold" onclick="return showReturn({{ $r->id }})">{{ $r->return_no }}</a></td>
                             <td><a href="{{ route('my.orders.show', $r->order_id) }}" class="link-name">{{ $r->order_no }}</a></td>
@@ -190,7 +223,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center text-muted py-5">
+                            <td colspan="{{ $canExportPickup ? 12 : 11 }}" class="text-center text-muted py-5">
                                 <i class="bi bi-arrow-return-left" style="font-size:2rem"></i>
                                 <p class="mb-1 mt-2">이 기간에 접수된 반품이 없습니다.</p>
                                 <p class="small mb-0">반품 접수는 <a href="{{ route('my.orders.index') }}" class="link-name">주문 상세</a>에서 합니다.</p>
@@ -316,5 +349,38 @@
             </table>
         </div>
     </div>
+@endif
+@if($canExportPickup ?? false)
+{{-- 체크박스 → 회수 엑셀에 확정된 반품만 실어 보낸다 --}}
+<script>
+(function () {
+    var picks = function () { return Array.prototype.slice.call(document.querySelectorAll('.return-pick:not(:disabled)')); };
+    var all = document.getElementById('returnPickAll');
+    if (! picks().length && ! all) return;
+    var btn = document.getElementById('pickupBtn'),
+        ids = document.getElementById('pickupIds'),
+        cnt = document.getElementById('pickupCount');
+
+    function sync() {
+        var on = picks().filter(function (c) { return c.checked; });
+        if (btn) {
+            ids.value = on.map(function (c) { return c.value; }).join(',');
+            btn.disabled = on.length === 0;
+            cnt.textContent = on.length ? ' (' + on.length + ')' : '';
+        }
+        if (all) {
+            var total = picks().length;
+            all.checked = total > 0 && on.length === total;
+            all.indeterminate = on.length > 0 && on.length < total;
+        }
+    }
+    picks().forEach(function (c) { c.addEventListener('change', sync); });
+    if (all) all.addEventListener('change', function () {
+        picks().forEach(function (c) { c.checked = all.checked; });
+        sync();
+    });
+    sync();
+})();
+</script>
 @endif
 @endsection

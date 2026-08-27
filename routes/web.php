@@ -247,6 +247,9 @@ Route::middleware('auth')->group(function () {
         Route::post('returns/{id}/retry-refund', [\App\Http\Controllers\Public\ReturnController::class, 'retryRefund'])->name('returns.retry_refund');
         Route::post('returns/{id}/reject',       [\App\Http\Controllers\Public\ReturnController::class, 'reject'])->name('returns.reject');
         Route::post('returns/{id}/cancel',       [\App\Http\Controllers\Public\ReturnController::class, 'cancel'])->name('returns.cancel');
+        // 물류센터 반품 회수 요청 엑셀 — 반품 목록에서 고른 건 (확정된 것만, 총판 전용)
+        Route::post('returns/export-logistics',
+            [\App\Http\Controllers\Public\ReturnExportController::class, 'export'])->name('returns.export_logistics');
 
         // 교재 조회 (영업자·총판) — 학원 없이도 판매 가능한 교재를 둘러본다
         Route::get('books', [\App\Http\Controllers\Public\BookCatalogController::class, 'index'])->name('books.index');
