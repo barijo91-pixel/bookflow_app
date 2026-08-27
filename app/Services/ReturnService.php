@@ -109,7 +109,7 @@ class ReturnService
 
         // 수량 검증부터 insert 까지 한 트랜잭션 — 주문 행 잠금으로 동시 접수를 직렬화해
         // "남은 3권"을 두 요청이 동시에 통과하는 초과 접수를 막는다.
-        return DB::transaction(function () use ($order, $lines, $reasonCode, $reasonText, $byUserId, $paymentRequestId) {
+        $created = DB::transaction(function () use ($order, $lines, $reasonCode, $reasonText, $byUserId, $paymentRequestId) {
             DB::table('orders')->where('id', $order->id)->lockForUpdate()->first();
 
             $left  = self::returnableQty($order->id);
@@ -175,6 +175,11 @@ class ReturnService
 
             return DB::table('returns')->find($returnId);
         });
+
+        // 커밋 후 알림 — 총판·영업자에게. 낸 사람 본인은 제외
+        self::notifyRequested((int) $created->id, $byUserId);
+
+        return $created;
     }
 
     /**
@@ -197,7 +202,12 @@ class ReturnService
             throw new \RuntimeException('접수 상태의 반품만 확정할 수 있습니다. (이미 처리됐을 수 있습니다)');
         }
 
-        return self::refund($return->id);
+        $result = self::refund($return->id);
+
+        // 환불 결과까지 담아 학부모에게 한 통만 (학부모 결제와 연결된 반품만 나간다)
+        self::notifyConfirmed((int) $return->id);
+
+        return $result;
     }
 
     /**
@@ -335,5 +345,76 @@ class ReturnService
             'status' => 'canceled', 'updated_at' => now(),
         ]);
         AuditLog::log('returns', $return->id, 'canceled', null, null);
+    }
+
+    /**
+     * 반품 접수 알림 — 총판·영업자에게 문자.
+     * 접수 경로가 학부모/영업자/총판 세 갈래라 서비스 안에서 보낸다.
+     * 낸 사람 본인에게는 보내지 않는다.
+     */
+    public static function notifyRequested(int $returnId, ?int $actorUserId = null): void
+    {
+        try {
+            $r = DB::table('returns')->where('id', $returnId)->first();
+            if (! $r) return;
+            $vendorName = DB::table('vendors')->where('id', $r->vendor_id)->value('name') ?? '';
+
+            $ids = array_filter([$r->distributor_user_id, $r->agent_user_id]);
+            $ids = array_values(array_diff($ids, array_filter([$actorUserId])));
+            if (! $ids) return;
+
+            $recipients = DB::table('users')->whereIn('id', $ids)->whereNull('deleted_at')
+                ->whereNotNull('phone')->get(['id', 'phone', 'name'])
+                ->map(fn ($u) => ['type' => 'user', 'id' => $u->id, 'phone' => $u->phone, 'name' => $u->name])
+                ->all();
+            if (! $recipients) return;
+
+            app(NotificationService::class)->send('return.requested', [
+                'return_no'    => $r->return_no,
+                'vendor_name'  => $vendorName,
+                'total_qty'    => number_format((int) $r->total_qty),
+                'total_amount' => number_format((int) $r->total_amount),
+                'reason'       => self::REASONS[$r->reason_code] ?? $r->reason_code,
+            ], $recipients);
+        } catch (\Throwable $e) {
+            // 알림 실패가 반품 접수를 되돌리면 안 된다
+            \Illuminate\Support\Facades\Log::warning('반품 접수 알림 실패', ['return_id' => $returnId, 'e' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * 반품 확정 알림 — 학부모에게 문자. 학부모 결제와 연결된 반품만 대상.
+     * 환불 결과(금액/장부처리)까지 한 통에 담아 문자를 두 번 보내지 않는다.
+     */
+    public static function notifyConfirmed(int $returnId): void
+    {
+        try {
+            $r = DB::table('returns')->where('id', $returnId)->first();
+            if (! $r || ! $r->payment_request_id) return;
+
+            $pr = DB::table('payment_requests')->where('id', $r->payment_request_id)
+                ->first(['parent_phone', 'parent_name']);
+            if (! $pr || ! $pr->parent_phone) return;
+
+            $note = match ($r->refund_status) {
+                'done'    => number_format((int) $r->refund_amount) . '원이 결제하신 카드로 환불됩니다.'
+                             . "\n카드사에 따라 2~5일 걸릴 수 있습니다.",
+                'partial' => number_format((int) $r->refund_amount) . '원이 우선 환불되었습니다. 나머지는 확인 후 안내드립니다.',
+                'failed'  => '환불 처리 중 문제가 있어 확인하고 있습니다. 잠시만 기다려 주세요.',
+                default   => '환불은 확인 후 안내드립니다.',
+            };
+
+            app(NotificationService::class)->send('return.confirmed', [
+                'return_no'   => $r->return_no,
+                'total_qty'   => number_format((int) $r->total_qty),
+                'refund_note' => $note,
+            ], [[
+                'type'  => 'parent',
+                'phone' => $pr->parent_phone,
+                'name'  => $pr->parent_name,
+            ]]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('반품 확정 알림 실패', ['return_id' => $returnId, 'e' => $e->getMessage()]);
+        }
     }
 }

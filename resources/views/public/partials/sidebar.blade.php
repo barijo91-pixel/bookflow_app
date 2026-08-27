@@ -33,10 +33,14 @@
         }
     }
 
-    // 총판 반품관리 — 확정 대기 건수 (사이드바 뱃지)
+    // 반품관리 — 확정 대기 건수 (사이드바 뱃지).
+    // 학부모가 결제창에서 직접 접수할 수 있어, 총판뿐 아니라 담당 영업자도 바로 알아야 한다.
     $returnBadge = 0;
     if ($user->role_code === 'distributor') {
         $returnBadge = DB::table('returns')->where('distributor_user_id', $user->id)
+            ->where('status', 'requested')->whereNull('deleted_at')->count();
+    } elseif ($user->role_code === 'agent') {
+        $returnBadge = DB::table('returns')->where('agent_user_id', $user->id)
             ->where('status', 'requested')->whereNull('deleted_at')->count();
     }
 
@@ -134,6 +138,7 @@
                 </a>
                 <a href="{{ route('my.returns.index') }}" class="nav-item {{ $startsWith('my.returns') }}">
                     <i class="bi bi-arrow-return-left"></i> 반품 관리
+                    @if(($returnBadge ?? 0) > 0)<span class="badge bg-danger ms-auto">{{ $returnBadge }}</span>@endif
                 </a>
                 <a href="{{ route('mypage.settlements') }}" class="nav-item {{ $is('mypage.settlements') }}">
                     <i class="bi bi-cash-stack"></i> 정산 내역

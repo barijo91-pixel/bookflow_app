@@ -58,6 +58,16 @@ class NotificationTemplateSeeder extends Seeder
             ['payment.requested', 'sms', '학부모 결제 요청 SMS 폴백',
                 "[BookSys] #{vendor_name} 교재 #{amount_fmt}원 결제: #{pay_url}",
                 ['vendor_name','amount_fmt','pay_url']],
+
+            // 반품 — 알림톡 템플릿은 카카오 승인이 필요해 우선 문자(SMS)로 보낸다.
+            // 승인 나면 같은 event_code 로 alimtalk 행을 추가하면 둘 다 나간다.
+            ['return.requested', 'sms', '반품 접수 알림(총판·영업자)',
+                "[BookSys] 반품이 접수되었습니다.\n반품번호: #{return_no}\n학원: #{vendor_name}\n수량: #{total_qty}권 (#{total_amount}원)\n사유: #{reason}\n확인 후 처리해 주세요.",
+                ['return_no','vendor_name','total_qty','total_amount','reason']],
+
+            ['return.confirmed', 'sms', '반품 확정 알림(학부모)',
+                "[BookSys] 신청하신 반품이 확정되었습니다.\n반품번호: #{return_no}\n수량: #{total_qty}권\n#{refund_note}",
+                ['return_no','total_qty','refund_note']],
         ];
 
         foreach ($templates as [$event, $channel, $name, $body, $vars]) {
