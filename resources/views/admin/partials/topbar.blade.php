@@ -8,6 +8,11 @@
             <i class="bi bi-person-circle"></i>
             {{ $u?->name }} ({{ $u?->email }})
         </span>
+        {{-- 비밀번호 변경 — /mypage/profile 에 폼이 있는데 관리자 화면에 진입로가 없어
+             주소를 직접 쳐야 했다 (형아가 못 찾아 헤맴) --}}
+        <a href="{{ route('mypage.profile') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-key"></i> 비밀번호 변경
+        </a>
         <form method="POST" action="{{ route('admin.logout') }}" class="m-0">
             @csrf
             <button type="submit" class="btn btn-sm btn-outline-secondary">
