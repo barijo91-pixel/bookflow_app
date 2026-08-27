@@ -20,6 +20,36 @@ class ReturnService
     /** 접수 가능한 주문 상태 — 물건이 나갔거나 나가는 중일 때 */
     public const RETURNABLE_ORDER_STATUS = ['accepted', 'shipped', 'in_transit', 'completed'];
 
+    /**
+     * 학부모 청약철회(반품) 신청 가능 기간 — 취소·환불정책 제1조와 같은 7일.
+     * 기산점은 '받은 날' 이므로 배송완료 → 출고 순으로 보고,
+     * 아직 안 나갔으면 기간 제한 없이 언제든 신청 가능(출고 전 취소).
+     */
+    public const PARENT_RETURN_DAYS = 7;
+
+    /**
+     * 이 주문을 학부모가 지금 반품 신청할 수 있나.
+     * 반환: ['open' => bool, 'deadline' => ?Carbon, 'reason' => string]
+     */
+    public static function parentWindow(object $order): array
+    {
+        if (! in_array($order->status_code, self::RETURNABLE_ORDER_STATUS, true)) {
+            return ['open' => false, 'deadline' => null,
+                    'reason' => '아직 출고 전이라 반품 대신 주문 취소 대상입니다. 학원으로 문의해 주세요.'];
+        }
+        $base = $order->completed_at ?? $order->shipped_at;
+        if (! $base) {
+            // 출고 시각이 없으면(총판 접수 단계) 기간을 걸지 않는다
+            return ['open' => true, 'deadline' => null, 'reason' => ''];
+        }
+        $deadline = \Carbon\Carbon::parse($base)->addDays(self::PARENT_RETURN_DAYS)->endOfDay();
+        if (now()->gt($deadline)) {
+            return ['open' => false, 'deadline' => $deadline,
+                    'reason' => '교재를 받은 날부터 ' . self::PARENT_RETURN_DAYS . '일이 지나 신청 기간이 끝났습니다.'];
+        }
+        return ['open' => true, 'deadline' => $deadline, 'reason' => ''];
+    }
+
     public const REASONS = [
         'damaged'      => '파손·불량',
         'wrong_book'   => '오배송',
@@ -66,7 +96,7 @@ class ReturnService
      * @param int|null $paymentRequestId 환불 대상 학부모 결제 (소매 — 지정하면 그 결제에서 우선 환불)
      * @return object returns 행
      */
-    public static function create(object $order, array $lines, string $reasonCode, ?string $reasonText, int $byUserId, ?int $paymentRequestId = null): object
+    public static function create(object $order, array $lines, string $reasonCode, ?string $reasonText, ?int $byUserId, ?int $paymentRequestId = null): object
     {
         // 대상 결제 지정 시 — 이 주문의 결제 완료 건이어야 한다
         if ($paymentRequestId) {

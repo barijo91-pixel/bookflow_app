@@ -385,7 +385,35 @@ class PaymentRequestController extends Controller
         $portOneStoreId = PortOneService::storeId();
         $portOneMethods = PortOneService::methods();
 
-        return view('public.pay.show', compact('pr', 'vendor', 'distributor', 'bankName', 'items', 'portOneActive', 'portOneStoreId', 'portOneMethods'));
+        // 반품(청약철회) — 결제 완료 건에만. 신청 가능 여부·품목별 잔여수량·기존 접수 내역
+        $returnWindow    = ['open' => false, 'deadline' => null, 'reason' => ''];
+        $returnableItems = [];
+        $myReturns       = collect();
+        if ($pr->status === 'paid' && $order) {
+            $returnWindow = \App\Services\ReturnService::parentWindow($order);
+            $left = \App\Services\ReturnService::returnableQty($order->id);
+            $rows = DB::table('order_items')->where('order_id', $order->id)
+                ->get(['id', 'title_snapshot', 'qty', 'unit_price']);
+            foreach ($rows as $r) {
+                $returnableItems[] = [
+                    'id'    => $r->id,
+                    'title' => $r->title_snapshot,
+                    'qty'   => (int) $r->qty,
+                    'left'  => (int) ($left[$r->id]['left'] ?? 0),
+                    'price' => (int) $r->unit_price,
+                ];
+            }
+            // 이 학부모 결제로 접수된 반품만 보여준다 (남의 반품은 안 보임)
+            $myReturns = DB::table('returns')
+                ->where('payment_request_id', $pr->id)->whereNull('deleted_at')
+                ->orderByDesc('id')
+                ->get(['id', 'return_no', 'status', 'total_qty', 'total_amount',
+                       'refund_status', 'refund_amount', 'requested_at']);
+        }
+
+        return view('public.pay.show', compact('pr', 'vendor', 'distributor', 'bankName', 'items',
+            'portOneActive', 'portOneStoreId', 'portOneMethods',
+            'returnWindow', 'returnableItems', 'myReturns'));
     }
 
     /**
@@ -442,6 +470,67 @@ class PaymentRequestController extends Controller
 
         return redirect()->route('public.pay', $token)
             ->with('success', '결제가 완료되었습니다. (테스트 모드)');
+    }
+
+    /**
+     * POST /pay/{token}/return — 학부모 반품(청약철회) 신청.
+     *
+     * 로그인 없이 토큰으로 들어오므로 신청 조건을 서버에서 전부 다시 본다.
+     * 접수되면 기존 반품관리(총판 확정 → PG 부분취소)로 그대로 흘러간다.
+     */
+    public function publicReturn(Request $request, string $token)
+    {
+        $pr = DB::table('payment_requests')->where('token', $token)->first();
+        abort_if(! $pr, 404, '결제 요청을 찾을 수 없습니다.');
+
+        if ($pr->status !== 'paid') {
+            return back()->with('error', '결제 완료된 건만 반품 신청할 수 있습니다.');
+        }
+        $order = DB::table('orders')->where('id', $pr->order_id)->whereNull('deleted_at')->first();
+        abort_if(! $order, 404);
+
+        $window = \App\Services\ReturnService::parentWindow($order);
+        if (! $window['open']) {
+            return back()->with('error', $window['reason'] ?: '지금은 반품을 신청할 수 없습니다.');
+        }
+
+        $data = $request->validate([
+            'items'       => ['required', 'array'],
+            'items.*'     => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'reason_code' => ['required', 'in:' . implode(',', array_keys(\App\Services\ReturnService::REASONS))],
+            'reason_text' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        // 이 주문의 품목만 허용 (남의 order_item_id 를 끼워넣지 못하게)
+        $ownIds = DB::table('order_items')->where('order_id', $order->id)->pluck('id')->all();
+        $lines  = [];
+        foreach ($data['items'] as $itemId => $qty) {
+            if (! in_array((int) $itemId, $ownIds, true)) continue;
+            if ((int) $qty > 0) $lines[(int) $itemId] = (int) $qty;
+        }
+        if (! $lines) {
+            return back()->with('error', '반품할 교재의 수량을 1권 이상 입력해 주세요.');
+        }
+
+        try {
+            // requested_by = null — 학부모는 로그인 사용자가 아니다. 누가 냈는지는 메모·감사로그로 남긴다
+            $return = \App\Services\ReturnService::create($order, $lines, $data['reason_code'],
+                $data['reason_text'] ?? null, null, (int) $pr->id);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        DB::table('returns')->where('id', $return->id)->update([
+            'memo'       => '학부모 신청 (결제요청 #' . $pr->id . ' · ' . ($pr->parent_name ?: '학부모') . ')',
+            'updated_at' => now(),
+        ]);
+        AuditLog::log('returns', $return->id, 'parent_requested', null, [
+            'payment_request_id' => $pr->id,
+            'parent_name'        => $pr->parent_name,
+        ]);
+
+        return back()->with('success',
+            '반품 신청이 접수되었습니다. (' . $return->return_no . ') 확인 후 환불까지 안내드립니다.');
     }
 
     /**

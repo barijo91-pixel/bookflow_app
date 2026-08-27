@@ -103,6 +103,119 @@
             </div>
         @endif
 
+        {{-- ── 반품(청약철회) ─────────────────────────────────────────
+             결제 완료 건에만. 안내는 항상 보이고, 신청 폼은 기간·수량이 남았을 때만. --}}
+        @if($pr->status === 'paid')
+            @php
+                $hasLeft = collect($returnableItems ?? [])->sum('left') > 0;
+            @endphp
+
+            @if(($myReturns ?? collect())->isNotEmpty())
+                <div class="pay-section">
+                    <h6><i class="bi bi-arrow-return-left"></i> 반품 신청 내역</h6>
+                    <ul class="items-list list-unstyled mb-0">
+                        @foreach($myReturns as $r)
+                            <li class="d-flex justify-content-between align-items-start">
+                                <span>
+                                    {{ $r->return_no }}
+                                    <span class="text-muted"> · {{ $r->total_qty }}권 · {{ number_format($r->total_amount) }}원</span>
+                                </span>
+                                <span class="text-end">
+                                    @switch($r->status)
+                                        @case('requested') <span class="text-muted">확인 중</span> @break
+                                        @case('confirmed') <strong>반품 확정</strong> @break
+                                        @case('rejected')  <span class="text-muted">반려</span> @break
+                                        @case('canceled')  <span class="text-muted">취소됨</span> @break
+                                        @default <span class="text-muted">{{ $r->status }}</span>
+                                    @endswitch
+                                    @if($r->refund_status === 'done')
+                                        <div class="small text-muted">{{ number_format($r->refund_amount) }}원 환불</div>
+                                    @elseif($r->status === 'confirmed')
+                                        <div class="small text-muted">환불 처리 중</div>
+                                    @endif
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="pay-section">
+                <h6><i class="bi bi-info-circle"></i> 반품·환불 안내</h6>
+                <ul class="small text-muted mb-2" style="padding-left:1.1rem; line-height:1.7;">
+                    <li>단순 변심에 의한 반품은 상품 수령 후 <strong>7일 이내</strong> 가능합니다.</li>
+                    <li>상품의 훼손, 사용 또는 필기 등으로 상품 가치가 현저히 감소한 경우
+                        반품이 제한될 수 있습니다.</li>
+                    <li>오배송 및 상품의 하자가 있는 경우 배송비는 <strong>판매자</strong>가 부담합니다.</li>
+                    <li>단순 변심에 의한 반품 배송비는 <strong>구매자</strong>가 부담합니다.</li>
+                    <li>확인 후 <strong>3영업일 이내</strong>에 결제하신 카드로 승인 취소되며,
+                        카드사 사정에 따라 실제 환급까지 며칠 더 걸릴 수 있습니다.</li>
+                </ul>
+                <a href="{{ route('legal.refund') }}" target="_blank" class="small">취소·환불정책 전문 보기</a>
+            </div>
+
+            @if(($returnWindow['open'] ?? false) && $hasLeft)
+                <div class="pay-section">
+                    <h6><i class="bi bi-box-arrow-left"></i> 반품 신청</h6>
+                    @if($returnWindow['deadline'] ?? null)
+                        <p class="small text-muted mb-2">
+                            신청 마감: {{ \Carbon\Carbon::parse($returnWindow['deadline'])->format('Y년 n월 j일') }}까지
+                        </p>
+                    @endif
+                    <form method="POST" action="{{ route('public.pay.return', $pr->token) }}"
+                          onsubmit="return confirm('반품을 신청할까요?\n\n신청 후 학원·총판 확인을 거쳐 환불됩니다.');">
+                        @csrf
+                        <ul class="items-list list-unstyled">
+                            @foreach($returnableItems as $it)
+                                <li class="d-flex justify-content-between align-items-center">
+                                    <span>
+                                        {{ $it['title'] }}
+                                        <span class="text-muted small"> · 주문 {{ $it['qty'] }}권</span>
+                                        @if($it['left'] < $it['qty'])
+                                            <span class="text-muted small">(신청 가능 {{ $it['left'] }}권)</span>
+                                        @endif
+                                    </span>
+                                    @if($it['left'] > 0)
+                                        <input type="number" name="items[{{ $it['id'] }}]" value="0"
+                                               min="0" max="{{ $it['left'] }}" inputmode="numeric"
+                                               style="width:72px; text-align:center;" class="form-control form-control-sm">
+                                    @else
+                                        <span class="text-muted small">신청 완료</span>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">반품 사유</label>
+                            <select name="reason_code" class="form-select form-select-sm" required>
+                                @foreach(\App\Services\ReturnService::REASONS as $k => $label)
+                                    <option value="{{ $k }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <textarea name="reason_text" rows="2" maxlength="500"
+                                      class="form-control form-control-sm"
+                                      placeholder="상세 내용을 적어주시면 처리가 빨라집니다 (선택)"></textarea>
+                        </div>
+                        <button class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-arrow-return-left"></i> 반품 신청하기
+                        </button>
+                    </form>
+                </div>
+            @elseif(! ($returnWindow['open'] ?? false))
+                <div class="pay-section">
+                    <p class="small text-muted mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        {{ $returnWindow['reason'] ?: '지금은 반품을 신청할 수 없습니다.' }}
+                        @if($vendor?->tel || $vendor?->mobile)
+                            문의: {{ format_phone($vendor->tel ?: $vendor->mobile) }}
+                        @endif
+                    </p>
+                </div>
+            @endif
+        @endif
+
         @if(in_array($pr->status, ['sent', 'viewed']))
             {{-- 카톡 등 인앱 브라우저에서는 카드 결제창(INIStdPay)이 차단됨 → 외부 브라우저 유도 --}}
             <div id="inappNotice" class="pay-section" style="display:none;">
@@ -143,7 +256,7 @@
                         @endforeach
                     </div>
                     <p class="small text-center text-muted mt-2 mb-0" style="font-size:.75rem;">
-                        <i class="bi bi-shield-check"></i> 안전한 PG사 결제 시스템
+                        <i class="bi bi-shield-check"></i> 결제대행 <strong>KG이니시스</strong> · 포트원(PortOne)
                     </p>
                 @else
                     {{-- mock 결제 (PortOne 미설정 시 fallback) --}}

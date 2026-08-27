@@ -49,6 +49,10 @@ Route::get('/pay/{token}', [\App\Http\Controllers\PaymentRequestController::clas
 Route::post('/pay/{token}/mock-pay', [\App\Http\Controllers\PaymentRequestController::class, 'mockPay'])
     ->middleware('throttle:10,1')
     ->name('public.pay.mock');
+// 학부모 반품(청약철회) 신청 — 남발 방어 (분당 5회)
+Route::post('/pay/{token}/return', [\App\Http\Controllers\PaymentRequestController::class, 'publicReturn'])
+    ->middleware('throttle:5,1')
+    ->name('public.pay.return');
 // PortOne 실 PG 결제 완료 콜백 — 분당 30회 제한
 Route::post('/pay/{token}/portone-complete', [\App\Http\Controllers\PaymentRequestController::class, 'portOneComplete'])
     ->middleware('throttle:30,1')
