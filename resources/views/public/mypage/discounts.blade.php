@@ -46,7 +46,7 @@
                                 </div>
                                 @php $isBoth = \App\Services\TradeService::usesSplitRate($v->trade_type ?? null); @endphp
                                 <div class="{{ $isBoth ? 'col-8 col-sm-3' : 'col-8 col-sm-5' }}">
-                                    @if($isBoth)<div class="text-muted" style="font-size:.7rem;">소매</div>@endif
+                                    @if($isBoth)<div class="small fw-bold navy mb-1">소매</div>@endif
                                     <div class="input-group input-group-sm rate-stepper">
                                         <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
                                         <input type="text" name="discount_rate" data-step="0.5" data-min="0" data-max="100" inputmode="decimal" autocomplete="off"
@@ -59,10 +59,10 @@
                                 @if($isBoth)
                                     {{-- 도·소매 학원만 — 학원 일괄 배송(도매) 주문에 쓰인다. 비우면 소매율을 그대로 쓴다 --}}
                                     <div class="col-8 col-sm-2">
-                                        <div class="text-muted" style="font-size:.7rem;">도매</div>
+                                        <div class="small fw-bold navy mb-1">도매</div>
                                         <div class="input-group input-group-sm rate-stepper">
                                             <input type="text" name="wholesale_discount_rate" data-step="0.5" data-min="0" data-max="100"
-                                                   inputmode="decimal" autocomplete="off"
+                                                   inputmode="decimal" autocomplete="off" data-allow-empty="1"
                                                    value="{{ $v->wholesale_rate !== null ? rtrim(rtrim($v->wholesale_rate, '0'), '.') : '' }}"
                                                    placeholder="소매율" class="form-control text-end rate-input">
                                             <span class="input-group-text">%</span>
@@ -293,7 +293,8 @@ document.addEventListener('blur', function (e) {
     if (!input) return;
     const min = parseFloat(input.dataset.min), max = parseFloat(input.dataset.max);
     let v = parseFloat(input.value);
-    if (isNaN(v)) { input.value = '0'; return; }
+    // 비워둘 수 있는 칸(도매율)은 0 으로 바꾸지 않는다 — 0%% 할인으로 굳어버린다
+    if (isNaN(v)) { input.value = input.dataset.allowEmpty === '1' ? '' : '0'; return; }
     if (!isNaN(min)) v = Math.max(min, v);
     if (!isNaN(max)) v = Math.min(max, v);
     input.value = (Math.round(v * 100) / 100).toString();
