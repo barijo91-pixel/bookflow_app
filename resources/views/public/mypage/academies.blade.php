@@ -51,16 +51,16 @@
                         </td>
                         <td class="text-muted text-nowrap">{{ $v->mobile ? format_phone($v->mobile) : '-' }}</td>
                         <td>
-                            @if($v->trade_type === 'wholesale')
-                                <span class="badge bg-primary">도매</span>
-                            @else
-                                <span class="badge bg-info text-dark">소매</span>
-                            @endif
+                            @switch(\App\Services\TradeService::normalize($v->trade_type))
+                                @case('wholesale') <span class="badge bg-primary">도매</span> @break
+                                @case('both')      <span class="badge bg-dark">도·소매</span> @break
+                                @default           <span class="badge bg-info text-dark">소매</span>
+                            @endswitch
                         </td>
                         <td class="text-muted text-nowrap">{{ $v->agent_name }}</td>
                         <td class="text-muted">{{ trim(($v->sido_name ?? '').' '.($v->sigungu_name ?? '')) ?: '-' }}</td>
                         <td class="text-end text-nowrap">
-                            {{ rtrim(rtrim(number_format($v->discount_rate, 1), '0'), '.') }}%<span class="text-muted small ms-1">{{ $v->trade_type === 'wholesale' ? '매입' : '학부모' }}</span>
+                            {{ rtrim(rtrim(number_format($v->discount_rate, 1), '0'), '.') }}%<span class="text-muted small ms-1">{{ \App\Services\TradeService::allowsWholesale($v->trade_type) ? (\App\Services\TradeService::allowsRetail($v->trade_type) ? '매입·학부모' : '매입') : '학부모' }}</span>
                         </td>
                         <td>
                             @switch($v->status_code)

@@ -36,7 +36,7 @@ class RehearsalCheck extends Command
             $this->table(['아이디', '학원', '거래', '기본배송'],
                 $academies->map(fn ($r) => [
                     $r->login_id, $r->vname,
-                    $r->trade_type === 'wholesale' ? '도매' : '소매',
+                    \App\Services\TradeService::label($r->trade_type),
                     ($r->default_ship_to_type ?? 'parent') === 'vendor' ? '학원일괄' : '학부모개별',
                 ])->all());
         }

@@ -90,6 +90,7 @@
                     <option value="">전체</option>
                     <option value="retail" @selected($tradeType === 'retail')>소매</option>
                     <option value="wholesale" @selected($tradeType === 'wholesale')>도매</option>
+                    <option value="both" @selected($tradeType === 'both')>도·소매</option>
                 </select>
             </div>
             <div style="width:100px">
@@ -247,7 +248,7 @@
                                 {{ $o->vendor_name ?? '-' }}
                                 @if($o->credit_allowed)<span class="badge bg-warning text-dark ms-1" style="font-size:.65rem;">여신</span>@endif
                             </td>
-                            <td><span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span></td>
+                            <td><span class="badge {{ ['wholesale' => 'bg-secondary', 'both' => 'bg-dark'][\App\Services\TradeService::normalize($o->trade_type ?? null)] ?? 'bg-light text-dark' }}">{{ \App\Services\TradeService::label($o->trade_type ?? null) }}</span></td>
                         @endif
                         <td class="text-end text-nowrap">{{ number_format($o->total_amount) }}원</td>
                         <td class="text-nowrap">
@@ -305,7 +306,7 @@
                 @endif
                 @if($user->role_code !== 'academy')
                     <div class="fw-bold mb-1">{{ $o->vendor_name ?? '-' }}
-                        <span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span>
+                        <span class="badge {{ ['wholesale' => 'bg-secondary', 'both' => 'bg-dark'][\App\Services\TradeService::normalize($o->trade_type ?? null)] ?? 'bg-light text-dark' }}">{{ \App\Services\TradeService::label($o->trade_type ?? null) }}</span>
                         @if($o->credit_allowed)<span class="badge bg-warning text-dark">여신</span>@endif
                     </div>
                 @endif

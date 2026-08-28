@@ -33,6 +33,7 @@ class SalesReportController extends Controller
         ''          => '전체',
         'retail'    => '소매',
         'wholesale' => '도매',
+        'both'      => '도·소매',
     ];
 
     private function authorizeUser(): User

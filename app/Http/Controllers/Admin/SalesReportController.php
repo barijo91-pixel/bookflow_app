@@ -25,7 +25,7 @@ class SalesReportController extends Controller
         'distributor' => '총판별',
     ];
 
-    public const TRADES = ['' => '전체', 'retail' => '소매', 'wholesale' => '도매'];
+    public const TRADES = ['' => '전체', 'retail' => '소매', 'wholesale' => '도매', 'both' => '도·소매'];
 
     /** 전사 결제 완료분 + 선택 필터 */
     private function scoped(string $from, string $to, ?string $trade, ?int $distId, ?int $agentId)

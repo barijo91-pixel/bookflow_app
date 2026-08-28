@@ -44,6 +44,7 @@
                             onchange="var d=this.form.querySelector('[name=discount_rate]'); if(d) d.value=(this.value==='wholesale'?30:10);">
                         <option value="retail" @selected(old('trade_type', 'retail') === 'retail')>소매</option>
                         <option value="wholesale" @selected(old('trade_type') === 'wholesale')>도매</option>
+                        <option value="both" @selected(old('trade_type') === 'both')>도·소매</option>
                     </select>
                 </div>
                 <div class="col-md-3">

@@ -28,8 +28,9 @@ class PaymentRequestController extends Controller
         if (! $vendorIds->contains($order->vendor_id)) abort(403, '본인 학원 주문이 아닙니다.');
 
         $vendor = DB::table('vendors')->find($order->vendor_id);
-        if (! $vendor || ($vendor->trade_type ?? 'retail') !== 'wholesale') {
-            return back()->with('error', '도매 학원만 직접 결제할 수 있습니다.');
+        // 도매 주문만 학원이 직접 결제한다. 도·소매 학원은 학원 일괄 배송 주문일 때만 해당.
+        if (! $vendor || ! \App\Services\TradeService::orderIsWholesale($vendor->trade_type ?? null, $order->ship_to_type ?? null)) {
+            return back()->with('error', '학원 일괄 배송 주문만 학원에서 직접 결제할 수 있습니다.');
         }
 
         // 중복 결제 방지
@@ -78,8 +79,9 @@ class PaymentRequestController extends Controller
         }
 
         $vendor = DB::table('vendors')->find($order->vendor_id);
-        if (! $vendor || ($vendor->trade_type ?? 'retail') !== 'wholesale') {
-            return response()->json(['success' => false, 'message' => '도매 학원만 직접 결제할 수 있습니다.'], 400);
+        // 결제 검증도 같은 기준 — 화면을 우회해 들어와도 여기서 걸린다
+        if (! $vendor || ! \App\Services\TradeService::orderIsWholesale($vendor->trade_type ?? null, $order->ship_to_type ?? null)) {
+            return response()->json(['success' => false, 'message' => '학원 일괄 배송 주문만 학원에서 직접 결제할 수 있습니다.'], 400);
         }
 
         if (DB::table('payment_requests')->where('order_id', $order->id)->where('status', 'paid')->exists()) {
@@ -153,11 +155,11 @@ class PaymentRequestController extends Controller
 
         $vendor = DB::table('vendors')->find($order->vendor_id);
 
-        // 도매는 학원이 직접 결제하는 구조 — 학부모 결제요청 대상이 아니다.
-        // (한 학원은 도매/소매 한 형태로만 거래한다)
-        if (($vendor->trade_type ?? 'retail') === 'wholesale') {
+        // 도매 주문은 학원이 직접 결제하는 구조 — 학부모 결제요청 대상이 아니다.
+        // 도·소매 학원은 학원 일괄 배송 주문만 여기에 걸린다 (학부모 개별 배송은 결제요청 가능).
+        if (\App\Services\TradeService::orderIsWholesale($vendor->trade_type ?? null, $order->ship_to_type ?? null)) {
             return redirect()->route('my.orders.show', $orderId)
-                ->with('error', '도매 학원은 학부모 결제요청 대신 학원에서 직접 결제합니다.');
+                ->with('error', '학원 일괄 배송 주문은 학부모 결제요청 대신 학원에서 직접 결제합니다.');
         }
 
         // 학급 목록 (active)
@@ -233,10 +235,10 @@ class PaymentRequestController extends Controller
         $vendorIds = DB::table('vendor_users')->where('user_id', $user->id)->pluck('vendor_id')->toArray();
         if (! in_array($order->vendor_id, $vendorIds)) abort(403);
 
-        // 도매 학원은 학부모 결제요청 대상이 아니다 (화면 우회 방어)
+        // 도매 주문은 학부모 결제요청 대상이 아니다 (화면 우회 방어)
         $tradeType = DB::table('vendors')->where('id', $order->vendor_id)->value('trade_type') ?? 'retail';
-        if ($tradeType === 'wholesale') {
-            return back()->with('error', '도매 학원은 학부모 결제요청 대신 학원에서 직접 결제합니다.');
+        if (\App\Services\TradeService::orderIsWholesale($tradeType, $order->ship_to_type ?? null)) {
+            return back()->with('error', '학원 일괄 배송 주문은 학부모 결제요청 대신 학원에서 직접 결제합니다.');
         }
 
         $data = $request->validate([

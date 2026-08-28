@@ -86,7 +86,7 @@ class AgentVendorController extends Controller
             'region_id'      => ['nullable', 'integer', 'exists:regions,id'],
             'address'        => ['nullable', 'string', 'max:255'],
             'address_detail' => ['nullable', 'string', 'max:255'],
-            'trade_type'     => ['nullable', 'in:retail,wholesale'],
+            'trade_type'     => ['nullable', 'in:retail,wholesale,both'],
             'default_ship_to_type' => ['nullable', 'in:parent,vendor'],
             'payment_type'   => ['nullable', 'in:cash,credit'],
             'credit_limit'   => ['nullable', 'integer', 'min:0', 'max:999999999'],
@@ -151,11 +151,10 @@ class AgentVendorController extends Controller
                 'owner_name'     => $data['owner_name'] ?? null,
                 'business_no'    => $data['business_no'] ?? null,
                 'type_code'      => 'academy',
-                'trade_type'     => ($data['trade_type'] ?? 'retail') === 'wholesale' ? 'wholesale' : 'retail',
+                'trade_type'     => \App\Services\TradeService::normalize($data['trade_type'] ?? 'retail'),
             // 도매는 항상 학원 수령, 소매는 선택값(기본 학부모)
-            'default_ship_to_type' => ($data['trade_type'] ?? 'retail') === 'wholesale'
-                ? 'vendor'
-                : (($data['default_ship_to_type'] ?? 'parent') === 'vendor' ? 'vendor' : 'parent'),
+            'default_ship_to_type' => \App\Services\TradeService::defaultShipTo(
+                $data['trade_type'] ?? 'retail', $data['default_ship_to_type'] ?? 'parent'),
                 'status_code'    => 'active',
                 'mobile'         => $phone,
                 'tel'            => $tel,
@@ -308,7 +307,7 @@ class AgentVendorController extends Controller
             'region_id'      => ['nullable', 'integer', 'exists:regions,id'],
             'address'        => ['nullable', 'string', 'max:255'],
             'address_detail' => ['nullable', 'string', 'max:255'],
-            'trade_type'     => ['nullable', 'in:retail,wholesale'],
+            'trade_type'     => ['nullable', 'in:retail,wholesale,both'],
             'default_ship_to_type' => ['nullable', 'in:parent,vendor'],
             'payment_type'   => ['nullable', 'in:cash,credit'],
             'credit_limit'   => ['nullable', 'integer', 'min:0', 'max:999999999'],
@@ -338,11 +337,10 @@ class AgentVendorController extends Controller
             'region_id'      => $data['region_id'] ?? null,
             'address'        => $data['address'] ?? null,
             'address_detail' => $data['address_detail'] ?? null,
-            'trade_type'     => ($data['trade_type'] ?? 'retail') === 'wholesale' ? 'wholesale' : 'retail',
+            'trade_type'     => \App\Services\TradeService::normalize($data['trade_type'] ?? 'retail'),
             // 도매는 항상 학원 수령, 소매는 선택값(기본 학부모)
-            'default_ship_to_type' => ($data['trade_type'] ?? 'retail') === 'wholesale'
-                ? 'vendor'
-                : (($data['default_ship_to_type'] ?? 'parent') === 'vendor' ? 'vendor' : 'parent'),
+            'default_ship_to_type' => \App\Services\TradeService::defaultShipTo(
+                $data['trade_type'] ?? 'retail', $data['default_ship_to_type'] ?? 'parent'),
             'payment_type'   => $paymentType,
             'credit_limit'   => $creditLimit,
             'memo'           => $data['memo'] ?? null,

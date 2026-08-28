@@ -2158,14 +2158,23 @@ class MyPageController extends Controller
                 ->value('id');
         }
 
-        // 소매는 학부모에게 개별 결제요청을 보내는 구조라 어느 학급 것인지 정해져야 한다.
+        // 배송지 유형을 먼저 정한다 — 이게 곧 거래 성격이라 아래 학급 검증이 여기에 걸린다.
+        // 도매는 항상 학원 수령. 소매·도소매는 주문에서 고른 값(없으면 학원 기본 배송지).
+        $vendorRow = DB::table('vendors')->where('id', $vendorId)
+            ->first(['trade_type', 'default_ship_to_type']);
+        $vendorTrade = $vendorRow->trade_type ?? 'retail';
+        $shipToType  = \App\Services\TradeService::shipChoosable($vendorTrade)
+            ? ((($data['ship_to_type'] ?? $vendorRow->default_ship_to_type ?? 'parent') === 'vendor') ? 'vendor' : 'parent')
+            : 'vendor';
+
+        // 소매 주문(학부모 개별 결제)은 어느 학급 것인지 정해져야 한다.
         // 학급 없이 주문하면 결제요청 단계에서 대상 학생을 특정할 수 없다.
-        $vendorTrade = DB::table('vendors')->where('id', $vendorId)->value('trade_type') ?? 'retail';
-        if ($vendorTrade !== 'wholesale' && ! $classId) {
+        // 학원 일괄 배송이면 학원이 결제하는 도매 주문이라 학급이 필요 없다.
+        if (! \App\Services\TradeService::orderIsWholesale($vendorTrade, $shipToType) && ! $classId) {
             $hasClass = DB::table('academy_classes')->where('vendor_id', $vendorId)
                 ->where('status', 'active')->exists();
             return back()->with('error', $hasClass
-                ? '소매 주문은 학급을 선택해야 합니다. 어느 학급 교재인지 정해야 학부모에게 결제를 요청할 수 있습니다.'
+                ? '학부모 개별 배송은 학급을 선택해야 합니다. 어느 학급 교재인지 정해야 학부모에게 결제를 요청할 수 있습니다.'
                 : '등록된 학급이 없습니다. 학급/학생 메뉴에서 학급을 먼저 만들어주세요.');
         }
 
@@ -2254,13 +2263,6 @@ class MyPageController extends Controller
             return back()->with('error', '주문 가능한 도서가 없습니다.');
         }
 
-        // 배송지 유형 — 도매(학원 매입)는 항상 학원 수령.
-        // 소매는 주문에서 선택한 값, 없으면 학원 설정의 기본 배송지를 따른다.
-        $vendorRow = DB::table('vendors')->where('id', $vendorId)
-            ->first(['trade_type', 'default_ship_to_type']);
-        $shipToType = ($vendorRow->trade_type ?? 'retail') === 'wholesale'
-            ? 'vendor'
-            : ((($data['ship_to_type'] ?? $vendorRow->default_ship_to_type ?? 'parent') === 'vendor') ? 'vendor' : 'parent');
 
         $orderId = null;
         DB::transaction(function () use ($orderNo, $vendorId, $classId, $agentRow, $distId, $subtotal, $itemRows, $studentRows, $user, $shipToType, &$orderId) {

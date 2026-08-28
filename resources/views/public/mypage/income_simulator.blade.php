@@ -25,7 +25,7 @@
                         <option value="">학원 선택 안함 (도매·소매 모두 표시)</option>
                         @foreach($vendors as $v)
                             <option value="{{ $v->id }}" @selected($vendorId == $v->id)>
-                                {{ $v->name }} @if(($v->trade_type ?? 'retail') === 'wholesale')(도매 · 할인 {{ (int) $v->discount_rate }}%)@else(소매)@endif
+                                {{ $v->name }} ({{ \App\Services\TradeService::label($v->trade_type ?? null) }}@if(\App\Services\TradeService::allowsWholesale($v->trade_type ?? null)) · 할인 {{ (int) $v->discount_rate }}%@endif)
                             </option>
                         @endforeach
                     </select>

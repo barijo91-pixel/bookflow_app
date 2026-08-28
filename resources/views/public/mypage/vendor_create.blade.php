@@ -37,6 +37,11 @@
                             <input class="form-check-input" type="radio" name="trade_type" id="tradeWholesale" value="wholesale" @checked(old('trade_type') === 'wholesale') onchange="var d=document.querySelector('[name=discount_rate]'); if(d) d.value=30;">
                             <label class="form-check-label" for="tradeWholesale"><strong>도매</strong></label>
                         </div>
+                        {{-- 교재에 따라 도매·소매를 섞는 학원 — 주문마다 배송지를 골라 성격이 갈린다 --}}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="trade_type" id="tradeBoth" value="both" @checked(old('trade_type') === 'both')>
+                            <label class="form-check-label" for="tradeBoth"><strong>도·소매</strong></label>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">

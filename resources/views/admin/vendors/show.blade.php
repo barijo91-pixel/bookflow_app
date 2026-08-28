@@ -79,6 +79,7 @@
                                     onchange="var d=document.getElementById('addAgentDefaultRate'); if(d) d.value=(this.value==='wholesale'?30:10);">
                                 <option value="retail" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'retail')>소매</option>
                                 <option value="wholesale" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'wholesale')>도매</option>
+                                <option value="both" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'both')>도·소매</option>
                             </select>
                         </div>
                         <div class="col-md-3">

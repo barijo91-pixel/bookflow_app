@@ -72,7 +72,8 @@
         @php
             $retail = (int) ($byTrade['retail']->revenue ?? 0);
             $whole  = (int) ($byTrade['wholesale']->revenue ?? 0);
-            $sumT   = $retail + $whole;
+            $bothRev = (int) ($byTrade['both']->revenue ?? 0);
+            $sumT   = $retail + $whole + $bothRev;
         @endphp
         <div class="stat-card">
             <div class="d-flex align-items-center gap-2">
@@ -87,6 +88,15 @@
                     <span class="text-muted fw-normal small">{{ $sumT ? round($whole / $sumT * 100) : 0 }}%</span>
                 </span>
             </div>
+            {{-- 도·소매 학원 매출 — 있을 때만. 없으면 줄만 늘어난다 --}}
+            @if($bothRev > 0)
+                <div class="d-flex align-items-center gap-2">
+                    <span class="stat-label mb-0">도·소매</span>
+                    <span class="ms-auto fw-bold navy">{{ number_format($bothRev) }}원
+                        <span class="text-muted fw-normal small">{{ $sumT ? round($bothRev / $sumT * 100) : 0 }}%</span>
+                    </span>
+                </div>
+            @endif
         </div>
     </div>
 </div>

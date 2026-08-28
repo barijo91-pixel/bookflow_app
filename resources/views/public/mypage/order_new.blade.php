@@ -30,15 +30,20 @@
     @php return; @endphp
 @endif
 
-{{-- 소매인데 학급이 없으면 주문이 끝에서 막힌다. 담기 전에 미리 알린다.
-     (서버 storeOrder 가 소매에 class_id 를 요구 — 학급 없이는 주문 자체가 안 됨) --}}
-@if(($vendor->trade_type ?? 'retail') !== 'wholesale' && $classes->isEmpty())
+{{-- 학급이 없으면 '학부모 개별 배송' 주문이 끝에서 막힌다. 담기 전에 미리 알린다.
+     도·소매 학원은 '학원 일괄 배송'을 고르면 학급 없이도 주문할 수 있어 문구가 다르다. --}}
+@if(\App\Services\TradeService::allowsRetail($vendor->trade_type ?? null) && $classes->isEmpty())
+    @php $canShipToVendor = \App\Services\TradeService::allowsWholesale($vendor->trade_type ?? null); @endphp
     <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2 mb-3">
         <div class="flex-grow-1">
             <strong><i class="bi bi-exclamation-triangle-fill"></i> 학급을 먼저 만들어 주세요.</strong>
             <div class="small mt-1 mb-0">
                 교재비를 학부모가 결제하는 방식이라, 어느 학급 학생들에게 보낼지 정해야 주문할 수 있습니다.
-                지금은 도서를 담아도 <strong>주문이 완료되지 않습니다.</strong>
+                @if($canShipToVendor)
+                    학급 없이 주문하려면 배송 방식을 <strong>학원(일괄 배송)</strong>으로 골라주세요.
+                @else
+                    지금은 도서를 담아도 <strong>주문이 완료되지 않습니다.</strong>
+                @endif
             </div>
         </div>
         @if($user->role_code === 'academy')
@@ -113,7 +118,7 @@
                     <select name="vendor_id" class="form-select form-select-sm" onchange="this.form.submit()">
                         @foreach($myVendors as $v)
                             <option value="{{ $v->id }}" @selected($vendor && $v->id == $vendor->id)>
-                                {{ $v->name }}{{ $v->trade_type === 'wholesale' ? ' (도매)' : '' }}
+                                {{ $v->name }}{{ ($v->trade_type ?? 'retail') !== 'retail' ? ' ('.\App\Services\TradeService::label($v->trade_type).')' : '' }}
                             </option>
                         @endforeach
                     </select>
@@ -550,13 +555,42 @@
                                 {{-- 대행 주문 대상 학원 (서버에서 담당 여부 재검증) --}}
                                 <input type="hidden" name="vendor_id" value="{{ $vendor->id }}">
                             @endif
-                            {{-- 학급·대상학생은 소매(학부모 개별 결제)에서만. 도매는 학원이 일괄 매입해 학급 개념이 없다 --}}
-                            @if(($vendor->trade_type ?? 'retail') !== 'wholesale' && $classes->isNotEmpty())
-                                <div class="mb-2 p-2 rounded" style="background:#eaf1f8; border:1px solid #1f3a5f;">
+                            @php
+                                $tradeType   = $vendor->trade_type ?? 'retail';
+                                $canPickShip = \App\Services\TradeService::shipChoosable($tradeType);
+                                $defaultShip = \App\Services\TradeService::defaultShipTo($tradeType, $vendor->default_ship_to_type ?? 'parent');
+                            @endphp
+
+                            {{-- 배송 → 학급 순서. 배송지가 곧 거래 성격이라 그걸 먼저 정해야
+                                 학급이 필요한지가 정해진다 (학원 일괄이면 학원이 결제 → 학급 불필요) --}}
+                            @if($canPickShip)
+                                <div class="mb-2 p-2 rounded text-start" style="background:#f6f9fd; border:1px solid #d7e3f2;">
+                                    <div class="small fw-bold navy mb-1"><i class="bi bi-truck"></i> 배송 방식</div>
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input ship-pick" type="radio" name="ship_to_type" value="parent" id="shipParent"
+                                                   @checked($defaultShip !== 'vendor')>
+                                            <label class="form-check-label small fw-bold" for="shipParent">학부모<span class="fw-normal text-muted">(개별 배송)</span></label>
+                                        </div>
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input ship-pick" type="radio" name="ship_to_type" value="vendor" id="shipVendor"
+                                                   @checked($defaultShip === 'vendor')>
+                                            <label class="form-check-label small fw-bold" for="shipVendor">학원<span class="fw-normal text-muted">(일괄 배송)</span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- 학급·대상학생은 학부모 개별 배송일 때만 (학부모마다 결제요청을 보내야 해서).
+                                 학원 일괄 배송이면 학원이 결제하는 도매 주문이라 학급을 고를 필요가 없다. --}}
+                            @if(\App\Services\TradeService::allowsRetail($tradeType) && $classes->isNotEmpty())
+                                <div id="classPickWrap" class="mb-2 p-2 rounded"
+                                     style="background:#eaf1f8; border:1px solid #1f3a5f;{{ $defaultShip === 'vendor' ? ' display:none;' : '' }}">
                                     <label class="form-label small fw-bold navy mb-1" for="orderClassSelect">
                                         <i class="bi bi-mortarboard-fill"></i> 학급 선택 <span class="text-danger">*</span>
                                     </label>
-                                    <select name="class_id" id="orderClassSelect" class="form-select form-select-sm" aria-label="학급 선택" required>
+                                    <select name="class_id" id="orderClassSelect" class="form-select form-select-sm" aria-label="학급 선택"
+                                            @required($defaultShip !== 'vendor')>
                                         <option value="">학급을 선택하세요</option>
                                         @foreach($classes as $c)
                                             <option value="{{ $c->id }}">{{ $c->name }}</option>
@@ -565,31 +599,6 @@
                                     <div id="studentPickArea" class="mt-2 text-start" style="display:none;">
                                         <div class="small text-muted mb-1"><i class="bi bi-people"></i> 대상 학생 <span class="text-muted">(기본 전체 선택)</span></div>
                                         <div id="studentPickList" class="border rounded p-2 bg-white" style="max-height:160px; overflow-y:auto;"></div>
-                                    </div>
-                                </div>
-                            @endif
-                            {{-- 배송 방식 — 소매(학부모 결제) 학원만 선택. 도매는 항상 학원 수령 --}}
-                            @if(($vendor->trade_type ?? 'retail') !== 'wholesale')
-                                {{-- 학원 설정(기본 배송지)이 기본 선택됨. 이번 주문만 다르게 하려면 변경 --}}
-                                @php $defaultShip = $vendor->default_ship_to_type ?? 'parent'; @endphp
-                                <div class="mb-2 p-2 rounded text-start" style="background:#f6f9fd; border:1px solid #d7e3f2;">
-                                    <div class="small fw-bold navy mb-1"><i class="bi bi-truck"></i> 배송 방식</div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ship_to_type" value="parent" id="shipParent"
-                                               @checked($defaultShip !== 'vendor')>
-                                        <label class="form-check-label small" for="shipParent">
-                                            학부모에게 개별 배송
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="ship_to_type" value="vendor" id="shipVendor"
-                                               @checked($defaultShip === 'vendor')>
-                                        <label class="form-check-label small" for="shipVendor">
-                                            학원으로 일괄 배송 <span class="text-muted">(학원에서 학생에게 전달)</span>
-                                        </label>
-                                    </div>
-                                    <div class="small text-muted mt-1" style="font-size:.72rem;">
-                                        학원 설정의 기본 배송지가 선택되어 있습니다.
                                     </div>
                                 </div>
                             @endif
@@ -622,6 +631,30 @@
 @endif
 
 @push('scripts')
+{{-- 배송 방식 → 학급 선택 표시. 학원 일괄이면 학원이 결제하는 도매 주문이라 학급이 필요 없다.
+     required 도 같이 끄지 않으면 숨은 칸 때문에 폼 제출이 막힌다. --}}
+<script>
+(function () {
+    var wrap = document.getElementById('classPickWrap');
+    var sel  = document.getElementById('orderClassSelect');
+    var picks = document.querySelectorAll('.ship-pick');
+    if (! wrap || ! picks.length) return;
+
+    function sync() {
+        var v = document.querySelector('.ship-pick:checked');
+        var toVendor = v && v.value === 'vendor';
+        wrap.style.display = toVendor ? 'none' : '';
+        if (sel) {
+            sel.required = ! toVendor;
+            if (toVendor) sel.value = '';          // 학원 배송이면 학급 값을 비운다
+        }
+        var area = document.getElementById('studentPickArea');
+        if (toVendor && area) area.style.display = 'none';
+    }
+    picks.forEach(function (r) { r.addEventListener('change', sync); });
+    sync();
+})();
+</script>
 <script>
 // 표지 확대 미리보기 — 썸네일에 마우스 올리면 fixed 팝업으로 크게 (overflow 잘림 회피)
 (function () {

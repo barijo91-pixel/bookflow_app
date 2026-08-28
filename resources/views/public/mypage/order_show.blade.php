@@ -558,7 +558,7 @@
         @if($user->role_code === 'academy' && in_array($order->status_code, ['requested','confirmed','accepted','shipped']))
             <div class="card section-card mt-3 border-warning">
                 <div class="card-body">
-                    @if(($vendor->trade_type ?? 'retail') === 'wholesale')
+                    @if(\App\Services\TradeService::orderIsWholesale($vendor->trade_type ?? null, $order->ship_to_type ?? null))
                         {{-- 도매: 학원이 직접 결제 (학부모 거치지 않음) --}}
                         @if($portOneActive ?? false)
                             <div class="d-grid gap-2">
@@ -592,7 +592,7 @@
     </div>
 </div>
 @push('scripts')
-@if(($portOneActive ?? false) && ($vendor->trade_type ?? 'retail') === 'wholesale')
+@if(($portOneActive ?? false) && \App\Services\TradeService::orderIsWholesale($vendor->trade_type ?? null, $order->ship_to_type ?? null))
 <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
 <script>
 (function () {

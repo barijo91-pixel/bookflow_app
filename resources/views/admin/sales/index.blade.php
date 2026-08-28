@@ -94,7 +94,8 @@
         @php
             $retail = (int) ($byTrade['retail']->revenue ?? 0);
             $whole  = (int) ($byTrade['wholesale']->revenue ?? 0);
-            $sumT   = $retail + $whole;
+            $bothRev = (int) ($byTrade['both']->revenue ?? 0);
+            $sumT   = $retail + $whole + $bothRev;
         @endphp
         <div class="stat-card py-2">
             <div class="stat-label small">소매 / 도매</div>
@@ -103,6 +104,10 @@
                     <span class="text-muted fw-normal">{{ $sumT ? round($retail / $sumT * 100) : 0 }}%</span></div>
                 <div class="fw-bold">도매 {{ number_format($whole) }}원
                     <span class="text-muted fw-normal">{{ $sumT ? round($whole / $sumT * 100) : 0 }}%</span></div>
+                @if($bothRev > 0)
+                    <div class="fw-bold">도·소매 {{ number_format($bothRev) }}원
+                        <span class="text-muted fw-normal">{{ $sumT ? round($bothRev / $sumT * 100) : 0 }}%</span></div>
+                @endif
             </div>
         </div>
     </div>

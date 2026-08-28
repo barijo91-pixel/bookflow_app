@@ -54,6 +54,11 @@
                                     <input class="form-check-input" type="radio" name="trade_type" id="tradeWholesale" value="wholesale" @checked(old('trade_type', $vendor->trade_type ?? 'retail') === 'wholesale')>
                                     <label class="form-check-label" for="tradeWholesale"><strong>도매</strong></label>
                                 </div>
+                                {{-- 교재에 따라 도매·소매를 섞는 학원 --}}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="trade_type" id="tradeBoth" value="both" @checked(old('trade_type', $vendor->trade_type ?? 'retail') === 'both')>
+                                    <label class="form-check-label" for="tradeBoth"><strong>도·소매</strong></label>
+                                </div>
                             </div>
                         </div>
                         {{-- 기본 배송지 — 주문 화면에서 이 값이 기본 선택됨 (건별 변경 가능). 도매는 항상 학원 수령 --}}

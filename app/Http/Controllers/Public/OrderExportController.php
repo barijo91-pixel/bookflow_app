@@ -235,7 +235,7 @@ class OrderExportController extends Controller
                 substr((string) ($o->requested_at ?? $o->created_at), 0, 10),
                 $o->confirmed_at ? substr((string) $o->confirmed_at, 0, 10) : '',
                 $o->vendor_name, $o->class_name ?? '',
-                $isWhole ? '도매' : '소매',
+                \App\Services\TradeService::label($o->trade_type ?? null),
                 ($isWhole || ($o->ship_to_type ?? 'parent') === 'vendor') ? '학원 일괄' : '학부모 개별',
                 $o->agent_name ?? '',
                 $oItems->count(), (int) $oItems->sum('qty'), (int) $o->total_amount,
