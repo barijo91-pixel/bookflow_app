@@ -195,14 +195,47 @@
                 </a>
             </div>
             <div class="card-body py-3">
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="h3 navy mb-0">{{ rtrim(rtrim($myMapping->discount_rate, '0'), '.') }}%</span>
-                    @if(! $myMapping->is_active)
-                        <span class="badge bg-warning text-dark">중단</span>
-                    @else
-                        <span class="text-muted small">거래중</span>
-                    @endif
-                </div>
+                @php
+                    // 도·소매 학원은 배송지에 따라 율이 갈린다 — 둘 다 보여준다
+                    $splitRate = \App\Services\TradeService::usesSplitRate($vendor->trade_type ?? null);
+                    $whRate    = $myMapping->wholesale_discount_rate ?? null;
+                @endphp
+                @if($splitRate)
+                    <div class="d-flex align-items-baseline gap-4 flex-wrap">
+                        <div>
+                            <div class="small fw-bold navy">소매</div>
+                            <span class="h4 navy mb-0">{{ rtrim(rtrim($myMapping->discount_rate, '0'), '.') }}%</span>
+                            <div class="text-muted" style="font-size:.72rem;">학부모 개별 배송</div>
+                        </div>
+                        <div>
+                            <div class="small fw-bold navy">도매</div>
+                            @if($whRate !== null)
+                                <span class="h4 navy mb-0">{{ rtrim(rtrim($whRate, '0'), '.') }}%</span>
+                            @else
+                                <span class="h4 text-muted mb-0">{{ rtrim(rtrim($myMapping->discount_rate, '0'), '.') }}%</span>
+                            @endif
+                            <div class="text-muted" style="font-size:.72rem;">
+                                {{ $whRate !== null ? '학원 일괄 배송' : '미설정 — 소매율 적용' }}
+                            </div>
+                        </div>
+                        <div class="ms-auto">
+                            @if(! $myMapping->is_active)
+                                <span class="badge bg-warning text-dark">중단</span>
+                            @else
+                                <span class="text-muted small">거래중</span>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="h3 navy mb-0">{{ rtrim(rtrim($myMapping->discount_rate, '0'), '.') }}%</span>
+                        @if(! $myMapping->is_active)
+                            <span class="badge bg-warning text-dark">중단</span>
+                        @else
+                            <span class="text-muted small">거래중</span>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
         @endif
@@ -220,7 +253,14 @@
                         <tr>
                             <td>{{ $m->name }} <span class="text-muted small">{{ $m->login_id }}</span></td>
                             <td class="text-end">
-                                <strong class="navy">{{ rtrim(rtrim($m->discount_rate, '0'), '.') }}%</strong>
+                                @if(\App\Services\TradeService::usesSplitRate($vendor->trade_type ?? null))
+                                    <span class="text-muted small">소매</span>
+                                    <strong class="navy">{{ rtrim(rtrim($m->discount_rate, '0'), '.') }}%</strong>
+                                    <span class="text-muted small ms-2">도매</span>
+                                    <strong class="navy">{{ rtrim(rtrim($m->wholesale_discount_rate ?? $m->discount_rate, '0'), '.') }}%</strong>
+                                @else
+                                    <strong class="navy">{{ rtrim(rtrim($m->discount_rate, '0'), '.') }}%</strong>
+                                @endif
                                 @if(! $m->is_active)
                                     <span class="badge bg-warning text-dark ms-1">중단</span>
                                 @endif

@@ -283,7 +283,7 @@ class AgentVendorController extends Controller
                 ->where('a.vendor_id', $vendorId)
                 ->whereNull('u.deleted_at')
                 ->orderBy('u.name')
-                ->get(['u.name', 'u.login_id', 'a.discount_rate', 'a.is_active']);
+                ->get(['u.name', 'u.login_id', 'a.discount_rate', 'a.wholesale_discount_rate', 'a.is_active']);
         }
 
         return view('public.mypage.vendor_show', compact(
