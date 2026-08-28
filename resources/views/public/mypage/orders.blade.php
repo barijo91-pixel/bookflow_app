@@ -184,7 +184,7 @@
                     {{-- 주문번호에 학급을 함께 표기 (학급 컬럼 별도 운용 안 함) --}}
                     <th><x-sort-link field="order_no" label="주문번호 (학급)" :sort="$sort" :dir="$dir" /></th>
                     <th>주문교재</th>
-                    @if($user->role_code !== 'academy')<th><x-sort-link field="vendor" label="학원" :sort="$sort" :dir="$dir" /></th><th>구분</th>@endif
+                    @if($user->role_code !== 'academy')<th style="min-width:180px"><x-sort-link field="vendor" label="학원" :sort="$sort" :dir="$dir" /></th><th class="text-nowrap">구분</th>@endif
                     <th class="text-end"><x-sort-link field="amount" label="금액" :sort="$sort" :dir="$dir" /></th>
                     <th><x-sort-link field="status" label="상태" :sort="$sort" :dir="$dir" /></th>
                     @if($user->role_code !== 'agent')
@@ -213,8 +213,11 @@
                                        title="{{ $canConfirmRow ? '여신 주문 확정 대상' : ($canExportRow ? '물류 출고 엑셀 대상' : '선택할 수 없는 상태') }}">
                             </td>
                         @endif
-                        <td class="small text-muted text-nowrap">
-                            {{ \Carbon\Carbon::parse($o->requested_at ?? $o->created_at)->format('Y-m-d H:i') }}
+                        {{-- 날짜만 — 시간까지 쓰면 칸이 넓어져 학원명·금액이 두 줄로 접힌다.
+                             시간은 마우스를 올리면 보인다 --}}
+                        <td class="small text-muted text-nowrap"
+                            title="{{ \Carbon\Carbon::parse($o->requested_at ?? $o->created_at)->format('Y-m-d H:i') }}">
+                            {{ \Carbon\Carbon::parse($o->requested_at ?? $o->created_at)->format('Y-m-d') }}
                         </td>
                         <td class="text-nowrap">
                             <a href="{{ route('my.orders.show', $o->id) }}" class="text-decoration-none navy fw-bold" onclick="event.stopPropagation()">
@@ -222,19 +225,19 @@
                             </a>
                             @if($o->class_name)
                                 <span class="text-muted small">({{ $o->class_name }})</span>
-                            @elseif(($o->trade_type ?? 'retail') !== 'wholesale')
-                                {{-- 소매인데 학급이 없는 건 학급 필수 적용 전에 만들어진 주문 --}}
-                                <span class="text-muted small">(학급 미지정)</span>
                             @endif
                         </td>
                         <td class="small">
                             @php $sum = $itemSummaries[$o->id] ?? null; @endphp
                             @if($sum)
-                                <span class="fw-semibold navy">{{ $sum['first'] }}</span>
-                                @if($sum['kinds'] > 1)
-                                    <span class="text-muted">외 {{ $sum['kinds'] - 1 }}종</span>
-                                @endif
-                                <span class="text-muted">· {{ number_format($sum['qty']) }}권</span>
+                                {{-- 교재명이 길면 한 줄로 자른다(전체는 툴팁). 종수·권수는 항상 보이게 --}}
+                                <div class="d-flex align-items-center gap-1 text-nowrap">
+                                    <span class="fw-semibold navy text-truncate"
+                                          title="{{ $sum['first'] }}">{{ $sum['first'] }}</span>
+                                    <span class="text-muted flex-shrink-0">
+                                        @if($sum['kinds'] > 1)외 {{ $sum['kinds'] - 1 }}종 @endif· {{ number_format($sum['qty']) }}권
+                                    </span>
+                                </div>
                             @else
                                 <span class="text-muted">-</span>
                             @endif
@@ -246,7 +249,7 @@
                             </td>
                             <td><span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span></td>
                         @endif
-                        <td class="text-end">{{ number_format($o->total_amount) }}원</td>
+                        <td class="text-end text-nowrap">{{ number_format($o->total_amount) }}원</td>
                         <td>
                             @php $opt = $statusOptions[$o->status_code] ?? [$o->status_code, 'bg-light text-dark']; @endphp
                             <span class="badge {{ $opt[1] }}">{{ $opt[0] }}</span>
@@ -265,10 +268,10 @@
                             @endif
                         </td>
                         @if($user->role_code !== 'agent')
-                            <td class="small text-muted">{{ $o->agent_name ?? '-' }}</td>
+                            <td class="small text-muted text-nowrap">{{ $o->agent_name ?? '-' }}</td>
                         @endif
                         @if(! in_array($user->role_code, ['distributor', 'academy'], true))
-                            <td class="small text-muted">{{ $o->distributor_name ?? '-' }}</td>
+                            <td class="small text-muted text-nowrap">{{ $o->distributor_name ?? '-' }}</td>
                         @endif
                     </tr>
                 @empty
