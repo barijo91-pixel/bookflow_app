@@ -45,17 +45,32 @@
     }
 
     // 학원 거래구분 (도매면 학급/학생 메뉴 숨김 — 소매 B2C 전용)
+    // + 좌측 상단 브랜드: 학원 계정은 BookSys 대신 자기 학원 로고(없으면 학원명)
     $academyTradeType = null;
+    $brandVendor = null;
     if ($user->role_code === 'academy') {
         $vid = DB::table('vendor_users')->where('user_id', $user->id)->value('vendor_id');
-        if ($vid) $academyTradeType = DB::table('vendors')->where('id', $vid)->value('trade_type');
+        if ($vid) {
+            $brandVendor = DB::table('vendors')->where('id', $vid)->first(['name', 'logo_path']);
+            $academyTradeType = DB::table('vendors')->where('id', $vid)->value('trade_type');
+        }
     }
 @endphp
 <aside class="public-sidebar">
     <div class="public-sidebar-brand">
         <a href="/">
-            <i class="bi bi-book-half"></i>
-            <span>BookSys</span>
+            @if($brandVendor && $brandVendor->logo_path)
+                <img src="{{ asset('storage/'.$brandVendor->logo_path) }}" alt="{{ $brandVendor->name }}"
+                     class="brand-logo"
+                     onerror="this.remove();">
+            @elseif($brandVendor)
+                {{-- 로고가 없으면 학원명 --}}
+                <i class="bi bi-building"></i>
+                <span>{{ $brandVendor->name }}</span>
+            @else
+                <i class="bi bi-book-half"></i>
+                <span>BookSys</span>
+            @endif
         </a>
     </div>
 

@@ -1,0 +1,10 @@
+
+/* 학원 계정 좌측 상단 로고 — 사이드바 폭 안에서 비율 유지 */
+.public-sidebar-brand .brand-logo {
+    max-width: 150px;
+    max-height: 34px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}

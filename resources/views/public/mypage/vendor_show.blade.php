@@ -35,7 +35,7 @@
     <div class="col-lg-7">
         <div class="card section-card">
             <div class="card-header"><strong><i class="bi bi-info-circle"></i> 기본 정보</strong></div>
-            <form method="POST" action="{{ route('my.vendors.update', $vendor->id) }}">
+            <form method="POST" action="{{ route('my.vendors.update', $vendor->id) }}" enctype="multipart/form-data">
                 @csrf @method('PUT')
                 <div class="card-body">
                     <div class="row g-3">
@@ -81,6 +81,26 @@
                         <div class="col-md-3">
                             <label class="form-label small text-muted">대표자</label>
                             <input type="text" name="owner_name" class="form-control" value="{{ old('owner_name', $vendor->owner_name) }}" maxlength="100">
+                        </div>
+                        {{-- 로고 — 학원 계정 화면 좌측 상단. 없으면 학원명이 나온다 --}}
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">학원 로고</label>
+                            <div class="d-flex align-items-center gap-2">
+                                @if($vendor->logo_path)
+                                    <img src="{{ asset('storage/'.$vendor->logo_path) }}" alt="로고"
+                                         style="height:38px; width:auto; max-width:120px; object-fit:contain;
+                                                border:1px solid #e6e9ef; border-radius:6px; background:#fff; padding:2px;">
+                                @endif
+                                <input type="file" name="logo_file" accept="image/jpeg,image/png,image/webp" class="form-control">
+                            </div>
+                            <div class="form-text small d-flex align-items-center gap-3">
+                                <span>jpg · png · webp, 2MB 이하. 없으면 학원명이 표시됩니다.</span>
+                                @if($vendor->logo_path)
+                                    <label class="mb-0 text-danger">
+                                        <input type="checkbox" name="logo_remove" value="1"> 로고 삭제
+                                    </label>
+                                @endif
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small text-muted">사업자번호</label>

@@ -69,6 +69,11 @@
             color: var(--sidebar-text-strong); text-decoration: none; font-weight: 700; font-size: 1.15rem;
         }
         .public-sidebar-brand i { font-size: 1.4rem; }
+        /* 학원 계정 좌측 상단 로고 — 사이드바 폭 안에서 비율 유지 */
+        .public-sidebar-brand .brand-logo {
+            max-width: 150px; max-height: 34px; width: auto; height: auto;
+            object-fit: contain; display: block;
+        }
         .public-nav { flex: 1; overflow-y: auto; padding: .6rem 0 2rem; }
         .public-nav::-webkit-scrollbar { width: 6px; }
         .public-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }

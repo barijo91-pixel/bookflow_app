@@ -14,7 +14,7 @@
 @if(session('error'))<div class="alert alert-danger py-2 small">{{ session('error') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger py-2 small"><ul class="mb-0 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
 
-<form method="POST" action="{{ route('my.vendors.store') }}">
+<form method="POST" action="{{ route('my.vendors.store') }}" enctype="multipart/form-data">
     @csrf
 
     {{-- 1. 학원 정보 --}}
@@ -47,6 +47,12 @@
                 <div class="col-md-3">
                     <label class="form-label small text-muted mb-1">대표자</label>
                     <input type="text" name="owner_name" class="form-control" value="{{ old('owner_name') }}" maxlength="100">
+                </div>
+                {{-- 로고 — 학원 계정으로 로그인하면 좌측 상단에 뜬다. 없으면 학원명이 나온다 --}}
+                <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">학원 로고 <span class="text-muted">(선택)</span></label>
+                    <input type="file" name="logo_file" accept="image/jpeg,image/png,image/webp" class="form-control">
+                    <div class="form-text small">jpg · png · webp, 2MB 이하. 넣지 않으면 학원명이 표시됩니다.</div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-muted mb-1">사업자번호</label>

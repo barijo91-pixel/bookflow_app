@@ -87,6 +87,7 @@ class AgentVendorController extends Controller
             'address'        => ['nullable', 'string', 'max:255'],
             'address_detail' => ['nullable', 'string', 'max:255'],
             'trade_type'     => ['nullable', 'in:retail,wholesale,both'],
+            'logo_file'      => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'default_ship_to_type' => ['nullable', 'in:parent,vendor'],
             'payment_type'   => ['nullable', 'in:cash,credit'],
             'credit_limit'   => ['nullable', 'integer', 'min:0', 'max:999999999'],
@@ -136,7 +137,7 @@ class AgentVendorController extends Controller
         $createdUser = null;
         $plainPw = null;
 
-        DB::transaction(function () use ($data, $user, $createAccount, &$vendorId, &$createdUser, &$plainPw) {
+        DB::transaction(function () use ($request, $data, $user, $createAccount, &$vendorId, &$createdUser, &$plainPw) {
             $phone = ! empty($data['vendor_mobile']) ? preg_replace('/[^0-9]/', '', $data['vendor_mobile']) : null;
             $tel   = ! empty($data['vendor_tel'])    ? preg_replace('/[^0-9]/', '', $data['vendor_tel'])    : null;
 
@@ -167,6 +168,12 @@ class AgentVendorController extends Controller
                 'created_at'     => now(),
                 'updated_at'     => now(),
             ]);
+
+            // 학원 로고 (선택) — 학원 계정 화면 좌측 상단에 쓰인다
+            if ($request->hasFile('logo_file')) {
+                $path = $request->file('logo_file')->store('vendor-logos', 'public');
+                DB::table('vendors')->where('id', $vendorId)->update(['logo_path' => $path]);
+            }
 
             // 학원 계정 동시 생성
             if ($createAccount) {
@@ -308,6 +315,7 @@ class AgentVendorController extends Controller
             'address'        => ['nullable', 'string', 'max:255'],
             'address_detail' => ['nullable', 'string', 'max:255'],
             'trade_type'     => ['nullable', 'in:retail,wholesale,both'],
+            'logo_file'      => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'default_ship_to_type' => ['nullable', 'in:parent,vendor'],
             'payment_type'   => ['nullable', 'in:cash,credit'],
             'credit_limit'   => ['nullable', 'integer', 'min:0', 'max:999999999'],
@@ -328,8 +336,19 @@ class AgentVendorController extends Controller
             $creditLimit = $paymentType === 'credit' ? (int) ($data['credit_limit'] ?? 0) : 0;
         }
 
+        // 로고 교체 — 새 파일이 오면 옛 파일은 지운다 (안 지우면 스토리지에 계속 쌓인다)
+        $logoPath = DB::table('vendors')->where('id', $vendorId)->value('logo_path');
+        if ($request->hasFile('logo_file')) {
+            if ($logoPath) \Illuminate\Support\Facades\Storage::disk('public')->delete($logoPath);
+            $logoPath = $request->file('logo_file')->store('vendor-logos', 'public');
+        } elseif ($request->boolean('logo_remove')) {
+            if ($logoPath) \Illuminate\Support\Facades\Storage::disk('public')->delete($logoPath);
+            $logoPath = null;
+        }
+
         DB::table('vendors')->where('id', $vendorId)->update([
             'name'           => $data['name'],
+            'logo_path'      => $logoPath,
             'owner_name'     => $data['owner_name'] ?? null,
             'business_no'    => $data['business_no'] ?? null,
             'mobile'         => $mobile,
