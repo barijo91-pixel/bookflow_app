@@ -64,7 +64,8 @@
                                             <input type="text" name="wholesale_discount_rate" data-step="0.5" data-min="0" data-max="100"
                                                    inputmode="decimal" autocomplete="off" data-allow-empty="1"
                                                    value="{{ $v->wholesale_rate !== null ? rtrim(rtrim($v->wholesale_rate, '0'), '.') : '' }}"
-                                                   placeholder="소매율" class="form-control text-end rate-input">
+                                                   placeholder="미설정" title="비워두면 소매율이 그대로 적용됩니다"
+                                                   class="form-control text-end rate-input">
                                             <span class="input-group-text">%</span>
                                         </div>
                                     </div>
