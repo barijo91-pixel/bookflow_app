@@ -186,7 +186,7 @@
                     <th>주문교재</th>
                     @if($user->role_code !== 'academy')<th style="min-width:180px"><x-sort-link field="vendor" label="학원" :sort="$sort" :dir="$dir" /></th><th class="text-nowrap">구분</th>@endif
                     <th class="text-end"><x-sort-link field="amount" label="금액" :sort="$sort" :dir="$dir" /></th>
-                    <th><x-sort-link field="status" label="상태" :sort="$sort" :dir="$dir" /></th>
+                    <th class="text-nowrap"><x-sort-link field="status" label="상태" :sort="$sort" :dir="$dir" /></th>
                     @if($user->role_code !== 'agent')
                         <th><x-sort-link field="agent" label="영업자" :sort="$sort" :dir="$dir" /></th>
                     @endif
@@ -250,13 +250,14 @@
                             <td><span class="badge {{ ($o->trade_type ?? 'retail') === 'wholesale' ? 'bg-secondary' : 'bg-light text-dark' }}">{{ ($o->trade_type ?? 'retail') === 'wholesale' ? '도매' : '소매' }}</span></td>
                         @endif
                         <td class="text-end text-nowrap">{{ number_format($o->total_amount) }}원</td>
-                        <td>
+                        <td class="text-nowrap">
                             @php $opt = $statusOptions[$o->status_code] ?? [$o->status_code, 'bg-light text-dark']; @endphp
                             <span class="badge {{ $opt[1] }}">{{ $opt[0] }}</span>
                             {{-- 결제 상태 — 접수 단계에서만 의미 있음(확정 이후는 이미 결제/여신 처리됨) --}}
                             @php $pi2 = $payInfo($o); @endphp
                             @if($o->status_code === 'requested')
-                                <div class="small mt-1">
+                                {{-- 상태 뱃지와 같은 줄에 — 줄바꿈되면 행 높이가 두 배가 된다 --}}
+                                <span class="small ms-1">
                                     @if($pi2['paid'])
                                         <span class="text-success"><i class="bi bi-check-circle-fill"></i> 결제완료</span>
                                     @elseif($pi2['credit'])
@@ -264,7 +265,7 @@
                                     @else
                                         <span class="text-muted"><i class="bi bi-hourglass-split"></i> 미결제</span>
                                     @endif
-                                </div>
+                                </span>
                             @endif
                         </td>
                         @if($user->role_code !== 'agent')
