@@ -1551,8 +1551,9 @@ class MyPageController extends Controller
             ->where('avd.is_active', true)
             ->whereNull('v.deleted_at')
             ->select(
-                'avd.id as avd_id', 'avd.discount_rate as general_rate', 'avd.is_active',
-                'v.id as vendor_id', 'v.name as vendor_name'
+                'avd.id as avd_id', 'avd.discount_rate as general_rate',
+                'avd.wholesale_discount_rate as wholesale_rate', 'avd.is_active',
+                'v.id as vendor_id', 'v.name as vendor_name', 'v.trade_type'
             )
             ->orderBy('v.name')->get();
 
@@ -1593,23 +1594,33 @@ class MyPageController extends Controller
         if ($user->role_code !== 'agent') abort(403);
 
         $data = $request->validate([
-            'discount_rate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'is_active'     => ['nullable', 'boolean'],
+            'discount_rate'           => ['required', 'numeric', 'min:0', 'max:100'],
+            'wholesale_discount_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'is_active'               => ['nullable', 'boolean'],
         ]);
 
         $row = DB::table('agent_vendor_discounts')->where('id', $avdId)
             ->where('agent_user_id', $user->id)->first();
         if (! $row) abort(404);
 
+        // 도매율은 도·소매 학원에서만 의미가 있다. 그 외에는 저장하지 않는다
+        // (거래구분이 바뀌었는데 옛 값이 남아 조용히 적용되면 안 된다)
+        $tradeType = DB::table('vendors')->where('id', $row->vendor_id)->value('trade_type');
+        $wholesaleRate = \App\Services\TradeService::usesSplitRate($tradeType)
+            ? (($data['wholesale_discount_rate'] ?? '') === '' || $data['wholesale_discount_rate'] === null
+                ? null : $data['wholesale_discount_rate'])
+            : null;
+
         DB::table('agent_vendor_discounts')->where('id', $avdId)->update([
-            'discount_rate' => $data['discount_rate'],
-            'is_active'     => $request->boolean('is_active'),
-            'updated_at'    => now(),
+            'discount_rate'           => $data['discount_rate'],
+            'wholesale_discount_rate' => $wholesaleRate,
+            'is_active'               => $request->boolean('is_active'),
+            'updated_at'              => now(),
         ]);
 
         AuditLog::log('agent_vendor_discounts', $avdId, 'update',
-            ['discount_rate' => $row->discount_rate],
-            ['discount_rate' => $data['discount_rate']]);
+            ['discount_rate' => $row->discount_rate, 'wholesale_discount_rate' => $row->wholesale_discount_rate ?? null],
+            ['discount_rate' => $data['discount_rate'], 'wholesale_discount_rate' => $wholesaleRate]);
         return back()->with('success', '학원 할인율이 저장되었습니다.');
     }
 
@@ -1852,6 +1863,25 @@ class MyPageController extends Controller
 
         // 5. 장바구니 (세션, vendor별 분리)
         $cartKey = 'cart.'.($vendorId ?? '0').'.'.($selectedAgent->id ?? '0');
+        // 이번 화면에 적용할 배송지 — 라디오를 바꾸면 ?ship= 로 다시 그린다.
+        // (도·소매 학원은 배송지에 따라 할인율이 갈려 화면 단가도 같이 바뀌어야 한다)
+        $shipSel = \App\Services\TradeService::defaultShipTo(
+            $vendor->trade_type ?? null,
+            $request->query('ship', $vendor->default_ship_to_type ?? 'parent')
+        );
+        // 이 학원의 avd 행에서 도매율을 가져온다 (도·소매가 아니면 안 쓰인다)
+        $avdRow = $selectedAgent
+            ? DB::table('agent_vendor_discounts')
+                ->where('agent_user_id', $selectedAgent->id)->where('vendor_id', $vendorId)
+                ->where('is_active', true)->first(['discount_rate', 'wholesale_discount_rate'])
+            : null;
+        $vendorRate = \App\Services\TradeService::effectiveRate(
+            (float) ($avdRow->discount_rate ?? $selectedAgent->general_rate ?? 0),
+            ($avdRow && $avdRow->wholesale_discount_rate !== null) ? (float) $avdRow->wholesale_discount_rate : null,
+            $vendor->trade_type ?? null,
+            $shipSel
+        );
+
         $cart = $request->session()->get($cartKey, []);
         $cartBooks = empty($cart) ? collect() : DB::table('books')->whereIn('id', array_keys($cart))->get()->keyBy('id');
 
@@ -1861,7 +1891,7 @@ class MyPageController extends Controller
         foreach ($cart as $bookId => $qty) {
             $book = $cartBooks->get($bookId);
             if (! $book) continue;
-            $rate = $bookDiscounts->get($bookId, $selectedAgent->general_rate ?? 0);
+            $rate = $bookDiscounts->get($bookId, $vendorRate);
             $unitPrice = (int) round($book->price * (100 - $rate) / 100);
             $lineTotal = $unitPrice * $qty;
             $subtotal += $lineTotal;
@@ -1892,6 +1922,9 @@ class MyPageController extends Controller
             'q'              => $q,
             'cartKey'        => $cartKey,
             'cartLines'      => $cartLines,
+            'shipSel'        => $shipSel,
+            'vendorRate'     => $vendorRate,
+            'wholesaleRate'  => ($avdRow && $avdRow->wholesale_discount_rate !== null) ? (float) $avdRow->wholesale_discount_rate : null,
             'subtotal'       => $subtotal,
             'filterOptions'  => $filterOptions,
             'activeFilters'  => $activeFilters,
@@ -2230,6 +2263,15 @@ class MyPageController extends Controller
             ->where('is_active', true)
             ->pluck('discount_rate', 'book_id');
 
+        // 이 주문에 적용할 학원 기본율 — 도·소매 학원은 학원 일괄 배송이면 도매율을 쓴다
+        $vendorRate = \App\Services\TradeService::effectiveRate(
+            (float) $agentRow->discount_rate,
+            isset($agentRow->wholesale_discount_rate) && $agentRow->wholesale_discount_rate !== null
+                ? (float) $agentRow->wholesale_discount_rate : null,
+            $vendorTrade,
+            $shipToType
+        );
+
         // 도서 정보 일괄 조회
         $books = DB::table('books')->whereIn('id', array_keys($cart))->whereNull('deleted_at')->get()->keyBy('id');
 
@@ -2243,7 +2285,9 @@ class MyPageController extends Controller
         foreach ($cart as $bookId => $qty) {
             $book = $books->get($bookId);
             if (! $book) continue;
-            $rate = (float) $bookDiscounts->get($bookId, $agentRow->discount_rate);
+            // 학원 기본율은 배송지에 따라 갈린다 (도·소매 학원의 도매 주문이면 도매율).
+            // 교재별 개별 할인율이 걸려 있으면 그게 우선 — 교재 단위 약속이라 거래 성격과 무관하다.
+            $rate = (float) $bookDiscounts->get($bookId, $vendorRate);
             $unitPrice = (int) round($book->price * (100 - $rate) / 100);
             $lineTotal = $unitPrice * (int) $qty;
             $subtotal += $lineTotal;

@@ -44,7 +44,9 @@
                                         {{ $v->vendor_name }}
                                     </a>
                                 </div>
-                                <div class="col-8 col-sm-5">
+                                @php $isBoth = \App\Services\TradeService::usesSplitRate($v->trade_type ?? null); @endphp
+                                <div class="{{ $isBoth ? 'col-8 col-sm-3' : 'col-8 col-sm-5' }}">
+                                    @if($isBoth)<div class="text-muted" style="font-size:.7rem;">소매</div>@endif
                                     <div class="input-group input-group-sm rate-stepper">
                                         <button type="button" class="btn btn-outline-secondary rate-down" tabindex="-1">−</button>
                                         <input type="text" name="discount_rate" data-step="0.5" data-min="0" data-max="100" inputmode="decimal" autocomplete="off"
@@ -54,6 +56,19 @@
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
+                                @if($isBoth)
+                                    {{-- 도·소매 학원만 — 학원 일괄 배송(도매) 주문에 쓰인다. 비우면 소매율을 그대로 쓴다 --}}
+                                    <div class="col-8 col-sm-2">
+                                        <div class="text-muted" style="font-size:.7rem;">도매</div>
+                                        <div class="input-group input-group-sm rate-stepper">
+                                            <input type="text" name="wholesale_discount_rate" data-step="0.5" data-min="0" data-max="100"
+                                                   inputmode="decimal" autocomplete="off"
+                                                   value="{{ $v->wholesale_rate !== null ? rtrim(rtrim($v->wholesale_rate, '0'), '.') : '' }}"
+                                                   placeholder="소매율" class="form-control text-end rate-input">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                @endif
                                 <div class="col-4 col-sm-2 d-grid">
                                     <button class="btn btn-sm btn-outline-navy">저장</button>
                                 </div>

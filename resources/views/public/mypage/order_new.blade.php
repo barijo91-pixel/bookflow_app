@@ -406,7 +406,7 @@
                     <tbody>
                         @forelse($books as $b)
                             @php
-                                $rate = $bookDiscounts->get($b->id, $selectedAgent->general_rate ?? 0);
+                                $rate = $bookDiscounts->get($b->id, $vendorRate ?? ($selectedAgent->general_rate ?? 0));
                                 $unit = (int) round($b->price * (100 - $rate) / 100);
                                 $hasBookDiscount = $bookDiscounts->has($b->id);
                             @endphp
@@ -558,22 +558,32 @@
                             @php
                                 $tradeType   = $vendor->trade_type ?? 'retail';
                                 $canPickShip = \App\Services\TradeService::shipChoosable($tradeType);
-                                $defaultShip = \App\Services\TradeService::defaultShipTo($tradeType, $vendor->default_ship_to_type ?? 'parent');
+                                // 화면에 이미 반영된 배송지 (컨트롤러가 ?ship= 를 보고 정한 값)
+                                $defaultShip = $shipSel ?? \App\Services\TradeService::defaultShipTo($tradeType, $vendor->default_ship_to_type ?? 'parent');
+                                // 도매율이 따로 있으면 배송을 바꿀 때 단가가 달라진다 → 서버에 다시 그리게 한다
+                                $rateSplit = \App\Services\TradeService::usesSplitRate($tradeType) && ($wholesaleRate ?? null) !== null;
                             @endphp
 
                             {{-- 배송 → 학급 순서. 배송지가 곧 거래 성격이라 그걸 먼저 정해야
                                  학급이 필요한지가 정해진다 (학원 일괄이면 학원이 결제 → 학급 불필요) --}}
                             @if($canPickShip)
                                 <div class="mb-2 p-2 rounded text-start" style="background:#f6f9fd; border:1px solid #d7e3f2;">
-                                    <div class="small fw-bold navy mb-1"><i class="bi bi-truck"></i> 배송 방식</div>
+                                    <div class="small fw-bold navy mb-1">
+                                        <i class="bi bi-truck"></i> 배송 방식
+                                        @if($rateSplit)
+                                            <span class="text-muted fw-normal" style="font-size:.72rem;">— 도매/소매 할인율이 다릅니다</span>
+                                        @endif
+                                    </div>
                                     <div class="d-flex gap-3 flex-wrap">
                                         <div class="form-check mb-0">
                                             <input class="form-check-input ship-pick" type="radio" name="ship_to_type" value="parent" id="shipParent"
+                                                   @if($rateSplit) data-reload="1" @endif
                                                    @checked($defaultShip !== 'vendor')>
                                             <label class="form-check-label small fw-bold" for="shipParent">학부모<span class="fw-normal text-muted">(개별 배송)</span></label>
                                         </div>
                                         <div class="form-check mb-0">
                                             <input class="form-check-input ship-pick" type="radio" name="ship_to_type" value="vendor" id="shipVendor"
+                                                   @if($rateSplit) data-reload="1" @endif
                                                    @checked($defaultShip === 'vendor')>
                                             <label class="form-check-label small fw-bold" for="shipVendor">학원<span class="fw-normal text-muted">(일괄 배송)</span></label>
                                         </div>
@@ -651,7 +661,19 @@
         var area = document.getElementById('studentPickArea');
         if (toVendor && area) area.style.display = 'none';
     }
-    picks.forEach(function (r) { r.addEventListener('change', sync); });
+    picks.forEach(function (r) {
+        r.addEventListener('change', function () {
+            // 도매/소매 할인율이 다른 학원은 단가가 바뀌므로 서버가 다시 그린다.
+            // (같은 계산을 JS 로 복제하면 서버 저장값과 어긋날 수 있다)
+            if (r.dataset.reload === '1' && r.checked) {
+                var u = new URL(window.location.href);
+                u.searchParams.set('ship', r.value);
+                window.location.href = u.toString();
+                return;
+            }
+            sync();
+        });
+    });
     sync();
 })();
 </script>

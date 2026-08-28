@@ -73,4 +73,28 @@ class TradeService
         if (self::normalize($tradeType) === 'wholesale') return 'vendor';
         return ($stored ?? 'parent') === 'vendor' ? 'vendor' : 'parent';
     }
+    /**
+     * 도매 주문에 별도 할인율을 쓰는가 — 도·소매 학원에서만.
+     * 순수 도매 학원은 discount_rate 자체가 도매율이라 나눌 필요가 없다.
+     */
+    public static function usesSplitRate(?string $tradeType): bool
+    {
+        return self::normalize($tradeType) === 'both';
+    }
+
+    /**
+     * 이 주문에 적용할 학원 할인율.
+     *
+     * @param float      $baseRate      agent_vendor_discounts.discount_rate (소매/기본)
+     * @param float|null $wholesaleRate agent_vendor_discounts.wholesale_discount_rate (도매용, 없으면 null)
+     */
+    public static function effectiveRate(float $baseRate, ?float $wholesaleRate, ?string $tradeType, ?string $shipToType): float
+    {
+        if (self::usesSplitRate($tradeType)
+            && $wholesaleRate !== null
+            && self::orderIsWholesale($tradeType, $shipToType)) {
+            return $wholesaleRate;
+        }
+        return $baseRate;
+    }
 }
