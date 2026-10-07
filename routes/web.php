@@ -183,6 +183,8 @@ Route::middleware('auth')->group(function () {
         Route::get('discounts',  [\App\Http\Controllers\MyPageController::class, 'discountsIndex'])->name('discounts.index');
         Route::put('discounts/vendor/{avdId}',     [\App\Http\Controllers\MyPageController::class, 'discountVendorUpdate'])->name('discounts.vendor.update');
         Route::delete('discounts/vendor/{avdId}',  [\App\Http\Controllers\MyPageController::class, 'discountVendorDestroy'])->name('discounts.vendor.destroy');
+        // 개별 할인율 추가용 도서 검색 — 교재 6천권을 화면에 통째로 싣던 걸 서버 검색으로
+        Route::get('discounts/book-search',        [\App\Http\Controllers\MyPageController::class, 'discountBookSearch'])->name('discounts.book.search');
         Route::post('discounts/book',              [\App\Http\Controllers\MyPageController::class, 'discountBookUpsert'])->name('discounts.book.upsert');
         Route::delete('discounts/book/{avbdId}',   [\App\Http\Controllers\MyPageController::class, 'discountBookDestroy'])->name('discounts.book.destroy');
 

@@ -77,9 +77,9 @@
                             <label class="form-label small text-muted">거래유형 *</label>
                             <select name="trade_type" class="form-select" required
                                     onchange="var d=document.getElementById('addAgentDefaultRate'); if(d) d.value=(this.value==='wholesale'?30:10);">
-                                <option value="retail" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'retail')>소매</option>
-                                <option value="wholesale" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'wholesale')>도매</option>
-                                <option value="both" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'both')>도·소매</option>
+                                <option value="retail" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'retail')>소매 (학부모 개별)</option>
+                                <option value="wholesale" @selected(old('trade_type', $vendor->trade_type ?? 'retail') === 'wholesale')>도매 (학원 일괄)</option>
+                                @if(($vendor->trade_type ?? 'retail') === 'both')<option value="both" selected>도·소매</option>@endif
                             </select>
                         </div>
                         <div class="col-md-3">

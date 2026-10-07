@@ -48,17 +48,20 @@
                             <div class="d-flex gap-3 pt-1">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="trade_type" id="tradeRetail" value="retail" @checked(old('trade_type', $vendor->trade_type ?? 'retail') === 'retail')>
-                                    <label class="form-check-label" for="tradeRetail"><strong>소매</strong></label>
+                                    <label class="form-check-label" for="tradeRetail"><strong>소매</strong> <span class="text-muted small">학부모 개별</span></label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="trade_type" id="tradeWholesale" value="wholesale" @checked(old('trade_type', $vendor->trade_type ?? 'retail') === 'wholesale')>
-                                    <label class="form-check-label" for="tradeWholesale"><strong>도매</strong></label>
+                                    <label class="form-check-label" for="tradeWholesale"><strong>도매</strong> <span class="text-muted small">학원 일괄</span></label>
                                 </div>
-                                {{-- 교재에 따라 도매·소매를 섞는 학원 --}}
+                                {{-- 도·소매 — 신규 선택은 숨김. 이미 도·소매인 학원만 보여준다
+                                     (안 보여주면 저장할 때 선택된 라디오가 없어 소매로 조용히 바뀐다) --}}
+                                @if(($vendor->trade_type ?? 'retail') === 'both')
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="trade_type" id="tradeBoth" value="both" @checked(old('trade_type', $vendor->trade_type ?? 'retail') === 'both')>
                                     <label class="form-check-label" for="tradeBoth"><strong>도·소매</strong></label>
                                 </div>
+                                @endif
                             </div>
                         </div>
                         {{-- 기본 배송지 — 주문 화면에서 이 값이 기본 선택됨 (건별 변경 가능). 도매는 항상 학원 수령 --}}

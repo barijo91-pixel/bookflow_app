@@ -31,17 +31,19 @@
                     <div class="d-flex gap-3 pt-1">
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="trade_type" id="tradeRetail" value="retail" @checked(old('trade_type', 'retail') === 'retail') onchange="var d=document.querySelector('[name=discount_rate]'); if(d) d.value=10;">
-                            <label class="form-check-label" for="tradeRetail"><strong>소매</strong></label>
+                            <label class="form-check-label" for="tradeRetail"><strong>소매</strong> <span class="text-muted small">학부모 개별</span></label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="trade_type" id="tradeWholesale" value="wholesale" @checked(old('trade_type') === 'wholesale') onchange="var d=document.querySelector('[name=discount_rate]'); if(d) d.value=30;">
-                            <label class="form-check-label" for="tradeWholesale"><strong>도매</strong></label>
+                            <label class="form-check-label" for="tradeWholesale"><strong>도매</strong> <span class="text-muted small">학원 일괄</span></label>
                         </div>
-                        {{-- 교재에 따라 도매·소매를 섞는 학원 — 주문마다 배송지를 골라 성격이 갈린다 --}}
+                        {{-- 도·소매 — 숨김. 기준이 서면 되살릴 것 (기능·데이터는 그대로 살아 있다).
+                             이미 도·소매로 지정된 학원은 수정 화면에서만 선택지가 보인다.
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="trade_type" id="tradeBoth" value="both" @checked(old('trade_type') === 'both')>
                             <label class="form-check-label" for="tradeBoth"><strong>도·소매</strong></label>
                         </div>
+                        --}}
                     </div>
                 </div>
                 <div class="col-md-3">

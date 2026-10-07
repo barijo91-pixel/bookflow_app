@@ -101,10 +101,14 @@
                 <a href="{{ route('my.agents.index') }}" class="nav-item {{ $startsWith('my.agents') }}">
                     <i class="bi bi-person-badge"></i> 영업자 관리
                 </a>
+                {{-- 사용자 관리 — 숨김. 영업자 관리와 하는 일이 겹친다(형아 지시 10/7).
+                     라우트는 살아 있어 /mypage/users 로 직접 접근 가능.
+                     ⚠️ 산하 '승인 대기' 처리가 여기에만 있으니, 가입 승인이 필요해지면 되살릴 것.
                 <a href="{{ route('my.users.index') }}" class="nav-item {{ $startsWith('my.users') }}">
                     <i class="bi bi-people"></i> 사용자 관리
                     @if($userBadge > 0)<span class="badge bg-danger ms-auto">{{ $userBadge }}</span>@endif
                 </a>
+                --}}
                 <a href="{{ route('my.academies.index') }}" class="nav-item {{ $startsWith('my.academies') }}">
                     <i class="bi bi-building"></i> 거래처(학원)
                 </a>

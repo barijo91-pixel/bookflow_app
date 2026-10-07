@@ -90,7 +90,6 @@
                     <option value="">전체</option>
                     <option value="retail" @selected($tradeType === 'retail')>소매</option>
                     <option value="wholesale" @selected($tradeType === 'wholesale')>도매</option>
-                    <option value="both" @selected($tradeType === 'both')>도·소매</option>
                 </select>
             </div>
             <div style="width:100px">

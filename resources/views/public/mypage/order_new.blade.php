@@ -546,6 +546,24 @@
                             <span class="text-muted">소계 ({{ $cartLines->sum('qty') }}권)</span>
                             <strong class="navy">{{ number_format($subtotal) }}원</strong>
                         </div>
+                            {{-- 배송비 — 1권이면 붙고 2권 이상 무료 --}}
+                            @php
+                                $cartQty  = $cartLines->sum('qty');
+                                $shipFee  = \App\Services\ShippingService::feeFor($cartQty);
+                            @endphp
+                            <div class="d-flex justify-content-between align-items-center small mt-1">
+                                <span class="text-muted">배송비</span>
+                                <span class="{{ $shipFee > 0 ? '' : 'text-success' }}">
+                                    {{ $shipFee > 0 ? number_format($shipFee).'원' : '무료' }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center fw-bold navy mt-1 pt-1 border-top">
+                                <span>합계</span>
+                                <span>{{ number_format($subtotal + $shipFee) }}원</span>
+                            </div>
+                            <div class="text-muted mt-1" style="font-size:.72rem;">
+                                {{ \App\Services\ShippingService::notice() }}
+                            </div>
                         <form method="POST" action="{{ route('my.order.store') }}" id="orderForm"
                               onsubmit="return confirm('이 내용으로 주문하시겠습니까?') && syncCartQty(this)">
                             @csrf

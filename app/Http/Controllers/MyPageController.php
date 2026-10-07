@@ -1576,10 +1576,9 @@ class MyPageController extends Controller
                 ->orderBy('b.title')->get();
 
             $existingBookIds = $bookDiscounts->pluck('book_id')->toArray();
-            $availableBooks = DB::table('books')
-                ->whereNull('deleted_at')->where('status_code', 'selling')
-                ->whereNotIn('id', $existingBookIds)
-                ->orderBy('title')->get(['id', 'title', 'isbn', 'price']);
+            // 목록을 화면에 싣지 않는다 — 교재가 6천권이라 페이지가 수 MB 가 되고 검색이 버벅인다.
+            // 실제 후보는 discountBookSearch() 가 입력할 때마다 서버에서 찾아준다.
+            $availableBooks = collect();
         }
 
         return view('public.mypage.discounts', compact(
@@ -1625,6 +1624,58 @@ class MyPageController extends Controller
     }
 
     /** 도서별 개별 할인율 추가/수정 */
+    /**
+     * 개별 할인율 추가용 도서 검색 (영업자).
+     *
+     * 교재가 6천권이 넘어 화면에 다 실으면 페이지가 무거워 "조회가 안 된다"고 느껴진다.
+     * 소속 총판이 취급하는 교재만, 입력한 글자로 서버에서 찾아 20건만 돌려준다.
+     */
+    public function discountBookSearch(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role_code !== 'agent') abort(403);
+
+        $vendorId = (int) $request->query('vendor_id');
+        // 본인 담당 학원인지 확인 (남의 학원 할인율을 엿보지 못하게)
+        $ok = DB::table('agent_vendor_discounts')
+            ->where('agent_user_id', $user->id)->where('vendor_id', $vendorId)->exists();
+        if (! $ok) abort(403);
+
+        $q = trim((string) $request->query('q'));
+
+        // 이미 개별 할인율이 걸린 교재는 후보에서 뺀다
+        $taken = DB::table('agent_vendor_book_discounts')
+            ->where('agent_user_id', $user->id)->where('vendor_id', $vendorId)
+            ->pluck('book_id')->all();
+
+        // 소속 총판이 취급(재고 등록)하는 교재만 — 총판에 없는 교재는 주문해도 출고가 안 된다
+        $distId = DB::table('user_relations')
+            ->where('child_user_id', $user->id)
+            ->where('relation_type', 'distributor_agent')
+            ->where('status', 'active')
+            ->value('parent_user_id');
+
+        $rows = DB::table('books as b')
+            ->leftJoin('publishers as p', 'p.id', '=', 'b.publisher_id')
+            ->whereNull('b.deleted_at')->where('b.status_code', 'selling')
+            ->when($taken, fn ($w) => $w->whereNotIn('b.id', $taken))
+            ->when($distId, fn ($w) => $w->whereIn('b.id', function ($sq) use ($distId) {
+                $sq->select('book_id')->from('book_stocks')->where('distributor_user_id', $distId);
+            }))
+            ->when($q !== '', function ($w) use ($q) {
+                $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $q) . '%';
+                $w->where(function ($x) use ($like) {
+                    $x->where('b.title', 'like', $like)
+                      ->orWhere('b.isbn', 'like', $like)
+                      ->orWhere('b.series_name', 'like', $like);
+                });
+            })
+            ->orderBy('b.title')->limit(20)
+            ->get(['b.id', 'b.title', 'b.isbn', 'b.price', 'p.name as publisher_name']);
+
+        return response()->json(['books' => $rows]);
+    }
+
     public function discountBookUpsert(Request $request)
     {
         $user = Auth::user();
@@ -2308,8 +2359,13 @@ class MyPageController extends Controller
         }
 
 
+        // 배송비 — 총 권수 기준 (1권이면 받고, 2권 이상 무료)
+        $totalQty    = array_sum(array_column($itemRows, 'qty'));
+        $shippingFee = \App\Services\ShippingService::feeFor($totalQty);
+        $totalAmount = $subtotal + $shippingFee;
+
         $orderId = null;
-        DB::transaction(function () use ($orderNo, $vendorId, $classId, $agentRow, $distId, $subtotal, $itemRows, $studentRows, $user, $shipToType, &$orderId) {
+        DB::transaction(function () use ($orderNo, $vendorId, $classId, $agentRow, $distId, $subtotal, $shippingFee, $totalAmount, $itemRows, $studentRows, $user, $shipToType, &$orderId) {
             $orderId = DB::table('orders')->insertGetId([
                 'order_no'            => $orderNo,
                 'vendor_id'           => $vendorId,
@@ -2319,8 +2375,8 @@ class MyPageController extends Controller
                 'distributor_user_id' => $distId,
                 'created_by_user_id'  => $user->id,   // 학원 본인 / 영업자 대행 구분용
                 'subtotal_amount'     => $subtotal,
-                'shipping_fee'        => 0,
-                'total_amount'        => $subtotal,
+                'shipping_fee'        => $shippingFee,
+                'total_amount'        => $totalAmount,
                 'status_code'         => 'requested',
                 'requested_at'        => now(),
                 'created_at'          => now(),

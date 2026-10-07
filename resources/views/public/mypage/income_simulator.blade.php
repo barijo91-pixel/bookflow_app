@@ -80,15 +80,24 @@
                                     <th class="text-success">내 마진 (세전)</th>
                                     <td class="text-end fw-bold text-success">{{ number_format($b2b['agent_margin']) }}원</td>
                                 </tr>
-                                @if($b2bTax['withholding_tax'] > 0)
-                                    <tr>
-                                        <th class="text-muted">원천징수 3.3%</th>
-                                        <td class="text-end text-danger">-{{ number_format($b2bTax['withholding_tax']) }}원</td>
-                                    </tr>
-                                @endif
+                                @php
+                                    $mg = (int) $b2b['agent_margin'];
+                                    $asBiz  = \App\Services\TaxService::calc('individual_general', $mg);
+                                    $asNone = \App\Services\TaxService::calc('none', $mg);
+                                @endphp
+                                <tr>
+                                    <th class="text-muted ps-3">① 사업자 <span class="fw-normal">(원천징수 없음)</span></th>
+                                    <td class="text-end">{{ number_format($asBiz['net']) }}원</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted ps-3">② 비사업자 <span class="fw-normal">(3.3% 원천징수)</span></th>
+                                    <td class="text-end">{{ number_format($asNone['net']) }}원
+                                        <span class="text-danger small">-{{ number_format($asNone['withholding_tax']) }}원</span>
+                                    </td>
+                                </tr>
                                 <tr class="table-success">
-                                    <th>최종 실수령</th>
-                                    <td class="text-end fw-bold">{{ number_format($b2b['agent_margin'] - $b2bTax['withholding_tax']) }}원</td>
+                                    <th>최종 실수령 <span class="fw-normal text-muted small">내 유형: {{ \App\Services\TaxService::TYPES[$businessType] }}</span></th>
+                                    <td class="text-end fw-bold">{{ number_format($mg - $b2bTax['withholding_tax']) }}원</td>
                                 </tr>
                             @else
                                 <tr class="border-top">
@@ -139,15 +148,24 @@
                                     <th class="text-success">내 마진 (세전)</th>
                                     <td class="text-end fw-bold text-success">{{ number_format($b2c['agent_net']) }}원</td>
                                 </tr>
-                                @if($b2cTax['withholding_tax'] > 0)
-                                    <tr>
-                                        <th class="text-muted">원천징수 3.3%</th>
-                                        <td class="text-end text-danger">-{{ number_format($b2cTax['withholding_tax']) }}원</td>
-                                    </tr>
-                                @endif
+                                @php
+                                    $mg = (int) $b2c['agent_net'];
+                                    $asBiz  = \App\Services\TaxService::calc('individual_general', $mg);
+                                    $asNone = \App\Services\TaxService::calc('none', $mg);
+                                @endphp
+                                <tr>
+                                    <th class="text-muted ps-3">① 사업자 <span class="fw-normal">(원천징수 없음)</span></th>
+                                    <td class="text-end">{{ number_format($asBiz['net']) }}원</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted ps-3">② 비사업자 <span class="fw-normal">(3.3% 원천징수)</span></th>
+                                    <td class="text-end">{{ number_format($asNone['net']) }}원
+                                        <span class="text-danger small">-{{ number_format($asNone['withholding_tax']) }}원</span>
+                                    </td>
+                                </tr>
                                 <tr class="table-success">
-                                    <th>최종 실수령</th>
-                                    <td class="text-end fw-bold">{{ number_format($b2c['agent_net'] - $b2cTax['withholding_tax']) }}원</td>
+                                    <th>최종 실수령 <span class="fw-normal text-muted small">내 유형: {{ \App\Services\TaxService::TYPES[$businessType] }}</span></th>
+                                    <td class="text-end fw-bold">{{ number_format($mg - $b2cTax['withholding_tax']) }}원</td>
                                 </tr>
                             @else
                                 <tr class="border-top">

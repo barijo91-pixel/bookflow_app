@@ -42,10 +42,9 @@
                     <label class="form-label small text-muted">거래유형 *</label>
                     <select name="trade_type" class="form-select" required
                             onchange="var d=this.form.querySelector('[name=discount_rate]'); if(d) d.value=(this.value==='wholesale'?30:10);">
-                        <option value="retail" @selected(old('trade_type', 'retail') === 'retail')>소매</option>
-                        <option value="wholesale" @selected(old('trade_type') === 'wholesale')>도매</option>
-                        <option value="both" @selected(old('trade_type') === 'both')>도·소매</option>
-                    </select>
+                        <option value="retail" @selected(old('trade_type', 'retail') === 'retail')>소매 (학부모 개별)</option>
+                        <option value="wholesale" @selected(old('trade_type') === 'wholesale')>도매 (학원 일괄)</option>
+                                            </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-muted">대표자</label>

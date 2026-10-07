@@ -142,7 +142,6 @@
                 </div>
 
                 {{-- 새 도서 개별 할인율 추가 (검색형 combobox) --}}
-                @if($availableBooks->isNotEmpty())
                     <div class="card-footer">
                         <form method="POST" action="{{ route('my.discounts.book.upsert') }}" class="row g-2 align-items-end" id="addBookDiscountForm">
                             @csrf
@@ -171,7 +170,6 @@
                             </div>
                         </form>
                     </div>
-                @endif
             </div>
         @else
             <div class="card section-card">
@@ -208,51 +206,52 @@ document.addEventListener('click', function (e) {
     input.value = (Math.round(v * 10) / 10).toString().replace(/\.0$/, '');
 });
 </script>
-@if($selectedVendor && $availableBooks->isNotEmpty())
-@php
-    $booksJsArray = $availableBooks->map(function ($b) {
-        return ['id' => $b->id, 'title' => $b->title, 'isbn' => $b->isbn, 'price' => $b->price];
-    })->values()->all();
-@endphp
+@if($selectedVendor)
 <script>
 (function () {
-    const books = {!! json_encode($booksJsArray, JSON_UNESCAPED_UNICODE) !!};
-    const input    = document.getElementById('bookSearchInput');
-    const hidden   = document.getElementById('bookIdInput');
-    const results  = document.getElementById('bookSearchResults');
+    // 교재가 6천권이 넘어 화면에 다 실으면 페이지가 무거워진다 → 입력할 때마다 서버에서 찾는다
+    const input   = document.getElementById('bookSearchInput');
+    const hidden  = document.getElementById('bookIdInput');
+    const results = document.getElementById('bookSearchResults');
     if (!input || !results) return;
 
-    function render(filtered) {
-        if (filtered.length === 0) {
-            results.innerHTML = '<div class="px-3 py-2 small text-muted">검색 결과 없음</div>';
-        } else {
-            results.innerHTML = filtered.slice(0, 50).map(b =>
-                `<a href="#" class="d-block px-3 py-2 small text-decoration-none text-dark border-bottom book-pick" data-id="${b.id}" data-label="${b.title}">
-                    <strong>${escapeHtml(b.title)}</strong>
-                    <div class="text-muted small">
-                        <code>${b.isbn}</code> · ${Number(b.price).toLocaleString()}원
-                    </div>
-                </a>`
-            ).join('');
-        }
-        results.classList.remove('d-none');
-    }
-    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    const url = @json(route('my.discounts.book.search'));
+    const vendorId = @json($selectedVendorId);
+    let timer = null, lastQuery = null;
 
-    function filter(query) {
-        const q = query.trim().toLowerCase();
-        if (q === '') return books;
-        return books.filter(b =>
-            b.title.toLowerCase().includes(q) ||
-            String(b.isbn).toLowerCase().includes(q)
-        );
+    function esc(x) { return String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function show(html) { results.innerHTML = html; results.classList.remove('d-none'); }
+
+    function render(books) {
+        if (!books.length) { show('<div class="px-3 py-2 small text-muted">검색 결과 없음</div>'); return; }
+        show(books.map(b =>
+            `<a href="#" class="d-block px-3 py-2 small text-decoration-none text-dark border-bottom book-pick"
+                data-id="${b.id}" data-label="${esc(b.title)}">
+                <strong>${esc(b.title)}</strong>
+                <div class="text-muted small">
+                    <code>${esc(b.isbn)}</code>${b.publisher_name ? ' · ' + esc(b.publisher_name) : ''} · ${Number(b.price).toLocaleString()}원
+                </div>
+            </a>`
+        ).join(''));
     }
 
-    input.addEventListener('focus', () => render(filter(input.value)));
-    input.addEventListener('input', () => {
-        hidden.value = ''; // 검색 시 선택값 초기화
-        render(filter(input.value));
-    });
+    function search() {
+        const q = input.value.trim();
+        if (q === lastQuery) { results.classList.remove('d-none'); return; }
+        lastQuery = q;
+        show('<div class="px-3 py-2 small text-muted">찾는 중…</div>');
+        fetch(`${url}?vendor_id=${encodeURIComponent(vendorId)}&q=${encodeURIComponent(q)}`, {
+            headers: { 'Accept': 'application/json' }, credentials: 'same-origin',
+        })
+            .then(r => r.ok ? r.json() : Promise.reject(r.status))
+            .then(j => render(j.books || []))
+            .catch(() => show('<div class="px-3 py-2 small text-danger">검색 중 오류가 발생했습니다.</div>'));
+    }
+
+    // 타자 칠 때마다 쏘지 않게 잠깐 모았다가
+    input.addEventListener('input', () => { hidden.value = ''; clearTimeout(timer); timer = setTimeout(search, 250); });
+    input.addEventListener('focus', search);
 
     results.addEventListener('click', (e) => {
         const link = e.target.closest('.book-pick');
@@ -262,44 +261,13 @@ document.addEventListener('click', function (e) {
         input.value  = link.dataset.label;
         results.classList.add('d-none');
     });
-
-    // 외부 클릭 시 닫기
     document.addEventListener('click', (e) => {
-        if (!input.contains(e.target) && !results.contains(e.target)) {
-            results.classList.add('d-none');
-        }
+        if (!input.contains(e.target) && !results.contains(e.target)) results.classList.add('d-none');
     });
-
-    // submit 전 hidden 검증
     document.getElementById('addBookDiscountForm').addEventListener('submit', (e) => {
-        if (!hidden.value) {
-            e.preventDefault();
-            alert('목록에서 도서를 선택해주세요.');
-            input.focus();
-        }
+        if (!hidden.value) { e.preventDefault(); alert('목록에서 도서를 선택해 주세요.'); }
     });
 })();
-
-// 숫자·소수점만 허용 ("2." 중간 상태는 유지)
-document.addEventListener('input', function (e) {
-    const input = e.target.closest('.rate-input');
-    if (!input) return;
-    let v = input.value.replace(/[^0-9.]/g, '');
-    const first = v.indexOf('.');
-    if (first !== -1) v = v.slice(0, first + 1) + v.slice(first + 1).replace(/\./g, '');
-    if (v !== input.value) input.value = v;
-});
-document.addEventListener('blur', function (e) {
-    const input = e.target.closest('.rate-input');
-    if (!input) return;
-    const min = parseFloat(input.dataset.min), max = parseFloat(input.dataset.max);
-    let v = parseFloat(input.value);
-    // 비워둘 수 있는 칸(도매율)은 0 으로 바꾸지 않는다 — 0%% 할인으로 굳어버린다
-    if (isNaN(v)) { input.value = input.dataset.allowEmpty === '1' ? '' : '0'; return; }
-    if (!isNaN(min)) v = Math.max(min, v);
-    if (!isNaN(max)) v = Math.min(max, v);
-    input.value = (Math.round(v * 100) / 100).toString();
-}, true);
 </script>
 @endif
 @endpush

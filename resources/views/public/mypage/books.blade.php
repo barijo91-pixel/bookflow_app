@@ -50,15 +50,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-muted mb-1">분류</label>
-                <select name="school" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="">전체</option>
-                    @foreach($filterOptions['school'] as $s)
-                        <option value="{{ $s->code }}" @selected($activeFilters['school'] === $s->code)>{{ $s->name }}</option>
-                    @endforeach
-                </select>
-            </div>
+
             <div class="col-md-2">
                 <label class="form-label small text-muted mb-1">과목</label>
                 <select name="subject" class="form-select form-select-sm" onchange="this.form.submit()">
