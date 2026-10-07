@@ -19,7 +19,7 @@ class MakeDemoSet extends Command
 {
     protected $signature = 'booksys:make-demo-set
         {--prefix=demo : 아이디 접두어 (demo → demo_dist / demo_agent / demo_academy)}
-        {--password= : 세 계정 공통 비밀번호 (영문+숫자 8자 이상, 필수)}
+        {--password= : 세 계정 공통 비밀번호 (생략하면 무작위 생성, 화면에 출력 안 함)}
         {--vendor-name= : 학원명 (기본: "데모학원")}
         {--rate=10 : 영업자→학원 할인율 %}
         {--stocks : 총판 취급 교재를 전체 교재로 채운다 (주문 테스트용)}';
@@ -33,9 +33,15 @@ class MakeDemoSet extends Command
             $this->error('prefix 는 영문·숫자만 가능합니다.');
             return self::FAILURE;
         }
+        // 비밀번호 — 주지 않으면 랜덤으로 만든다. 어느 경우에도 화면에 출력하지 않는다.
+        // (출력하면 운영 로그·대화 기록에 남는다. 확인은 관리자 > 사용자 목록 > 비밀번호 초기화)
         $password = (string) $this->option('password');
-        if (strlen($password) < 8 || ! preg_match('/[a-zA-Z]/', $password) || ! preg_match('/[0-9]/', $password)) {
-            $this->error('--password 를 영문+숫자 8자 이상으로 지정해 주세요. (화면에 출력하지 않습니다)');
+        $generated = false;
+        if ($password === '') {
+            $password = $this->randomPassword(12);
+            $generated = true;
+        } elseif (strlen($password) < 8 || ! preg_match('/[a-zA-Z]/', $password) || ! preg_match('/[0-9]/', $password)) {
+            $this->error('--password 는 영문+숫자 8자 이상이어야 합니다.');
             return self::FAILURE;
         }
 
@@ -139,7 +145,12 @@ class MakeDemoSet extends Command
 
         $this->newLine();
         $this->line('아이디: ' . implode(' / ', $ids));
-        $this->line('비밀번호는 지정하신 값입니다. (보안상 출력하지 않습니다)');
+        if ($generated) {
+            $this->warn('비밀번호는 무작위로 만들었고 화면에 출력하지 않습니다.');
+            $this->warn('관리자 > 사용자 목록에서 각 계정의 [비밀번호 초기화] 를 눌러 임시 비번을 확인하세요.');
+        } else {
+            $this->line('비밀번호는 지정하신 값입니다. (보안상 출력하지 않습니다)');
+        }
         return self::SUCCESS;
     }
 
@@ -165,4 +176,15 @@ class MakeDemoSet extends Command
         $this->line("  {$loginId} 생성 ({$role})");
         return $user;
     }
+    /** 영문+숫자 혼합 비밀번호 */
+    private function randomPassword(int $len): string
+    {
+        $pool = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        do {
+            $pw = '';
+            for ($i = 0; $i < $len; $i++) $pw .= $pool[random_int(0, strlen($pool) - 1)];
+        } while (! preg_match('/[a-zA-Z]/', $pw) || ! preg_match('/[0-9]/', $pw));
+        return $pw;
+    }
+
 }
