@@ -109,6 +109,32 @@
 
     <div class="d-flex justify-content-between">
         <a href="{{ route('my.agents.index') }}" class="btn btn-link text-muted">취소</a>
+                <div class="section-divider mt-4 mb-2">
+                    <small class="text-muted fw-bold text-uppercase">계약 조건 (총판–영업자)</small>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted">매입율 (정가 대비 %)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" name="purchase_rate" inputmode="decimal" autocomplete="off"
+                                   value="{{ old('purchase_rate', $relation->purchase_rate !== null ? rtrim(rtrim($relation->purchase_rate, '0'), '.') : '') }}"
+                                   placeholder="{{ $defaultRate }}" class="form-control text-end"
+                                   title="비워두면 기본값 {{ $defaultRate }}% 가 적용됩니다">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="form-text small">총판이 이 영업자에게 넘기는 가격. 비우면 기본 {{ $defaultRate }}%</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted">분배율 (총판 : 영업자)</label>
+                        <select name="split_ratio" class="form-select form-select-sm">
+                            <option value="">기본값 사용</option>
+                            @foreach($splitOptions as $k => $opt)
+                                <option value="{{ $k }}" @selected(old('split_ratio', $relation->split_ratio ?? '') === $k)>{{ $opt['label'] }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text small">마진을 총판과 영업자가 나누는 비율</div>
+                    </div>
+                </div>
         <button class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> 저장</button>
     </div>
 </form>

@@ -158,9 +158,20 @@ class DistributorAgentController extends Controller
         $currentSido = $user->region_id
             ? DB::table('regions')->where('id', $user->region_id)->value('parent_id')
             : null;
+        // 총판–영업자 계약조건 (비어 있으면 서비스 기본값을 쓴다)
+        $relation = DB::table('user_relations')
+            ->where('parent_user_id', Auth::id())
+            ->where('child_user_id', $user->id)
+            ->where('relation_type', 'distributor_agent')
+            ->where('status', 'active')
+            ->first(['id', 'purchase_rate', 'split_ratio']);
+
         return view('public.mypage.agent_edit', [
             'user'        => Auth::user(),
             'agent'       => $user,
+            'relation'    => $relation,
+            'splitOptions'=> \App\Services\SettlementService::SPLIT_SCENARIOS,
+            'defaultRate' => (int) round(\App\Services\SettlementService::RATE_DIST_TO_AGENT * 100),
             'bankOptions' => $bankOptions,
             'sidos'       => $sidos,
             'sigungus'    => $sigungus,
@@ -185,7 +196,27 @@ class DistributorAgentController extends Controller
             'bank_code'     => ['nullable', 'string', 'max:10'],
             'bank_account'  => ['nullable', 'string', 'max:50'],
             'bank_holder'   => ['nullable', 'string', 'max:50'],
+            // 총판–영업자 계약조건
+            'purchase_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'split_ratio'   => ['nullable', 'string', 'max:10'],
         ], [], ['user_name' => '이름', 'user_phone' => '휴대폰']);
+
+        // 분배율은 정해진 시나리오만 (임의 문자열이 들어가면 정산이 기본값으로 조용히 떨어진다)
+        $splitKeys = array_keys(\App\Services\SettlementService::SPLIT_SCENARIOS);
+        $splitRatio = in_array($data['split_ratio'] ?? '', $splitKeys, true) ? $data['split_ratio'] : null;
+        $purchaseRate = ($data['purchase_rate'] ?? '') === '' || ! isset($data['purchase_rate'])
+            ? null : (float) $data['purchase_rate'];
+
+        DB::table('user_relations')
+            ->where('parent_user_id', Auth::id())
+            ->where('child_user_id', $user->id)
+            ->where('relation_type', 'distributor_agent')
+            ->where('status', 'active')
+            ->update([
+                'purchase_rate' => $purchaseRate,
+                'split_ratio'   => $splitRatio,
+                'updated_at'    => now(),
+            ]);
 
         $before = $user->only(['name', 'phone', 'email', 'status_code', 'business_type']);
         $user->update([
