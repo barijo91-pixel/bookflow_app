@@ -137,7 +137,7 @@ class MakeDemoSet extends Command
         // ── 6) 총판 취급 교재 (선택) — 없으면 주문 화면에 교재가 안 보인다
         if ($this->option('stocks')) {
             $dist = User::where('login_id', $ids['distributor'])->first();
-            $this->call('booksys:copy-stocks', ['scope' => 'all', 'distributor' => $dist->login_id, '--apply' => true]);
+            $this->call('booksys:copy-stocks', ['from' => 'all', 'to' => $dist->login_id, '--apply' => true]);
         } else {
             $this->warn('총판 취급 교재는 안 넣었습니다. 주문 테스트까지 하려면 --stocks 를 붙이거나');
             $this->warn('총판 계정으로 재고 업로드를 해주세요. (교재가 없으면 주문 화면이 비어 보입니다)');
